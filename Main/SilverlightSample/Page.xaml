@@ -1,0 +1,21 @@
+﻿<UserControl xmlns:my="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Data"  x:Class="SilverlightSample.Page"
+    xmlns="http://schemas.microsoft.com/client/2007" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Width="400" Height="300">
+    <Grid x:Name="LayoutRoot" Background="White">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Button Grid.Row="0" Content="Load an STDF file" Click="Load_Click"/>
+        <my:DataGrid x:Name="Data" Grid.Row="1"
+                     AutoGenerateColumns="False">
+            <my:DataGrid.Columns>
+                <my:DataGridTextBoxColumn Header="Field"
+                                          DisplayMemberBinding="{Binding Field}"/>
+                <my:DataGridTextBoxColumn Header="Value"
+                                          DisplayMemberBinding="{Binding Value}"/>
+            </my:DataGrid.Columns>
+        </my:DataGrid>
+    </Grid>
+</UserControl>
