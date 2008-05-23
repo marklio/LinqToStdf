@@ -1,4 +1,8 @@
-﻿using System.Reflection;
+﻿// (c) Copyright Mark Miller.
+// This source is subject to the Microsoft Public License.
+// See http://www.microsoft.com/resources/sharedsource/licensingbasics/sharedsourcelicenses.mspx.
+// All other rights reserved.
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Resources;
@@ -9,9 +13,9 @@ using System.Resources;
 [assembly: AssemblyTitle("LinqToStdf")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Microsoft")]
+[assembly: AssemblyCompany("Mark Miller")]
 [assembly: AssemblyProduct("LinqToStdf")]
-[assembly: AssemblyCopyright("Copyright © Microsoft 2007")]
+[assembly: AssemblyCopyright("Copyright © Mark Miller")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
