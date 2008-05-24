@@ -88,7 +88,12 @@ namespace LinqToStdf {
         /// over the contents of the record. (be sure and dispose it).
         /// </summary>
         /// <returns></returns>
+#if SILVERLIGHT
+        //this must be public for Silverlight
         public BinaryReader GetBinaryReaderForContent() {
+#else
+        internal BinaryReader GetBinaryReaderForContent() {
+#endif
             return new BinaryReader(new MemoryStream(_Content, false), _Endian, true);
         }
 	}

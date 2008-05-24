@@ -248,7 +248,11 @@ namespace LinqToStdf {
                 var converter = new DynamicMethod(
                     string.Format("ConvertTo{0}", type.Name),
                     type,
-                    new Type[] { typeof(UnknownRecord) });
+                    new Type[] { typeof(UnknownRecord) }
+#if !SILVERLIGHT
+                    ,true //skip visibility for desktop
+#endif
+                    );
                 ilGenerator = converter.GetILGenerator();
                 returner = () => (Converter<UnknownRecord, StdfRecord>)converter.CreateDelegate(typeof(Converter<UnknownRecord, StdfRecord>));
             }
@@ -366,7 +370,11 @@ namespace LinqToStdf {
                 //get a memory stream on the record content (call UnknownRecord.GetMemoryStreamForContent)
                 _Reader = _ILGen.DeclareLocal(typeof(BinaryReader));
                 _ILGen.Ldarg_0();
+#if SILVERLIGHT
                 _ILGen.Callvirt(typeof(UnknownRecord).GetMethod("GetBinaryReaderForContent"));
+#else
+                _ILGen.Callvirt(typeof(UnknownRecord).GetMethod("GetBinaryReaderForContent", BindingFlags.Instance | BindingFlags.NonPublic));
+#endif
                 _ILGen.Stloc(_Reader);
                 //nothing on the stack
 

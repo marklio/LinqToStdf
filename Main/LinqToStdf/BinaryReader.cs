@@ -21,8 +21,12 @@ namespace LinqToStdf {
     /// In addition, it adds some STDF-specific datatype reading
     /// such as variable-length strings and dates.
     /// </remarks>
+#if SILVERLIGHT
+    //for silverlight, this must be public due to the sandbox modelss
     public class BinaryReader : IDisposable {
-
+#else
+    internal class BinaryReader : IDisposable {
+#endif
         /// <summary>
         /// The epoch used for STDF dates
         /// </summary>

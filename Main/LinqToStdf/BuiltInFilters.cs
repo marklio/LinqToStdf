@@ -427,6 +427,56 @@ namespace LinqToStdf {
         #endregion
 
         /// <summary>
+        /// Populates the "optional" PTR fields with the defaults provided by the first PTR record for the test.
+        /// </summary>
+        /// <remarks>
+        /// See the V4 STDF spec section on PTRs, "Notes on Specific Fields", "Default Data"
+        /// </remarks>
+        public static RecordFilter PopulatePtrFieldsWithDefaults { get { return PopulatePtrFieldsWithDefaultsImpl; } }
+
+        #region PopulatePtrFieldsWithDefaults implementation
+
+        static IEnumerable<StdfRecord> PopulatePtrFieldsWithDefaultsImpl(IEnumerable<StdfRecord> records) {
+            var firstPtrs = new Dictionary<uint, Ptr>();
+            foreach (var r in records) {
+                if (r.GetType() == typeof(Ptr)) {
+                    var ptr = (Ptr)r;
+                    Ptr first;
+                    if (firstPtrs.TryGetValue(ptr.TestNumber, out first)) {
+                        if (ptr.ResultScalingExponent == null)
+                            ptr.ResultScalingExponent = first.ResultScalingExponent;
+                        if (ptr.LowLimitScalingExponent == null)
+                            ptr.LowLimitScalingExponent = first.LowLimitScalingExponent;
+                        if (ptr.HighLimitScalingExponent == null)
+                            ptr.HighLimitScalingExponent = first.HighLimitScalingExponent;
+                        if (ptr.LowLimit == null)
+                            ptr.LowLimit = first.LowLimit;
+                        if (ptr.HighLimit == null)
+                            ptr.HighLimit = first.HighLimit;
+                        if (ptr.Units == null)
+                            ptr.Units = first.Units;
+                        if (ptr.ResultFormatString == null)
+                            ptr.ResultFormatString = first.ResultFormatString;
+                        if (ptr.LowLimitFormatString == null)
+                            ptr.LowLimitFormatString = first.LowLimitFormatString;
+                        if (ptr.HighLimitFormatString == null)
+                            ptr.HighLimitFormatString = first.HighLimitFormatString;
+                        if (ptr.LowSpecLimit == null)
+                            ptr.LowSpecLimit = first.LowSpecLimit;
+                        if (ptr.HighSpecLimit == null)
+                            ptr.HighSpecLimit = first.HighSpecLimit;
+                    }
+                    else {
+                        firstPtrs[ptr.TestNumber] = ptr;
+                    }
+                }
+                yield return r;
+            }
+        }
+
+        #endregion
+
+        /// <summary>
         /// This filter will invoke the <see cref="StdfFile.RewindAndSeek">"rewind and seek"</see> functionality
         /// if any unknown records are encountered.
         /// </summary>
