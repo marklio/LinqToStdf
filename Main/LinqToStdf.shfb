@@ -5,6 +5,10 @@
     <namespaceSummaries>
         <namespaceSummaryItem name="" isDocumented="False" />
         <namespaceSummaryItem name="LinqToStdf" isDocumented="True" />
+        <namespaceSummaryItem name="LinqToStdf.Attributes" isDocumented="True" />
+        <namespaceSummaryItem name="LinqToStdf.CompiledQuerySupport" isDocumented="True" />
+        <namespaceSummaryItem name="LinqToStdf.Records" isDocumented="True" />
+        <namespaceSummaryItem name="LinqToStdf.Records.V4" isDocumented="True" />
     </namespaceSummaries>
     <ProjectSummary />
     <MissingTags>Summary, Parameter, Returns, AutoDocumentCtors, Namespace</MissingTags>
@@ -23,7 +27,7 @@
     <BinaryTOC>True</BinaryTOC>
     <IncludeFavorites>False</IncludeFavorites>
     <Preliminary>False</Preliminary>
-    <RootNamespaceContainer>False</RootNamespaceContainer>
+    <RootNamespaceContainer>True</RootNamespaceContainer>
     <RootNamespaceTitle />
     <HelpTitle>LinqToStdf - A parser for Stardard Test Datalog Format files</HelpTitle>
     <HtmlHelpName>LinqToStdf</HtmlHelpName>
