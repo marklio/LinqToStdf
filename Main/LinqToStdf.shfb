@@ -4,13 +4,13 @@
     </assemblies>
     <namespaceSummaries>
         <namespaceSummaryItem name="" isDocumented="False" />
-        <namespaceSummaryItem name="LinqToStdf" isDocumented="True" />
-        <namespaceSummaryItem name="LinqToStdf.Attributes" isDocumented="True" />
-        <namespaceSummaryItem name="LinqToStdf.CompiledQuerySupport" isDocumented="True" />
-        <namespaceSummaryItem name="LinqToStdf.Records" isDocumented="True" />
-        <namespaceSummaryItem name="LinqToStdf.Records.V4" isDocumented="True" />
+        <namespaceSummaryItem name="LinqToStdf" isDocumented="True">Main namespace for the library.  StdfFile is likely where you want to start looking if you're new to the library.</namespaceSummaryItem>
+        <namespaceSummaryItem name="LinqToStdf.Attributes" isDocumented="True">This namespace holds the custom attributes used to describe the format of STDF records.  The parser uses this information to generate parsers on the fly for each record type.</namespaceSummaryItem>
+        <namespaceSummaryItem name="LinqToStdf.CompiledQuerySupport" isDocumented="True">Support for compiled queries</namespaceSummaryItem>
+        <namespaceSummaryItem name="LinqToStdf.Records" isDocumented="True">Namespace where base STDF records are defined, as well as some "pseudo-records" such as StartOfStreamRecord and EndOfStreamRecord and things like error records.</namespaceSummaryItem>
+        <namespaceSummaryItem name="LinqToStdf.Records.V4" isDocumented="True">The namespace for the STDF V4 records as well as infrastructure and error records.</namespaceSummaryItem>
     </namespaceSummaries>
-    <ProjectSummary />
+    <ProjectSummary>A library for parsing/processing Standard Test Datalog Format files, typically used in semiconductor testing.</ProjectSummary>
     <MissingTags>Summary, Parameter, Returns, AutoDocumentCtors, Namespace</MissingTags>
     <VisibleItems>Attributes, ExplicitInterfaceImplementations, InheritedMembers, InheritedFrameworkMembers, Protected, SealedProtected</VisibleItems>
     <HtmlHelp1xCompilerPath path="" />

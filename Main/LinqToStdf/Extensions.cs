@@ -74,6 +74,8 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets the <see cref="Hbr">Hbrs</see> for the record context.
         /// </summary>
+        /// <param name="record">The record context</param>
+        /// <returns>All the <see cref="Hbr">Hbrs</see>.</returns>
         public static IEnumerable<Hbr> GetHbrs(this IRecordContext record) {
 			return record.StdfFile.GetRecords().OfExactType<Hbr>();
         }
@@ -162,8 +164,8 @@ namespace LinqToStdf {
         /// <summary>
         /// returns records that occur before the given record
         /// </summary>
-        /// <param name="record"></param>
-        /// <returns></returns>
+        /// <param name="record">The "marker" record</param>
+        /// <returns>All the records before the marker record</returns>
         static public IEnumerable<StdfRecord> Before(this StdfRecord record) {
             return record.StdfFile.GetRecords().TakeWhile(r => r.Offset < record.Offset);
         }
@@ -171,8 +173,8 @@ namespace LinqToStdf {
         /// <summary>
         /// Returns the records that occur after the given record
         /// </summary>
-        /// <param name="record"></param>
-        /// <returns></returns>
+        /// <param name="record">The "marker" record</param>
+        /// <returns>All the records after the marker record</returns>
         static public IEnumerable<StdfRecord> After(this StdfRecord record) {
             return record.StdfFile.GetRecords().SkipWhile(r => r.Offset <= record.Offset);
         }
@@ -257,8 +259,9 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets the records associated with this pir
         /// </summary>
-        /// <param name="pir"></param>
-        /// <returns></returns>
+        /// <param name="pir">The <see cref="Pir"/> representing the part</param>
+        /// <returns>The records associated with the part (between the <see cref="Pir"/>
+        /// and <see cref="Prr"/> and sharing the same head/site information.</returns>
         public static IEnumerable<StdfRecord> GetChildRecords(this Pir pir) {
 			var prrHandle = typeof(Prr).TypeHandle;
             return pir.After()
@@ -271,8 +274,9 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets the records associated with this prr
         /// </summary>
-        /// <param name="prr"></param>
-        /// <returns></returns>
+        /// <param name="prr">The <see cref="Prr"/> representing the part</param>
+        /// <returns>The records associated with the part (between the <see cref="Pir"/>
+        /// and <see cref="Prr"/> and sharing the same head/site information.</returns>
         public static IEnumerable<StdfRecord> GetChildRecords(this Prr prr) {
             return prr.GetMatchingPir().GetChildRecords();
         }
@@ -283,6 +287,9 @@ namespace LinqToStdf {
         /// Combines two uint?'s with the sematics desirable
         /// for record summarizing.
         /// </summary>
+        /// <param name="first">The first nullable uint</param>
+        /// <param name="second">The second nullable uint</param>
+        /// <returns>The addition of first and second where null is treated as 0.</returns>
         public static uint? Combine(this uint? first, uint? second) {
             if (first == null && second == null) return null;
             else if (first == null) return second;
@@ -293,6 +300,8 @@ namespace LinqToStdf {
         /// <summary>
         /// Chains 2 <see cref="RecordFilter"/>s together
         /// </summary>
+        /// <param name="first">The first filter</param>
+        /// <param name="other">The filter to chain to the first</param>
         public static RecordFilter Chain(this RecordFilter first, RecordFilter other) {
             return (input) => other(first(input));
         }
@@ -300,6 +309,8 @@ namespace LinqToStdf {
         /// <summary>
         /// Chains 2 <see cref="SeekAlgorithm"/>s together
         /// </summary>
+        /// <param name="first">The first algorithm</param>
+        /// <param name="other">The algorithm to chain to the first</param>
         public static SeekAlgorithm Chain(this SeekAlgorithm first, SeekAlgorithm other) {
             return (input, endian, callback) => other(first(input, endian, callback), endian, callback);
         }

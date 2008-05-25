@@ -10,11 +10,47 @@ using System.Linq.Expressions;
 using LinqToStdf.CompiledQuerySupport;
 
 namespace LinqToStdf {
+    /// <summary>
+    /// This class allows you to generate "compiled queries".  These are queries that have been 
+    /// analyzed and optimized by skipping unused records, and even unused fields if possible.
+    /// This can provide excellent performance, depending on the situation.  See the remarks
+    /// for limitations.  The resulting compiled query takes a path to an STDF file and returns
+    /// the output of the query.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Pre-compiled queries have the following limitations:
+    /// <list type="bullet">
+    /// <item>They must be expressible as an expression tree</item>
+    /// <item>They should not "leak" records parsed from the file itself.
+    /// (This is currently not enforced)
+    /// Any data returned from a compiled query should be put into new object instances
+    /// rather than passing records back directly.  Otherwise, the analyzer cannot detect which
+    /// fields you are using from those records and you'll get back empty records.
+    /// This does not apply to error records or other injected/synthesized records.</item>
+    /// </list>
+    /// </para>
+    /// </remarks>
     public static class CompiledQuery {
+
+        /// <summary>
+        /// Compiles an argument-less query
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result (in most cases, this can be inferred)</typeparam>
+        /// <param name="query">The expression tree representing the query.</param>
+        /// <returns>The results of the query</returns>
         public static Func<string, TResult> Compile<TResult>(Expression<Func<StdfFile, TResult>> query) {
             return Compile(null, query);
         }
 
+        /// <summary>
+        /// Compiles an argument-less query, allowing you to do some initialization on the <see cref="StdfFile"/>
+        /// object before the query runs.  This allows you to set options or add filters or seek algorithms.
+        /// </summary>
+        /// <typeparam name="TResult">The type of the result (in most cases, this can be inferred)</typeparam>
+        /// <param name="stdfFileInit">An action that will initialize the <see cref="StdfFile"/>.</param>
+        /// <param name="query">The expression tree representing the query.</param>
+        /// <returns>The results of the query</returns>
         public static Func<string, TResult> Compile<TResult>(Action<StdfFile> stdfFileInit, Expression<Func<StdfFile, TResult>> query) {
             var rnf = ExpressionInspector.Inspect(query);
             var compiled = query.Compile();
