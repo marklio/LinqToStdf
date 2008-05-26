@@ -34,7 +34,7 @@ namespace LinqToStdf {
         /// </summary>
         public static Mir GetMir(this IRecordContext record) {
             return (from mir in record.StdfFile.GetRecords().OfExactType<Mir>()
-                    select mir).First();
+                    select mir).FirstOrDefault();
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace LinqToStdf {
         /// </summary>
         public static Mrr GetMrr(this IRecordContext record) {
 			return (from mrr in record.StdfFile.GetRecords().OfExactType<Mrr>()
-                    select mrr).First();
+                    select mrr).FirstOrDefault();
         }
 
         /// <summary>
@@ -66,9 +66,9 @@ namespace LinqToStdf {
         /// Gets the summary (head 255) <see cref="Pcr"/> for the record context.
         /// </summary>
         public static Pcr GetSummaryPcr(this IRecordContext record) {
-			return (from r in record.StdfFile.GetRecords().OfExactType<Pcr>()
-                   where r.HeadNumber == 255
-                   select r).First();
+            return (from r in record.StdfFile.GetRecords().OfExactType<Pcr>()
+                    where r.HeadNumber == 255
+                    select r).FirstOrDefault();
         }
 
         /// <summary>
@@ -202,7 +202,7 @@ namespace LinqToStdf {
         public static Wir GetWir(this IHeadIndexable record) {
 			return (from wir in record.StdfFile.GetRecords().OfExactType<Wir>()
                     where wir.HeadNumber == record.HeadNumber
-                    select wir).First();
+                    select wir).FirstOrDefault();
         }
 
         /// <summary>
@@ -211,7 +211,7 @@ namespace LinqToStdf {
         public static Wrr GetWrr(this IHeadIndexable record) {
 			return (from wrr in record.StdfFile.GetRecords().OfExactType<Wrr>()
                     where wrr.HeadNumber == record.HeadNumber
-                    select wrr).First();
+                    select wrr).FirstOrDefault();
         }
 
         #endregion
@@ -219,23 +219,21 @@ namespace LinqToStdf {
         #region extending IHeadSiteIndexable
 
         /// <summary>
-        /// Gets the Prr?  This doesn't make sense to me anymore.
-        /// TODO: figure this out.
+        /// Gets the current Prr associated with the head/site
         /// </summary>
         public static Prr GetPrr(this IHeadSiteIndexable record) {
 			return (from prr in record.StdfFile.GetRecords().OfExactType<Prr>()
                     where prr.HeadNumber == record.HeadNumber && prr.SiteNumber == record.SiteNumber
-                    select prr).First();
+                    select prr).FirstOrDefault();
         }
 
         /// <summary>
-        /// Gets the Pir?  This doesn't make sense to me anymore.
-        /// TODO: figure this out.
+        /// Gets the current Pir associated with the head/site
         /// </summary>
         public static Pir GetPir(this IHeadSiteIndexable record) {
 			return (from pir in record.StdfFile.GetRecords().OfExactType<Pir>()
                     where pir.HeadNumber == record.HeadNumber && pir.SiteNumber == record.SiteNumber
-                    select pir).First();
+                    select pir).FirstOrDefault();
         }
 
         #endregion
@@ -246,14 +244,14 @@ namespace LinqToStdf {
             return pir.After()
 				.OfExactType<Prr>()
                 .Where(r => r.HeadNumber == pir.HeadNumber && r.SiteNumber == pir.SiteNumber)
-                .First();
+                .FirstOrDefault();
         }
 
         public static Pir GetMatchingPir(this Prr prr) {
             return prr.Before()
 				.OfExactType<Pir>()
                 .Where(r => r.HeadNumber == prr.HeadNumber && r.SiteNumber == prr.SiteNumber)
-                .Last();
+                .LastOrDefault();
         }
 
         /// <summary>
