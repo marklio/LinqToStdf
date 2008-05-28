@@ -5,7 +5,6 @@
 using System;
 
 //we only need this for silverlight
-#if SILVERLIGHT
 namespace System.Collections {
     public class BitArray {
 
@@ -37,4 +36,3 @@ namespace System.Collections {
         }
     }
 }
-#endif

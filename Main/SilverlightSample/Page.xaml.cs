@@ -31,7 +31,7 @@ namespace SilverlightSample {
         private void Load_Click(object sender, RoutedEventArgs e) {
             var dialog = new OpenFileDialog();
             if (dialog.ShowDialog() == DialogResult.OK) {
-                var file = new StdfFile(dialog.SelectedFile);
+                var file = new StdfFile(new SilverlightStreamManager(dialog.SelectedFile));
                 //don't throw
                 file.ThrowOnFormatError = false;
                 file.AddFilter(BuiltInFilters.V4ContentSpec);

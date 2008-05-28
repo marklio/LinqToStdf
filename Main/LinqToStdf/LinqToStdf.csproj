@@ -49,7 +49,6 @@
     <Compile Include="Attributes\StdfStringLayoutAttribute.cs" />
     <Compile Include="BinaryReader.cs" />
     <Compile Include="BinaryWriter.cs" />
-    <Compile Include="BitArray.cs" />
     <Compile Include="BuiltInFilters.cs" />
     <Compile Include="CompiledQuery.cs" />
     <Compile Include="CompiledQuerySupport\ExpressionInspector.cs" />
@@ -57,7 +56,6 @@
     <Compile Include="CompiledQuerySupport\RecordsAndFields.cs" />
     <Compile Include="Endian.cs" />
     <Compile Include="Extensions.cs" />
-    <Compile Include="HashSet.cs" />
     <Compile Include="IHeadIndexable.cs" />
     <Compile Include="IHeadSiteIndexable.cs" />
     <Compile Include="ILGenHelpers.cs" />
@@ -115,6 +113,7 @@
     <Compile Include="StdfOutputDirectory.cs" />
     <Compile Include="StdfRecord.cs" />
     <Compile Include="StdfV4Specification.cs" />
+    <Compile Include="StreamManager.cs" />
     <Compile Include="UnknownRecord.cs" />
   </ItemGroup>
   <ItemGroup>

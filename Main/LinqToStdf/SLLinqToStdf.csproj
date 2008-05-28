@@ -113,6 +113,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="SeekAlgorithms.cs" />
+    <Compile Include="SilverlightStreamManager.cs" />
     <Compile Include="StdfException.cs" />
     <Compile Include="StdfFile.cs" />
     <Compile Include="StdfFileWriter.cs" />
@@ -120,6 +121,7 @@
     <Compile Include="StdfOutputDirectory.cs" />
     <Compile Include="StdfRecord.cs" />
     <Compile Include="StdfV4Specification.cs" />
+    <Compile Include="StreamManager.cs" />
     <Compile Include="UnknownRecord.cs" />
   </ItemGroup>
   <ItemGroup>

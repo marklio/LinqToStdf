@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 
 //we only need this for Silverlight
-#if SILVERLIGHT
 namespace System.Collections.Generic {
     public class HashSet<T> : IEnumerable<T> {
 
@@ -57,4 +56,3 @@ namespace System.Collections.Generic {
 
     }
 }
-#endif
