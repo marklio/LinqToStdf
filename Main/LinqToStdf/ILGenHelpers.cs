@@ -107,7 +107,7 @@ namespace LinqToStdf {
                 ilgen.Ldstr((string)value);
             }
             else {
-                throw new NotSupportedException(string.Format("Ldc<T> does not support T is {0}", typeof(T)));
+                throw new NotSupportedException(string.Format(Resources.CodeGen_UnsupportedGenericLdc, typeof(T)));
             }
         }
 

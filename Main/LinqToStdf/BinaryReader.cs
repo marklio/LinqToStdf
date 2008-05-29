@@ -346,13 +346,13 @@ namespace LinqToStdf {
         public void SkipBitArray() {
             int length = ReadUInt16();
             if (length > 0) {
-                var realLength = (int)Math.Ceiling((double)length / 8);
+                var realLength = (length + 7) / 8;
                 Skip(realLength);
             }
         }
 
         public void SkipNibbleArray(byte length) {
-            Skip((long)Math.Ceiling((double)length / 2));
+            Skip((length + 1) / 2);
         }
 
         #region Buffer Management
@@ -388,7 +388,7 @@ namespace LinqToStdf {
                 do {
                     var bytesRead = _Stream.Read(_Buffer, offset, length - offset);
                     if (bytesRead == 0) {
-                        throw new EndOfStreamException(string.Format("Could not read {0} more bytes of {1}", length - offset, length));
+                        throw new EndOfStreamException(string.Format(Resources.EndOfStreamException, length - offset, length));
                     }
                     offset += bytesRead;
                 } while (offset < length);

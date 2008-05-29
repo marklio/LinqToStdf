@@ -9,6 +9,11 @@ using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 
 namespace LinqToStdf {
+
+    /// <summary>
+    /// <see cref="IStdfStreamManager"/> implementation for Silverlight.
+    /// Use this with the results of the file open dialog.
+    /// </summary>
     public class SilverlightStreamManager : IStdfStreamManager {
 
         FileDialogFileInfo _FileInfo;

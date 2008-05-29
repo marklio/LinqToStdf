@@ -29,7 +29,7 @@ namespace LinqToStdf.Records {
     public class StartOfStreamRecord : StdfRecord {
 
         public override RecordType RecordType {
-            get { throw new NotImplementedException("The method or operation is not implemented."); }
+            get { throw new NotSupportedException(); }
         }
 
         public string FileName { get; set; }

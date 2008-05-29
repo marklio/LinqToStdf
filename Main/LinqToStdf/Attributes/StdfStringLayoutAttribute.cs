@@ -38,7 +38,7 @@ namespace LinqToStdf.Attributes {
 			get { return base.FieldType; }
 			set {
 				if (value != typeof(string)) {
-					throw new InvalidOperationException("StdfStringLayoutAttribute can only define fields of type string.");
+					throw new InvalidOperationException(Resources.StdfStringLayoutNonString);
 				}
 			}
 		}

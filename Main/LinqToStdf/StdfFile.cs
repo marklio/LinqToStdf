@@ -105,7 +105,7 @@ namespace LinqToStdf {
         }
 
         private void EnsureFiltersUnlocked() {
-            if (_FiltersLocked) throw new InvalidOperationException("You cannot modify the filters after records have been read.");
+            if (_FiltersLocked) throw new InvalidOperationException(Resources.ErrorFiltersLocked);
         }
 
         /// <summary>
@@ -151,8 +151,7 @@ namespace LinqToStdf {
         }
 
         internal StdfFile(IStdfStreamManager streamManager, RecordConverterFactory rcf)
-            : this(streamManager, PrivateImpl.None)
-        {
+            : this(streamManager, PrivateImpl.None) {
             _ConverterFactory = rcf;
         }
 
@@ -198,7 +197,7 @@ namespace LinqToStdf {
             _FiltersLocked = true;
             foreach (var record in GetTopRecordFilter()(_RecordFilter(GetBaseRecordFilter()(InternalGetAllRecords())))) {
                 if (record.GetType() == typeof(StartOfStreamRecord)) {
-					var sosRecord = (StartOfStreamRecord)record;
+                    var sosRecord = (StartOfStreamRecord)record;
                     sosRecord.FileName = _StreamManager.Name;
                     if (_Endian == Endian.Unknown) {
                         _Endian = sosRecord.Endian;
@@ -276,7 +275,7 @@ namespace LinqToStdf {
                     if (_Stream.Read(far, 0, 6) < 6) {
                         yield return new StartOfStreamRecord() { Endian = Endian.Unknown };
                         yield return new FormatErrorRecord() {
-                            Message = "The FAR could not be fully read.",
+                            Message = Resources.FarReadError,
                             Recoverable = false
                         };
                         yield return new EndOfStreamRecord();
@@ -297,7 +296,7 @@ namespace LinqToStdf {
                     if (length != 2) {
                         yield return new StartOfStreamRecord() { Endian = endian };
                         yield return new FormatErrorRecord() {
-                            Message = "The FAR record length was not reported as 2.",
+                            Message = Resources.FarLengthError,
                             Recoverable = false
                         };
                         yield return new EndOfStreamRecord();
@@ -307,7 +306,7 @@ namespace LinqToStdf {
                     if (far[2] != 0) {
                         yield return new StartOfStreamRecord() { Endian = endian };
                         yield return new FormatErrorRecord() {
-                            Message = "The FAR record type was not reported as 0.",
+                            Message = Resources.FarRecordTypeError,
                             Recoverable = false
                         };
                         yield return new EndOfStreamRecord();
@@ -317,7 +316,7 @@ namespace LinqToStdf {
                     if (far[3] != 10) {
                         yield return new StartOfStreamRecord() { Endian = endian };
                         yield return new FormatErrorRecord() {
-                            Message = "The FAR record sub-type was not reported as 10.",
+                            Message = Resources.FarRecordSubTypeError,
                             Recoverable = false
                         };
                         yield return new EndOfStreamRecord();
@@ -377,7 +376,7 @@ namespace LinqToStdf {
                                 };
                                 //spit out a format error
                                 yield return new FormatErrorRecord() {
-                                    Message = "End of Stream encountered while in seek mode.",
+                                    Message = Resources.EOFInSeekMode,
                                     Recoverable = false,
                                     Offset = _Stream.Position
                                 };
@@ -396,7 +395,7 @@ namespace LinqToStdf {
                         catch (EndOfStreamException) { }
                         if (header == null) {
                             yield return new FormatErrorRecord() {
-                                Message = "End of Stream encountered while reading record header.",
+                                Message = Resources.EOFInHeader,
                                 Recoverable = false,
                                 Offset = position
                             };
@@ -406,7 +405,7 @@ namespace LinqToStdf {
                         int read = _Stream.Read(contents, 0, contents.Length);
                         if (read < contents.Length) {
                             yield return new FormatErrorRecord() {
-                                Message = "End of Stream encountered while reading record contents.",
+                                Message = Resources.EOFInRecordContent,
                                 Recoverable = false,
                                 Offset = position
                             };

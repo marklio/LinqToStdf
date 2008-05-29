@@ -140,13 +140,13 @@ namespace LinqToStdf {
                 return (r, e) => {
                            var ur = (UnknownRecord)r;
                            if (ur.Endian != e) {
-                               throw new InvalidOperationException("Can't unconvert unknown records with the wrong Endianness.");
+                               throw new InvalidOperationException(Resources.UnconvertEndianMismatch);
                            }
                            return ur;
                        };
             }
             else if (!_Unconverters.ContainsKey(type)) {
-                throw new InvalidOperationException(string.Format("The type {0} has no registered unconverter", type));
+                throw new InvalidOperationException(string.Format(Resources.NoRegisteredUnconverter, type));
             }
             else {
                 return _Unconverters[type];
@@ -186,9 +186,8 @@ namespace LinqToStdf {
         /// with all the converters and unconverters created so far.
         /// </summary>
         public void SaveDynamicAssembly() {
-            if (!Debug || _DynamicAssembly == null) throw new InvalidOperationException("You can only save the dynamic assembly if debug is turned on and code has been generated.");
-            throw new NotSupportedException();
-            //_DynamicAssembly.Save("DynamicConverters.dll");
+            if (!Debug || _DynamicAssembly == null) throw new InvalidOperationException(Resources.InvalidSaveAssembly);
+            _DynamicAssembly.Save("DynamicConverters.dll");
         }
 #endif
 
@@ -201,7 +200,7 @@ namespace LinqToStdf {
 		/// <returns></returns>
         Converter<UnknownRecord, StdfRecord> CreateConverterForType(Type type) {
             if (!typeof(StdfRecord).IsAssignableFrom(type)) {
-                throw new InvalidOperationException(string.Format("{0} is not assignable from StdfRecord.", type));
+                throw new InvalidOperationException(string.Format(Resources.ConverterTargetNotStdfRecord, type));
             }
             Converter<UnknownRecord, StdfRecord> converter = null;
             //only bother creating a converter if we need to parse fields
@@ -225,7 +224,7 @@ namespace LinqToStdf {
             Func<Converter<UnknownRecord, StdfRecord>> returner = null;
             if (Debug) {
 #if SILVERLIGHT
-                throw new NotSupportedException("Silverlight doesn't support debug mode");
+                throw new NotSupportedException(Resources.NoDebugInSilverlight);
 #else
                 if (_DynamicAssembly == null) InitializeDynamicAssembly();
                 var methodName = string.Format("ConvertTo{0}", type.Name);
@@ -267,7 +266,7 @@ namespace LinqToStdf {
 
         Func<StdfRecord, Endian, UnknownRecord> CreateUnconverterForType(Type type) {
             if (!typeof(StdfRecord).IsAssignableFrom(type)) {
-                throw new InvalidOperationException(string.Format("{0} is not assignable from StdfRecord.", type));
+                throw new InvalidOperationException(string.Format(Resources.ConverterTargetNotStdfRecord, type));
             }
             Func<StdfRecord, Endian, UnknownRecord> unconverter = null;
             return (r, e) => {
@@ -283,7 +282,7 @@ namespace LinqToStdf {
             Func<Func<StdfRecord,Endian, UnknownRecord>> returner = null;
             if (Debug) {
 #if SILVERLIGHT
-                throw new NotSupportedException("Silverlight doesn't support debug mode");
+                throw new NotSupportedException(Resources.NoDebugInSilverlight);
 #else
                 if (_DynamicAssembly == null) InitializeDynamicAssembly();
                 var methodName = string.Format("UnconvertFrom{0}", type.Name);
@@ -473,7 +472,7 @@ namespace LinqToStdf {
                 StdfArrayLayoutAttribute arrayLayout = pair.Key as StdfArrayLayoutAttribute;
                 if (arrayLayout != null) {
                     if (typeof(T) == typeof(string)) {
-                        throw new InvalidOperationException("String fields do not support array layout attributes.");
+                        throw new InvalidOperationException(Resources.NoStringArrays);
                     }
                     GenerateArrayAssignment<T>(pair);
                     return;
@@ -611,7 +610,7 @@ namespace LinqToStdf {
                 else if (type == typeof(DateTime)) return "ReadDateTime";
                 else if (type == typeof(BitArray)) return "ReadBitArray";
                 else {
-                    throw new NotSupportedException(string.Format("Ldc<T> does not support T is {0}", type));
+                    throw new NotSupportedException(string.Format(Resources.UnsupportedReaderType, type));
                 }
             }
 
@@ -640,7 +639,7 @@ namespace LinqToStdf {
                 else if (type == typeof(DateTime)) return "Skip4";
                 else if (type == typeof(BitArray)) return "SkipBitArray";
                 else {
-                    throw new NotSupportedException(string.Format("Does not support T is {0}", type));
+                    throw new NotSupportedException(string.Format(Resources.UnsupportedReaderType, type));
                 }
             }
 
@@ -772,10 +771,10 @@ namespace LinqToStdf {
                 StdfArrayLayoutAttribute arrayLayout = pair.Key as StdfArrayLayoutAttribute;
                 if (arrayLayout != null) {
                     if (typeof(T) == typeof(string)) {
-                        throw new InvalidOperationException("String fields do not support array layout attributes.");
+                        throw new InvalidOperationException(Resources.NoStringArrays);
                     }
                     if (typeof(T) == typeof(BitArray)) {
-                        throw new InvalidOperationException("BitArray fields do not support array layout attributes.");
+                        throw new InvalidOperationException(Resources.NoBitArrayArrays);
                     }
                     GenerateArrayAssignment<T>(pair);
                     return;
@@ -883,14 +882,14 @@ namespace LinqToStdf {
                 else if (typeof(T).IsValueType) {
                     //if T is a value type, we're up a creek with nothing to write.
                     //this is obviously not a good place, so throw
-                    _ILGen.Ldstr(string.Format("There is no contingency for writing \"NULL\" to field index {0} of {1}", pair.Key.FieldIndex, _Type));
+                    _ILGen.Ldstr(string.Format(Resources.NonNullableField, pair.Key.FieldIndex, _Type));
                     _ILGen.Newobj<InvalidOperationException>(typeof(string));
                     _ILGen.Throw();
                 }
                 else {
                     if (stringLayout != null && stringLayout.Length > 0) {
                         //TODO: move this check into StdfStringLayout, along with a check that the missing value length matches
-                        throw new NotSupportedException("Fixed-length string layouts must provide a missing value.");
+                        throw new NotSupportedException(Resources.FixedLengthStringMustHaveDefault);
                     }
                     _ILGen.Ldloc(_Writer);
                     //we'll have to write null and hope for the best
@@ -935,7 +934,7 @@ namespace LinqToStdf {
                 _FieldLocals.Add(arrayLayout.FieldIndex, local);
 
                 if (pair.Value == null) {
-                    throw new InvalidOperationException("Arrays must be assignable.");
+                    throw new InvalidOperationException(Resources.ArraysMustBeAssignable);
                 }
 
                 _ILGen.Ldloc(_ConcreteRecord);
@@ -965,11 +964,11 @@ namespace LinqToStdf {
                         _ILGen.Conv_U2();
                     else if (lengthLayout.FieldType == typeof(byte))
                         _ILGen.Conv_I4();
-                    else throw new NotSupportedException(string.Format("Array length fields must be either ushort or byte. ({0} not supported)", lengthLayout.FieldType));
+                    else throw new NotSupportedException(string.Format(Resources.UnsupportedArrayLengthType, lengthLayout.FieldType));
                     _ILGen.Ldloc(lengthLocal);
                     _ILGen.Ceq();
                     _ILGen.Brtrue(dontThrow);
-                    _ILGen.Ldstr(string.Format("Shared length arrays have differing lengths (length field index {0})", lengthLayout.FieldIndex));
+                    _ILGen.Ldstr(string.Format(Resources.SharedLengthViolation, lengthLayout.FieldIndex));
                     _ILGen.Newobj<InvalidOperationException>(typeof(string));
                     _ILGen.Throw();
                     _ILGen.MarkLabel(dontThrow);
@@ -1027,7 +1026,7 @@ namespace LinqToStdf {
                 else if (type == typeof(DateTime)) return "WriteDateTime";
                 else if (type == typeof(BitArray)) return "WriteBitArray";
                 else {
-                    throw new NotSupportedException(string.Format("Ldc<T> does not support T is {0}", type));
+                    throw new NotSupportedException(string.Format(Resources.UnsupportedWriterType, type));
                 }
             }
         }

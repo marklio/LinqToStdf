@@ -16,7 +16,7 @@ namespace LinqToStdf.Records {
 
         public override string Message {
             get {
-                return base.Message ?? string.Format("{0} bytes of corrupt data found at offset {1}", (CorruptData ?? new byte[0]).Length, Offset);
+                return base.Message ?? string.Format(Resources.CorruptDataMessage, (CorruptData ?? new byte[0]).Length, Offset);
             }
         }
 

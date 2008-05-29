@@ -309,8 +309,8 @@ namespace LinqToStdf {
         /// Writes a string where the first byte indicates the length
         /// </summary>
         public void WriteString(string value) {
-            value = value ?? "";
-            if (value.Length > 255) throw new InvalidOperationException("STDF only supports strings < 256 characters long.");
+            value = value ?? String.Empty;
+            if (value.Length > 255) throw new InvalidOperationException(Resources.StringTooLong);
             if (!_WriteBackwards) {
                 WriteByte((byte)value.Length);
             }

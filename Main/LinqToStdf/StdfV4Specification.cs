@@ -15,6 +15,9 @@ namespace LinqToStdf {
 	static class StdfV4Specification {
 
 		public static void RegisterRecords(RecordConverterFactory converterFactory) {
+            if (converterFactory == null) {
+                throw new ArgumentNullException("converterFactory");
+            }
 			converterFactory.RegisterRecordType(new RecordType(0, 10), typeof(Far));
 			converterFactory.RegisterRecordType(new RecordType(0, 20), typeof(Atr));
 			converterFactory.RegisterRecordType(new RecordType(1, 10), typeof(Mir));

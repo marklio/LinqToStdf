@@ -16,7 +16,7 @@ namespace LinqToStdf.Records {
     public class EndOfStreamRecord : StdfRecord {
 
         public override RecordType RecordType {
-            get { throw new NotImplementedException("The method or operation is not implemented."); }
+            get { throw new NotSupportedException(); }
         }
 
         public override bool IsWritable { get { return false; } }

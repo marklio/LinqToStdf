@@ -27,7 +27,7 @@ namespace LinqToStdf {
         /// <param name="path">The directory to use as the root.  It must exist.</param>
         public StdfOutputDirectory(string path) {
             if (!Directory.Exists(path)) {
-                throw new DirectoryNotFoundException(string.Format("The directory does not exist ({0}).", path));
+                throw new DirectoryNotFoundException(string.Format(Resources.DirectoryNotFound, path));
             }
             _Path = path;
         }
@@ -43,7 +43,7 @@ namespace LinqToStdf {
                 if (r.GetType() == typeof(StartOfStreamRecord)) {
 					var sos = (StartOfStreamRecord)r;
                     if (writer != null) {
-                        throw new InvalidOperationException("Cannot start a new file before ending the current one.");
+                        throw new InvalidOperationException(Resources.SOFBeforeEOF);
                     }
                     writer = new StdfFileWriter(Path.Combine(_Path, sos.FileName), sos.Endian);
                 }
@@ -58,12 +58,12 @@ namespace LinqToStdf {
                 }
             }
             if (writer != null) {
-                throw new InvalidOperationException("The stream of records ended prematurely. The last record consumed must be an EndOfStreamRecord.");
+                throw new InvalidOperationException(Resources.EndWithoutEOS);
             }
         }
 
         static void EnsureWriter(StdfFileWriter writer) {
-            if (writer == null) throw new InvalidOperationException("Attempting to write outside of a StartOfStreamRecord/EndOfStreamRecord pair.");
+            if (writer == null) throw new InvalidOperationException(Resources.WriteOutsideSOSEOS);
         }
     }
 }

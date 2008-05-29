@@ -117,16 +117,166 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ArraysMustBeAssignable" xml:space="preserve">
+    <value>Arrays must be assignable.</value>
+  </data>
+  <data name="CachingReEntrancy" xml:space="preserve">
+    <value>Nested iterations cannot be triggered inside RecordFilter implementations when caching is enabled.</value>
+  </data>
+  <data name="CannotInferEndianness" xml:space="preserve">
+    <value>Cannot write record without being able to infer the endianness of the output file. Use a StartOfStreamRecord or Far as the first record.</value>
+  </data>
+  <data name="CodeGen_UnsupportedGenericLdc" xml:space="preserve">
+    <value>Ldc&lt;T&gt; does not support T is {0}</value>
+  </data>
+  <data name="ConverterTargetNotStdfRecord" xml:space="preserve">
+    <value>{0} is not assignable from StdfRecord.</value>
+  </data>
+  <data name="CorruptDataMessage" xml:space="preserve">
+    <value>{0} bytes of corrupt data found at offset {1}</value>
+  </data>
+  <data name="DirectoryNotFound" xml:space="preserve">
+    <value>The directory does not exist ({0}).</value>
+  </data>
+  <data name="EndOfStreamException" xml:space="preserve">
+    <value>Could not read {0} more bytes of {1}</value>
+  </data>
+  <data name="EndWithoutEOS" xml:space="preserve">
+    <value>The stream of records ended prematurely. The last record consumed must be an EndOfStreamRecord.</value>
+  </data>
+  <data name="EOFInHeader" xml:space="preserve">
+    <value>End of Stream encountered while reading record header.</value>
+  </data>
+  <data name="EOFInRecordContent" xml:space="preserve">
+    <value>End of Stream encountered while reading record contents.</value>
+  </data>
+  <data name="EOFInSeekMode" xml:space="preserve">
+    <value>End of Stream encountered while in seek mode.</value>
+  </data>
+  <data name="ErrorFiltersLocked" xml:space="preserve">
+    <value>You cannot modify the filters after records have been read.</value>
+  </data>
+  <data name="FarLengthError" xml:space="preserve">
+    <value>The FAR record length was not reported as 2.</value>
+  </data>
+  <data name="FarReadError" xml:space="preserve">
+    <value>The FAR could not be fully read.</value>
+  </data>
+  <data name="FarRecordSubTypeError" xml:space="preserve">
+    <value>The FAR record sub-type was not reported as 10.</value>
+  </data>
+  <data name="FarRecordTypeError" xml:space="preserve">
+    <value>The FAR record type was not reported as 0.</value>
+  </data>
+  <data name="FixedLengthStringMustHaveDefault" xml:space="preserve">
+    <value>Fixed-length string layouts must provide a missing value.</value>
+  </data>
+  <data name="InitialSequenceError" xml:space="preserve">
+    <value>V4 sequence rules prohibit {0} int the state "{1}".</value>
+  </data>
+  <data name="InvalidGdrDataTypeCode" xml:space="preserve">
+    <value>The data type code {0} is not defined in the STDF spec.</value>
+  </data>
   <data name="InvalidRecordConverstionDefault" xml:space="preserve">
-    <value>"The unknown record type does not match the type of the converter"</value>
+    <value>The unknown record type does not match the type of the converter</value>
+  </data>
+  <data name="InvalidSaveAssembly" xml:space="preserve">
+    <value>You can only save the dynamic assembly if debug is turned on and code has been generated.</value>
+  </data>
+  <data name="NegativeFieldIndex" xml:space="preserve">
+    <value>FieldIndex must be greater than or equal to zero.</value>
+  </data>
+  <data name="NegativeOffset" xml:space="preserve">
+    <value>Offset must be &gt;= 0</value>
+  </data>
+  <data name="NoBitArrayArrays" xml:space="preserve">
+    <value>BitArray fields do not support array layout attributes.</value>
+  </data>
+  <data name="NoDebugInSilverlight" xml:space="preserve">
+    <value>Silverlight doesn't support debug mode.</value>
   </data>
   <data name="NonConsecutiveFieldIndexDefault" xml:space="preserve">
-    <value>"The stdf field indexes for type {0} are not consecutive and/or unique"</value>
+    <value>The stdf field indexes for type {0} are not consecutive and/or unique</value>
+  </data>
+  <data name="NonNullableField" xml:space="preserve">
+    <value>There is no contingency for writing "NULL" to field index {0} of {1}</value>
+  </data>
+  <data name="NoRegisteredUnconverter" xml:space="preserve">
+    <value>The type {0} has no registered unconverter</value>
+  </data>
+  <data name="NoStringArrays" xml:space="preserve">
+    <value>String fields do not support array layout attributes.</value>
+  </data>
+  <data name="OffsetTooLarge" xml:space="preserve">
+    <value>The offset is to large to be stored in an StdfRecord.</value>
+  </data>
+  <data name="SharedLengthViolation" xml:space="preserve">
+    <value>Shared length arrays have differing lengths (length field index {0})</value>
+  </data>
+  <data name="SOFBeforeEOF" xml:space="preserve">
+    <value>Cannot start a new file before ending the current one.</value>
+  </data>
+  <data name="StdfStringLayoutNonString" xml:space="preserve">
+    <value>StdfStringLayoutAttribute can only define fields of type string.</value>
   </data>
   <data name="StdfStringLessThanOne" xml:space="preserve">
-    <value>"Stdf strings must be at least 1 character long"</value>
+    <value>Stdf strings must be at least 1 character long</value>
+  </data>
+  <data name="StringTooLong" xml:space="preserve">
+    <value>STDF only supports strings &lt; 256 characters long.</value>
+  </data>
+  <data name="UnconvertEndianMismatch" xml:space="preserve">
+    <value>Can't unconvert unknown records with the wrong Endianness.</value>
+  </data>
+  <data name="UnsupportedArrayLengthType" xml:space="preserve">
+    <value>Array length fields must be either ushort or byte. ({0} not supported)</value>
+  </data>
+  <data name="UnsupportedGdrDataType" xml:space="preserve">
+    <value>Don't know how to write {0} to a GDR.</value>
+  </data>
+  <data name="UnsupportedReaderType" xml:space="preserve">
+    <value>No reader method for {0}</value>
   </data>
   <data name="UnsupportedStdfFieldTypeMessage" xml:space="preserve">
-    <value>"This record converter factory does not support Stdf fields of type {0}"</value>
+    <value>This record converter factory does not support Stdf fields of type {0}</value>
+  </data>
+  <data name="UnsupportedWriterType" xml:space="preserve">
+    <value>No writer method for {0}</value>
+  </data>
+  <data name="V4ContentState_AfterAtr" xml:space="preserve">
+    <value>after ATR</value>
+  </data>
+  <data name="V4ContentState_AfterFar" xml:space="preserve">
+    <value>after FAR</value>
+  </data>
+  <data name="V4ContentState_AfterMir" xml:space="preserve">
+    <value>after MIR</value>
+  </data>
+  <data name="V4ContentState_AfterMrr" xml:space="preserve">
+    <value>after MRR</value>
+  </data>
+  <data name="V4ContentState_AfterRdr" xml:space="preserve">
+    <value>after RDR</value>
+  </data>
+  <data name="V4ContentState_AfterSdr" xml:space="preserve">
+    <value>after SDR</value>
+  </data>
+  <data name="V4ContentState_AtEOF" xml:space="preserve">
+    <value>at end of file</value>
+  </data>
+  <data name="V4ContentState_AtSOF" xml:space="preserve">
+    <value>at start of file</value>
+  </data>
+  <data name="V4ContentState_BeforeSOF" xml:space="preserve">
+    <value>before start of file</value>
+  </data>
+  <data name="V4ContentState_StdfBody" xml:space="preserve">
+    <value>in the STDF body</value>
+  </data>
+  <data name="V4ContentState_Unknown" xml:space="preserve">
+    <value>in unknown state</value>
+  </data>
+  <data name="WriteOutsideSOSEOS" xml:space="preserve">
+    <value>Attempting to write outside of a StartOfStreamRecord/EndOfStreamRecord pair.</value>
   </data>
 </root>

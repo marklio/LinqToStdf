@@ -48,7 +48,7 @@ namespace LinqToStdf {
                 else if (record.GetType() == typeof(Far)) {
                     InferEndianFromFar((Far)record);
                 }
-                if (_Endian == Endian.Unknown) throw new InvalidOperationException("Cannot write record without being able to infer the endianness of the output file. Use a StartOfStreamRecord or Far as the first record.");
+                if (_Endian == Endian.Unknown) throw new InvalidOperationException(Resources.CannotInferEndianness);
             }
             if (record.IsWritable) {
                 var writer = new LinqToStdf.BinaryWriter(_Stream, _Endian, false);

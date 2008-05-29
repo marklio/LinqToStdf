@@ -61,7 +61,7 @@ namespace LinqToStdf.Attributes {
             get { return _FieldIndex; }
             set {
                 if (value < 0) {
-                    throw new ArgumentOutOfRangeException("value", "FieldIndex must be greater than or equal to zero.");
+                    throw new ArgumentOutOfRangeException("value", Resources.NegativeFieldIndex);
                 }
                 _FieldIndex = value;
             }

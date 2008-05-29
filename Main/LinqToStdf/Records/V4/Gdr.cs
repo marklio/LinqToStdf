@@ -84,7 +84,7 @@ namespace LinqToStdf.Records.V4 {
 							break;
 						}
 						default:
-							throw new InvalidOperationException(string.Format("The date type code {0} is not defined in the STDF spec.", dataTypeCode));
+							throw new InvalidOperationException(string.Format(Resources.InvalidGdrDataTypeCode, dataTypeCode));
 					}
 				}
                 gdr.GenericData = data;
@@ -146,7 +146,7 @@ namespace LinqToStdf.Records.V4 {
                         writer.WriteBitArray((BitArray)o);
                     }
                     else {
-                        throw new InvalidOperationException(string.Format("Don't know how to write {0} to a GDR.", o.GetType()));
+                        throw new InvalidOperationException(string.Format(Resources.UnsupportedGdrDataType, o.GetType()));
                     }
                     //TODO: how to deal with nibble?
                 }

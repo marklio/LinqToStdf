@@ -44,7 +44,7 @@ namespace LinqToStdf {
             /// </summary>
             public IEnumerable<StdfRecord> Filter(IEnumerable<StdfRecord> input) {
                 if (_Caching) {
-                    throw new InvalidOperationException("Nested iterations cannot be triggered inside RecordFilter implementations when caching is enabled.");
+                    throw new InvalidOperationException(Resources.CachingReEntrancy);
                 }
                 //cache the records
                 if (_Records == null) {
@@ -274,7 +274,7 @@ namespace LinqToStdf {
         /// node in the state machine representation
         /// </summary>
         class RecordState {
-            public string Message = "in unknown state";
+            public string Message = Resources.V4ContentState_Unknown;
             public Func<StdfRecord, bool> ShouldTransition;
             public List<RecordState> Routes;
         }
@@ -292,49 +292,49 @@ namespace LinqToStdf {
             // Build up the various states that describe the V4 content spec.
 
             var eofState = new RecordState() {
-                               Message = "at EOF",
+                               Message = Resources.V4ContentState_AtEOF,
                                ShouldTransition = (r) => r.GetType() == typeof(EndOfStreamRecord),
                                Routes = new List<RecordState>() //we'd better never get here.
                            };
             var mrrState = new RecordState() {
-                               Message = "after Mrr",
+                               Message = Resources.V4ContentState_AfterMrr,
                                ShouldTransition = (r) => r.GetType() == typeof(Mrr),
                                Routes = new List<RecordState>() { eofState } //we only expect EOF from here
                            };
             var bodyState = new RecordState() {
-                                Message = "in the STDF body",
+                                Message = Resources.V4ContentState_StdfBody,
                                 //anything that's not in the initial sequence (or EOS)
                                 ShouldTransition = (r) => !_InitialSequenceSet.Contains(r.GetType().TypeHandle),
                             };
             bodyState.Routes = new List<RecordState>() { mrrState, bodyState };
 
             var sdrState = new RecordState() {
-                               Message = "after Sdr",
+                               Message = Resources.V4ContentState_AfterSdr,
                                ShouldTransition = (r) => r.GetType() == typeof(Sdr),
                            };
             sdrState.Routes = new List<RecordState>() { sdrState, bodyState };
             var rdrState = new RecordState() {
-                               Message = "after Rdr",
+                               Message = Resources.V4ContentState_AfterRdr,
                                ShouldTransition = (r) => r.GetType() == typeof(Rdr),
                                Routes = new List<RecordState>() { sdrState, bodyState }
                            };
             var mirState = new RecordState() {
-                               Message = "after Mir",
+                               Message = Resources.V4ContentState_AfterMir,
                                ShouldTransition = (r) => r.GetType() == typeof(Mir),
                                Routes = new List<RecordState>() { rdrState, sdrState, bodyState }
                            };
             var atrState = new RecordState() {
-                               Message = "after Atr",
+                               Message = Resources.V4ContentState_AfterAtr,
                                ShouldTransition = (r) => r.GetType() == typeof(Atr),
                            };
             atrState.Routes = new List<RecordState>() { atrState, mirState };
             var farState = new RecordState() {
-                               Message = "after Far",
+                               Message = Resources.V4ContentState_AfterFar,
                                ShouldTransition = (r) => r.GetType() == typeof(Far),
                                Routes = new List<RecordState>() { atrState, mirState }
                            };
             var sofState = new RecordState() {
-                               Message = "at start of file",
+                               Message = Resources.V4ContentState_AtSOF,
                                ShouldTransition = (r) => r.GetType() == typeof(StartOfStreamRecord),
                                Routes = new List<RecordState>() { farState }
                            };
@@ -343,7 +343,7 @@ namespace LinqToStdf {
 
             //we'll start in a pre-far state
             var currentState = new RecordState() {
-                                   Message = "before start of file",
+                                   Message = Resources.V4ContentState_BeforeSOF,
                                    Routes = new List<RecordState>() { sofState }
                                };
             foreach (var r in input) {
@@ -357,7 +357,7 @@ namespace LinqToStdf {
                 }
                 //TODO: does IsWritable prevent informational and error records from violating the content spec (we want that)?
                 if (!transitioned && r.IsWritable) {
-                    yield return new V4ContentErrorRecord() { Message = string.Format("V4 sequence rules prohibit {0} {1}.", r.GetType().Name, currentState.Message) };
+                    yield return new V4ContentErrorRecord() { Message = string.Format(Resources.InitialSequenceError, r.GetType().Name, currentState.Message) };
                 }
                 yield return r;
             }
