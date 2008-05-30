@@ -394,20 +394,31 @@ namespace LinqToStdf {
                         //swallow EOS
                         catch (EndOfStreamException) { }
                         if (header == null) {
+                            _Stream.Seek(position, SeekOrigin.Begin);
+                            yield return new CorruptDataRecord() {
+                                Offset = position,
+                                CorruptData = ReadStreamAsByteSequence().ToArray(),
+                                Recoverable = false
+                            };
                             yield return new FormatErrorRecord() {
                                 Message = Resources.EOFInHeader,
                                 Recoverable = false,
                                 Offset = position
                             };
-                            break;
+                            yield break;
                         }
                         var contents = new byte[header.Value.Length];
                         int read = _Stream.Read(contents, 0, contents.Length);
                         if (read < contents.Length) {
+                            yield return new CorruptDataRecord() {
+                                Offset = position + 4,
+                                CorruptData = contents.Take(read).ToArray(),
+                                Recoverable = false
+                            };
                             yield return new FormatErrorRecord() {
                                 Message = Resources.EOFInRecordContent,
                                 Recoverable = false,
-                                Offset = position
+                                Offset = position + 4
                             };
                         }
                         else {
@@ -415,6 +426,8 @@ namespace LinqToStdf {
                             StdfRecord r = _ConverterFactory.Convert(ur);
                             if (r.GetType() != typeof(UnknownRecord)) {
                                 //it converted, so update our last known position
+                                //TODO: think about being able to set this conditionally based on corruption detection
+                                //as well as via the record converter
                                 _LastKnownOffset = _Stream.Position;
                             }
                             r.Offset = position;
