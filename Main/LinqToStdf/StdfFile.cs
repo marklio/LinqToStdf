@@ -207,6 +207,18 @@ namespace LinqToStdf {
             }
         }
 
+        /// <summary>
+        /// Consumes all the records in the StdfFile
+        /// </summary>
+        /// <remarks>
+        /// This is useful if you have a set of filters set up, but no need for iterating
+        /// through the records themselves at the end of the chain.
+        /// </remarks>
+        /// <returns>The count of records consumed at the end of the chain.</returns>
+        public int Consume() {
+            return this.GetRecords().Count();
+        }
+
         #region Rewind and Seek APIs
 
         void RewindToLastKnownOffset() {
