@@ -293,16 +293,7 @@ namespace LinqToStdf {
                         yield return new EndOfStreamRecord();
                         yield break;
                     }
-                    switch (far[4]) {
-                        case 0:
-                        case 1:
-                            endian = Endian.Big;
-                            break;
-                        default:
-                            endian = Endian.Little;
-                            break;
-                    }
-
+                    endian = far[4] < 2 ? Endian.Big : Endian.Little;
                     var stdfVersion = far[5];
                     var length = (endian == Endian.Little ? far[0] : far[1]);
                     if (length != 2) {
@@ -438,8 +429,9 @@ namespace LinqToStdf {
                             StdfRecord r = _ConverterFactory.Convert(ur);
                             if (r.GetType() != typeof(UnknownRecord)) {
                                 //it converted, so update our last known position
-                                //TODO: think about being able to set this conditionally based on corruption detection
-                                //as well as via the record converter
+                                //TODO: We should think about:
+                                //* how to indicate corruption within the record boundaries
+                                //* enabling filteres to set the last known offset (to allow valid unknown records to pass through)
                                 _LastKnownOffset = _Stream.Position;
                             }
                             r.Offset = position;

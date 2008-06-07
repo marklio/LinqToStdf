@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using LinqToStdf;
 using LinqToStdf.Records;
 
@@ -30,7 +24,7 @@ namespace SilverlightSample {
 
         private void Load_Click(object sender, RoutedEventArgs e) {
             var dialog = new OpenFileDialog();
-            if (dialog.ShowDialog() == DialogResult.OK) {
+            if (dialog.ShowDialog() ?? false) {
                 var file = new StdfFile(new SilverlightStreamManager(dialog.SelectedFile));
                 //don't throw
                 file.ThrowOnFormatError = false;

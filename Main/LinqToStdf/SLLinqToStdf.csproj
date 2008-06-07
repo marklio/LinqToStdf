@@ -54,7 +54,6 @@
     <Compile Include="Attributes\StdfStringLayoutAttribute.cs" />
     <Compile Include="BinaryReader.cs" />
     <Compile Include="BinaryWriter.cs" />
-    <Compile Include="BitArray.cs" />
     <Compile Include="BuiltInFilters.cs" />
     <Compile Include="CompiledQuery.cs" />
     <Compile Include="CompiledQuerySupport\ExpressionInspector.cs" />
