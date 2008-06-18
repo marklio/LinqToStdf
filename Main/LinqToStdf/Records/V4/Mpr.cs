@@ -54,12 +54,12 @@ namespace LinqToStdf.Records.V4 {
         public byte? OptionalFlags { get; set; }
         public sbyte? ResultScalingExponent { get; set; }
         public sbyte? LowLimitScalingExponent { get; set; }
-        public byte? HighLimitScalingExponent { get; set; }
+        public sbyte? HighLimitScalingExponent { get; set; }
         public float? LowLimit { get; set; }
         public float? HighLimit { get; set; }
         public float? StartingCondition { get; set; }
         public float? ConditionIncrement { get; set; }
-        public ushort? PinIndexes { get; set; }
+        public ushort[] PinIndexes { get; set; }
         public string Units { get; set; }
         public string IncrementUnits { get; set; }
         public string ResultFormatString { get; set; }

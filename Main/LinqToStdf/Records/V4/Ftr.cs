@@ -51,8 +51,8 @@ namespace LinqToStdf.Records.V4 {
         public uint? RelativeVectorAddress { get; set; }
         public uint? RepeatCount { get; set; }
 		public uint? FailingPinCount { get; set; }
-		public uint? XFailureAddress { get; set; }
-		public uint? YFailureAddress { get; set; }
+		public int? XFailureAddress { get; set; }
+		public int? YFailureAddress { get; set; }
 		public short? VectorOffset { get; set; }
 		public ushort[] ReturnIndexes { get; set; }
 		public byte[] ReturnStates { get; set; }
