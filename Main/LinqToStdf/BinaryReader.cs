@@ -301,7 +301,24 @@ namespace LinqToStdf {
         }
 
         public void Skip(long bytes) {
-            _Stream.Seek(bytes, SeekOrigin.Current);
+            if (bytes < 0) {
+                throw new ArgumentOutOfRangeException("bytes", "bytes must be non-negative");
+            }
+            if (bytes == 0) return;
+            if (_Stream.CanSeek) {
+                _Stream.Seek(bytes, SeekOrigin.Current);
+            }
+            else {
+                var tempBuffer = new byte[512];
+                var fullTimes = bytes / tempBuffer.Length;
+                for (int i = 0; i < fullTimes; i++) {
+                    _Stream.Read(tempBuffer, 0, tempBuffer.Length);
+                }
+                var finalLength = bytes % tempBuffer.Length;
+                if (finalLength != 0) {
+                    _Stream.Read(tempBuffer, 0, (int)finalLength);
+                }
+            }
         }
 
         public void Skip1() {

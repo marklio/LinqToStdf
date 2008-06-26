@@ -9,6 +9,7 @@ using System.Text;
 using System.IO;
 using LinqToStdf.Records;
 using LinqToStdf.CompiledQuerySupport;
+using System.Diagnostics;
 
 #if SILVERLIGHT
 using System.Windows.Controls;
@@ -121,7 +122,7 @@ namespace LinqToStdf {
         /// for parsing STDF V4 files.
         /// </summary>
         /// <param name="path">The path the the STDF file</param>
-        public StdfFile(string path) : this(new StdfFileStreamManager(path), false) { }
+		public StdfFile(string path) : this(new DefaultFileStreamManager(path), false) { }
 
         /// <summary>
         /// Constructs an StdfFile for the given path, suitable
@@ -245,6 +246,9 @@ namespace LinqToStdf {
         /// Must be called within the context of live record reading.
         /// </summary>
         public void RewindAndSeek() {
+            if (!_Stream.CanSeek) {
+                throw new NotSupportedException("Cannot enter seek mode. The underlying stream is not seekable.");
+            }
             RewindToLastKnownOffset();
             EnterSeekMode();
         }
@@ -281,6 +285,14 @@ namespace LinqToStdf {
             using (IStdfStreamScope streamScope = _StreamManager.GetScope()) {
                 try {
                     _Stream = streamScope.Stream;
+                    //try getting position to see if we need to wrap it.
+                    //TODO: address seeking
+                    try {
+                        _LastKnownOffset = _Stream.Position;
+                    }
+                    catch (NotSupportedException) {
+                        _Stream = new PositionTrackingStream(_Stream, false);
+                    }
                     //read the FAR to get endianness
                     var endian = Endian.Little;
                     var far = new byte[6];
@@ -342,10 +354,12 @@ namespace LinqToStdf {
                     while (true) {
                         if (_RewindTo != -1) {
                             //TODO: validate we went where we asked?
+                            Debug.Assert(_Stream.CanSeek, "We attempted to rewind an unseekable stream.");
                             _Stream.Seek(_RewindTo, SeekOrigin.Begin);
                             _RewindTo = -1;
                         }
                         if (_InSeekMode) {
+                            Debug.Assert(_Stream.CanSeek, "We are in seek mode with an unseekable stream.");
                             int backup = -1;
                             BackUpCallback backupCallback = (bytes) => { backup = bytes; };
                             var corruptData = new MemoryStream();
@@ -397,12 +411,15 @@ namespace LinqToStdf {
                         //swallow EOS
                         catch (EndOfStreamException) { }
                         if (header == null) {
-                            _Stream.Seek(position, SeekOrigin.Begin);
-                            yield return new CorruptDataRecord() {
-                                Offset = position,
-                                CorruptData = ReadStreamAsByteSequence().ToArray(),
-                                Recoverable = false
-                            };
+                            //TODO:how do we maintain fidelity with unseekable streams?
+                            if (_Stream.CanSeek) {
+                                _Stream.Seek(position, SeekOrigin.Begin);
+                                yield return new CorruptDataRecord() {
+                                    Offset = position,
+                                    CorruptData = ReadStreamAsByteSequence().ToArray(),
+                                    Recoverable = false
+                                };
+                            }
                             yield return new FormatErrorRecord() {
                                 Message = Resources.EOFInHeader,
                                 Recoverable = false,
