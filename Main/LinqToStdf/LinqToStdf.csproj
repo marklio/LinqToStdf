@@ -105,6 +105,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="RewindableByteStream.cs" />
     <Compile Include="SeekAlgorithms.cs" />
     <Compile Include="StdfException.cs" />
     <Compile Include="StdfFile.cs" />

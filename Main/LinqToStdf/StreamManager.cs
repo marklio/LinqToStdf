@@ -173,75 +173,11 @@ namespace LinqToStdf {
 
         public IStdfStreamScope GetScope() {
 			Stream stream = new FileStream(_Path, FileMode.Open, FileAccess.Read, FileShare.Read);
-			return new OwnedStdfStreamScope(new PositionTrackingStream(new GZipStream(stream, CompressionMode.Decompress), true));
+			return new OwnedStdfStreamScope(new GZipStream(stream, CompressionMode.Decompress));
         }
 
 		#endregion
 	}
 #endif
 
-	internal class PositionTrackingStream : Stream {
-
-        public PositionTrackingStream(Stream stream, bool ownStream) {
-            if (stream == null) {
-                throw new ArgumentNullException("stream");
-            }
-            _Stream = stream;
-            _OwnStream = ownStream;
-        }
-
-        Stream _Stream;
-        bool _OwnStream;
-
-        public override bool CanRead {
-            get { return _Stream.CanRead; }
-        }
-
-        public override bool CanSeek {
-            get { return false; }
-        }
-
-        public override bool CanWrite {
-            get { return false; }
-        }
-
-        public override void Flush() {
-            _Stream.Flush();
-        }
-
-        public override long Length {
-            get { return _Stream.Length; }
-        }
-
-        long _Position = 0;
-        public override long Position {
-            get { return _Position; }
-            set {
-                throw new NotSupportedException("Setting position not supported for this stream instance.");
-            }
-        }
-
-        public override int Read(byte[] buffer, int offset, int count) {
-            var bytesRead = _Stream.Read(buffer, offset, count);
-            _Position += bytesRead;
-            return bytesRead;
-        }
-
-        public override long Seek(long offset, SeekOrigin origin) {
-            throw new NotSupportedException("Seek not supported for this stream instance.");
-        }
-
-        public override void SetLength(long value) {
-            _Stream.SetLength(value);
-        }
-
-        public override void Write(byte[] buffer, int offset, int count) {
-            throw new NotSupportedException("Write not supported for this stream instance.");
-        }
-
-        protected override void Dispose(bool disposing) {
-            if (_OwnStream) _Stream.Dispose();
-            base.Dispose(disposing);
-        }
-    }
 }

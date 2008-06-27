@@ -40,9 +40,9 @@ namespace LinqToStdf {
     /// suitable for parsing STDF V4 files.
     /// </para>
     /// </remarks>
-    public sealed class StdfFile : IRecordContext {
+    public sealed partial class StdfFile : IRecordContext {
         IStdfStreamManager _StreamManager;
-        Stream _Stream;
+        RewindableByteStream _Stream;
         static internal RecordConverterFactory _V4ConverterFactory = new RecordConverterFactory();
         RecordConverterFactory _ConverterFactory;
         /// <summary>
@@ -122,7 +122,7 @@ namespace LinqToStdf {
         /// for parsing STDF V4 files.
         /// </summary>
         /// <param name="path">The path the the STDF file</param>
-		public StdfFile(string path) : this(new DefaultFileStreamManager(path), false) { }
+        public StdfFile(string path) : this(new DefaultFileStreamManager(path), false) { }
 
         /// <summary>
         /// Constructs an StdfFile for the given path, suitable
@@ -222,16 +222,6 @@ namespace LinqToStdf {
 
         #region Rewind and Seek APIs
 
-        void RewindToLastKnownOffset() {
-            RewindToOffset(_LastKnownOffset);
-        }
-
-        void RewindToOffset(long offset) {
-            //TODO: validate this arg
-            //TODO: ensure we're in a call to InternalGetAllRecords
-            _Stream.Seek(offset, SeekOrigin.Begin);
-        }
-
         void EnterSeekMode() {
             _InSeekMode = true;
         }
@@ -246,10 +236,6 @@ namespace LinqToStdf {
         /// Must be called within the context of live record reading.
         /// </summary>
         public void RewindAndSeek() {
-            if (!_Stream.CanSeek) {
-                throw new NotSupportedException("Cannot enter seek mode. The underlying stream is not seekable.");
-            }
-            RewindToLastKnownOffset();
             EnterSeekMode();
         }
 
@@ -267,36 +253,17 @@ namespace LinqToStdf {
 
         //indicates we are in seek mode
         bool _InSeekMode;
-        //indicates a pending rewind command
-        long _RewindTo = -1;
-        //indicates the position in the stream where we stopped getting known records
-        long _LastKnownOffset;
-
-        IEnumerable<byte> ReadStreamAsByteSequence() {
-            while (true) {
-                var b = _Stream.ReadByte();
-                if (b == -1) break;
-                yield return (byte)b;
-            }
-        }
 
         IEnumerable<StdfRecord> InternalGetAllRecords() {
-            _LastKnownOffset = 0;
+            //set this in case the last time we ended in seek mode
+            _InSeekMode = false;
             using (IStdfStreamScope streamScope = _StreamManager.GetScope()) {
                 try {
-                    _Stream = streamScope.Stream;
-                    //try getting position to see if we need to wrap it.
-                    //TODO: address seeking
-                    try {
-                        _LastKnownOffset = _Stream.Position;
-                    }
-                    catch (NotSupportedException) {
-                        _Stream = new PositionTrackingStream(_Stream, false);
-                    }
+                    _Stream = new RewindableByteStream(streamScope.Stream);
                     //read the FAR to get endianness
                     var endian = Endian.Little;
                     var far = new byte[6];
-                    if (_Stream.Read(far, 0, 6) < 6) {
+                    if (_Stream.Read(far, 6) < 6) {
                         yield return new StartOfStreamRecord() { Endian = Endian.Unknown };
                         yield return new FormatErrorRecord() {
                             Message = Resources.FarReadError,
@@ -341,104 +308,90 @@ namespace LinqToStdf {
                     yield return new StartOfStreamRecord() { Endian = endian };
                     yield return new LinqToStdf.Records.V4.Far() { CpuType = far[4], StdfVersion = far[5] };
 
-
-                    //create a reader
-                    BinaryReader reader = new BinaryReader(_Stream, endian, false);
-
-                    //let's keep track of the last "known" good position.
-                    //That is, the last time we got a record we recognized.
-                    //We'll use this to "rewind" and look for known records.
-                    _LastKnownOffset = _Stream.Position;
+                    //flush the memory
+                    _Stream.Flush();
 
                     //now we have the FAR out of the way, and we can blow through the rest.
                     while (true) {
-                        if (_RewindTo != -1) {
-                            //TODO: validate we went where we asked?
-                            Debug.Assert(_Stream.CanSeek, "We attempted to rewind an unseekable stream.");
-                            _Stream.Seek(_RewindTo, SeekOrigin.Begin);
-                            _RewindTo = -1;
-                        }
                         if (_InSeekMode) {
-                            Debug.Assert(_Stream.CanSeek, "We are in seek mode with an unseekable stream.");
+                            _Stream.RewindAll();
                             int backup = -1;
+                            //create the callback algorithms use to indicate the found something
                             BackUpCallback backupCallback = (bytes) => { backup = bytes; };
-                            var corruptData = new MemoryStream();
-                            var corruptOffset = _Stream.Position;
+                            var corruptOffset = _Stream.Offset;
                             //set up the seek algorithms and consume the sequence.
-                            var algorithm = _SeekAlgorithm(ReadStreamAsByteSequence(), endian, backupCallback);
-                            foreach (var b in algorithm) {
-                                corruptData.WriteByte(b);
-                            }
+                            var algorithm = _SeekAlgorithm(_Stream.ReadAsByteSequence(), endian, backupCallback);
+                            algorithm.Count();
                             //when we get here, one of the algorithms has found the record stream,
                             //or we went to the end of the stream
 
+                            var recoverable = false;
                             if (backup != -1) {
                                 //someone found where we need to be, backup the number of bytes they suggest
-                                _Stream.Seek(-backup, SeekOrigin.Current);
-                                corruptData.SetLength(corruptData.Length - backup);
-                                //spit out the corrupt data
-                                yield return new CorruptDataRecord() {
-                                    CorruptData = corruptData.ToArray(),
-                                    Offset = corruptOffset,
-                                    Recoverable = true
-                                };
+                                _Stream.Rewind(backup);
+                                recoverable = true;
                             }
-                            else {
+                            //spit out the corrupt data
+                            yield return new CorruptDataRecord() {
+                                CorruptData = _Stream.DumpDataToCurrentOffset(),
+                                Offset = corruptOffset,
+                                Recoverable = recoverable
+                            };
+                            //the data's gone out the door, so flush it
+                            _Stream.Flush();
+                            if (!recoverable) {
                                 //we got to the end without finding anything
-                                //spit out the corrupt data
-                                yield return new CorruptDataRecord() {
-                                    CorruptData = corruptData.ToArray(),
-                                    Offset = corruptOffset,
-                                    Recoverable = false
-                                };
                                 //spit out a format error
                                 yield return new FormatErrorRecord() {
                                     Message = Resources.EOFInSeekMode,
                                     Recoverable = false,
-                                    Offset = _Stream.Position
+                                    Offset = _Stream.Offset
                                 };
-                                yield return new EndOfStreamRecord() { Offset = _Stream.Position };
+                                yield return new EndOfStreamRecord() { Offset = _Stream.Offset };
                                 yield break;
                             }
                             _InSeekMode = false;
                         }
-                        var position = _Stream.Position;
-                        if (reader.AtEndOfStream) break;
-                        RecordHeader? header = null;
-                        try {
-                            header = reader.ReadHeader();
-                        }
-                        //swallow EOS
-                        catch (EndOfStreamException) { }
+                        var position = _Stream.Offset;
+                        //read a record header
+                        RecordHeader? header = _Stream.ReadHeader(endian);
+                        //null means we hit EOS
                         if (header == null) {
-                            //TODO:how do we maintain fidelity with unseekable streams?
-                            if (_Stream.CanSeek) {
-                                _Stream.Seek(position, SeekOrigin.Begin);
+                            if (!_Stream.PastEndOfStream) {
+                                //Something's wrong. We know the offset is rewound
+                                //to the begining of the header.  If there's still
+                                //data, we're corrupt
                                 yield return new CorruptDataRecord() {
                                     Offset = position,
-                                    CorruptData = ReadStreamAsByteSequence().ToArray(),
+                                    //TODO: leverage the data in the stream.
+                                    //we know we've hit the end, so we can just dump
+                                    //the remaining memoized data
+                                    CorruptData = _Stream.DumpRemainingData(),
                                     Recoverable = false
                                 };
+                                yield return new FormatErrorRecord() {
+                                    Message = Resources.EOFInHeader,
+                                    Recoverable = false,
+                                    Offset = position
+                                };
                             }
-                            yield return new FormatErrorRecord() {
-                                Message = Resources.EOFInHeader,
-                                Recoverable = false,
-                                Offset = position
-                            };
+                            yield return new EndOfStreamRecord() { Offset = _Stream.Offset };
                             yield break;
                         }
                         var contents = new byte[header.Value.Length];
-                        int read = _Stream.Read(contents, 0, contents.Length);
+                        int read = _Stream.Read(contents, contents.Length);
                         if (read < contents.Length) {
+                            //rewind to the beginning of the record (read bytes + the header)
+                            _Stream.Rewind(_Stream.Offset - position);
                             yield return new CorruptDataRecord() {
-                                Offset = position + 4,
-                                CorruptData = contents.Take(read).ToArray(),
+                                Offset = position,
+                                CorruptData = _Stream.DumpRemainingData(),
                                 Recoverable = false
                             };
                             yield return new FormatErrorRecord() {
                                 Message = Resources.EOFInRecordContent,
                                 Recoverable = false,
-                                Offset = position + 4
+                                Offset = position
                             };
                         }
                         else {
@@ -449,13 +402,13 @@ namespace LinqToStdf {
                                 //TODO: We should think about:
                                 //* how to indicate corruption within the record boundaries
                                 //* enabling filteres to set the last known offset (to allow valid unknown records to pass through)
-                                _LastKnownOffset = _Stream.Position;
+                                //  * This could possible be done by allowing filters access to Flush or the dump functionality.
+                                _Stream.Flush();
                             }
                             r.Offset = position;
                             yield return r;
                         }
                     }
-                    yield return new EndOfStreamRecord() { Offset = _Stream.Position };
                 }
                 finally {
                     //set stream to null so we're not holding onto it
