@@ -60,6 +60,9 @@ namespace LinqToStdf {
         /// </summary>
         public Endian Endian { get { return _Endian; } }
 
+        long? _ExpectedLength = null;
+        public long? ExpectedLength { get { return _ExpectedLength; } }
+
         RecordFilter _RecordFilter = null;
         RecordFilter _CachingFilter = BuiltInFilters.CachingFilter;
         bool _FiltersLocked;
@@ -203,6 +206,7 @@ namespace LinqToStdf {
                     if (_Endian == Endian.Unknown) {
                         _Endian = sosRecord.Endian;
                     }
+                    _ExpectedLength = sosRecord.ExpectedLength;
                 }
                 yield return record;
             }
@@ -264,7 +268,7 @@ namespace LinqToStdf {
                     var endian = Endian.Little;
                     var far = new byte[6];
                     if (_Stream.Read(far, 6) < 6) {
-                        yield return new StartOfStreamRecord() { Endian = Endian.Unknown };
+                        yield return new StartOfStreamRecord() { Endian = Endian.Unknown, ExpectedLength = _Stream.Length };
                         yield return new FormatErrorRecord() {
                             Message = Resources.FarReadError,
                             Recoverable = false
@@ -276,7 +280,7 @@ namespace LinqToStdf {
                     var stdfVersion = far[5];
                     var length = (endian == Endian.Little ? far[0] : far[1]);
                     if (length != 2) {
-                        yield return new StartOfStreamRecord() { Endian = endian };
+                        yield return new StartOfStreamRecord() { Endian = endian, ExpectedLength = _Stream.Length };
                         yield return new FormatErrorRecord() {
                             Message = Resources.FarLengthError,
                             Recoverable = false
@@ -286,7 +290,7 @@ namespace LinqToStdf {
                     }
                     //validate record type
                     if (far[2] != 0) {
-                        yield return new StartOfStreamRecord() { Endian = endian };
+                        yield return new StartOfStreamRecord() { Endian = endian, ExpectedLength = _Stream.Length };
                         yield return new FormatErrorRecord() {
                             Message = Resources.FarRecordTypeError,
                             Recoverable = false
@@ -296,7 +300,7 @@ namespace LinqToStdf {
                     }
                     //validate record type
                     if (far[3] != 10) {
-                        yield return new StartOfStreamRecord() { Endian = endian };
+                        yield return new StartOfStreamRecord() { Endian = endian, ExpectedLength = _Stream.Length };
                         yield return new FormatErrorRecord() {
                             Message = Resources.FarRecordSubTypeError,
                             Recoverable = false
@@ -305,7 +309,7 @@ namespace LinqToStdf {
                         yield break;
                     }
                     //OK we're satisfied, let's go
-                    yield return new StartOfStreamRecord() { Endian = endian };
+                    yield return new StartOfStreamRecord() { Endian = endian, ExpectedLength = _Stream.Length };
                     yield return new LinqToStdf.Records.V4.Far() { CpuType = far[4], StdfVersion = far[5] };
 
                     //flush the memory

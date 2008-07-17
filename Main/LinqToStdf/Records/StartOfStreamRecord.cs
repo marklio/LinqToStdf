@@ -34,6 +34,7 @@ namespace LinqToStdf.Records {
 
         public string FileName { get; set; }
         public Endian Endian { get; set; }
+        public long? ExpectedLength { get; set; }
 
         public override bool IsWritable { get { return false; } }
     }

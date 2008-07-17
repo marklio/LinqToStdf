@@ -40,6 +40,17 @@ namespace LinqToStdf {
                 _MemoizedData = new MemoryStream(512);
             }
 
+            public long? Length {
+                get {
+                    try {
+                        return _Stream.Length;
+                    }
+                    catch (NotSupportedException) {
+                        return null;
+                    }
+                }
+            }
+
             /// <summary>
             /// Reads a record header from the underlying stream.
             /// </summary>
