@@ -163,7 +163,7 @@ namespace LinqToStdf {
                 }
                 _Rewound = offset;
                 _Offset -= _Rewound;
-                _MemoizedData.Seek(offset, SeekOrigin.Current);
+                _MemoizedData.Seek(-offset, SeekOrigin.Current);
             }
 
             /// <summary>
@@ -213,6 +213,9 @@ namespace LinqToStdf {
                 }
                 else {
                     value = _Stream.ReadByte();
+                    if (value != -1) {
+                        _MemoizedData.WriteByte((byte)value);
+                    }
                 }
                 _Offset++;
                 //make note if we have passed the end
