@@ -9,9 +9,9 @@ using System.IO;
 
 namespace LinqToStdf {
 
-	/// <summary>
+    /// <summary>
     /// <para>
-	/// Encapsulates an "unknown" STDF record.
+    /// Encapsulates an "unknown" STDF record.
     /// </para>
     /// <para>
     /// Unknown records carry around the byte contents of the original record,
@@ -22,48 +22,48 @@ namespace LinqToStdf {
     /// If this is unexpected, you can add the <see cref="BuiltInFilters.ExpectOnlyKnownRecords"/>, which will treat unknown records
     /// as corrupt data.
     /// </para>
-	/// </summary>
+    /// </summary>
     /// <remarks>
     /// Under the covers, a record reader reads the STDF file and produces <see cref="UnknownRecord">UnknownRecords</see>.
     /// These records are then converted to concrete record types via a <see cref="RecordConverterFactory"/>.
     /// </remarks>
-	public class UnknownRecord : StdfRecord {
+    public class UnknownRecord : StdfRecord {
 
-		/// <summary>
-		/// Constructs an unknown record
-		/// </summary>
-		/// <param name="recordType">The <see cref="RecordType"/> for the record</param>
-		/// <param name="content">The original byte content of the record</param>
-		/// <param name="endian">The endian-ness of <paramref name="content"/></param>
-		public UnknownRecord(RecordType recordType, byte[] content, Endian endian) {
-			this._RecordType = recordType;
-			this._Content = content;
-			this._Endian = endian;
-		}
+        /// <summary>
+        /// Constructs an unknown record
+        /// </summary>
+        /// <param name="recordType">The <see cref="RecordType"/> for the record</param>
+        /// <param name="content">The original byte content of the record</param>
+        /// <param name="endian">The endian-ness of <paramref name="content"/></param>
+        public UnknownRecord(RecordType recordType, byte[] content, Endian endian) {
+            this._RecordType = recordType;
+            this._Content = content;
+            this._Endian = endian;
+        }
 
-		private RecordType _RecordType;
-		/// <summary>
-		/// The records <see cref="RecordType"/>
-		/// </summary>
-		public override RecordType RecordType {
-			get { return this._RecordType; }
-		}
+        private RecordType _RecordType;
+        /// <summary>
+        /// The records <see cref="RecordType"/>
+        /// </summary>
+        public override RecordType RecordType {
+            get { return this._RecordType; }
+        }
 
-		private Endian _Endian;
-		/// <summary>
-		/// The endian-ness of <see cref="Content"/>
-		/// </summary>
-		public Endian Endian {
-			get { return _Endian; }
-		}
-		
-		private byte[] _Content;
-		/// <summary>
-		/// The original byte content of the record
-		/// </summary>
-		public byte[] Content {
-			get { return _Content; }
-		}
+        private Endian _Endian;
+        /// <summary>
+        /// The endian-ness of <see cref="Content"/>
+        /// </summary>
+        public Endian Endian {
+            get { return _Endian; }
+        }
+        
+        private byte[] _Content;
+        /// <summary>
+        /// The original byte content of the record
+        /// </summary>
+        public byte[] Content {
+            get { return _Content; }
+        }
 
         /// <summary>
         /// <para>
@@ -88,13 +88,8 @@ namespace LinqToStdf {
         /// over the contents of the record. (be sure and dispose it).
         /// </summary>
         /// <returns></returns>
-#if SILVERLIGHT
-        //this must be public for Silverlight
         public BinaryReader GetBinaryReaderForContent() {
-#else
-        internal BinaryReader GetBinaryReaderForContent() {
-#endif
             return new BinaryReader(new MemoryStream(_Content, writable: false), _Endian, ownsStream: true);
         }
-	}
+    }
 }

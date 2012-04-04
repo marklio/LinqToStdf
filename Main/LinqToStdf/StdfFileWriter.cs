@@ -25,13 +25,22 @@ namespace LinqToStdf {
         RecordConverterFactory _Factory;
         Stream _Stream;
         Endian _Endian;
-        public StdfFileWriter(string path, Endian endian) {
+        public StdfFileWriter(string path, Endian endian, bool debug = false)
+        {
             _Stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read);
             _Endian = endian;
-            _Factory = new RecordConverterFactory(StdfFile._V4ConverterFactory);
+            if (debug)
+            {
+                _Factory = new RecordConverterFactory() { Debug = debug };
+                StdfV4Specification.RegisterRecords(_Factory);
+            }
+            else
+            {
+                _Factory = new RecordConverterFactory(StdfFile._V4ConverterFactory);
+            }
         }
 
-        public StdfFileWriter(string path) : this(path, Endian.Unknown) { }
+        public StdfFileWriter(string path, bool debug = false) : this(path, Endian.Unknown, debug) { }
 
         /// <summary>
         /// Writes a single record to the file

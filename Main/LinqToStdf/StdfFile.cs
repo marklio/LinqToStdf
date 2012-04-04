@@ -131,6 +131,15 @@ namespace LinqToStdf {
         /// Constructs an StdfFile for the given path, suitable
         /// for parsing STDF V4 files.
         /// </summary>
+        /// <param name="path">The path the the STDF file</param>
+        /// <param name="debug">True if you want the converter factory
+        /// to emit to a dynamic assembly suitable for debugging IL generation.</param>
+        public StdfFile(string path, bool debug) : this(new DefaultFileStreamManager(path), debug) { }
+
+        /// <summary>
+        /// Constructs an StdfFile for the given path, suitable
+        /// for parsing STDF V4 files.
+        /// </summary>
         /// <param name="streamManager">The STDF stream manager to use</param>
         public StdfFile(IStdfStreamManager streamManager) : this(streamManager, false) { }
 

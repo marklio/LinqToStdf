@@ -51,6 +51,7 @@ namespace LinqToStdf {
         /// </summary>
         /// <remarks>
         /// This is useful to eliminate the LCG and JIT hit for the dynamic converters and unconverters.
+        /// Keep in mind that this will cause you to reuse all codegen from the one factory.
         /// </remarks>
         /// <param name="factoryToClone"></param>
         public RecordConverterFactory(RecordConverterFactory factoryToClone) {
@@ -486,7 +487,7 @@ namespace LinqToStdf {
 #if SILVERLIGHT
             static MethodInfo _GetBinaryReaderForContentMethod = typeof(UnknownRecord).GetMethod("GetBinaryReaderForContent");
 #else
-            static MethodInfo _GetBinaryReaderForContentMethod = typeof(UnknownRecord).GetMethod("GetBinaryReaderForContent", BindingFlags.Instance | BindingFlags.NonPublic);
+            static MethodInfo _GetBinaryReaderForContentMethod = typeof(UnknownRecord).GetMethod("GetBinaryReaderForContent", BindingFlags.Instance | BindingFlags.Public);
 #endif
             public override CodeNode VisitInitReaderNode(InitReaderNode node)
             {
@@ -804,7 +805,7 @@ namespace LinqToStdf {
                 ILGen.BeginFinallyBlock();
                 //dispose the memorystream
                 ILGen.Ldloc(memoryStream);
-                ILGen.Callvirt(typeof(IDisposable).GetMethod("Dispose"));
+                ILGen.Callvirt(typeof(Stream).GetMethod("Dispose"));
                 ILGen.EndExceptionBlock();
 
                 //get the record type
@@ -1968,11 +1969,8 @@ namespace LinqToStdf {
         class UnconverterGenerator {
             ILGenerator _ILGen;
             Type _Type;
-            LocalBuilder _ConcreteRecord;
-            LocalBuilder _StartedWriting;
             HashSet<int> _FieldLocalsCreated = new HashSet<int>();
             List<KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo>> _Fields;
-            LocalBuilder _Writer;
 
             public UnconverterGenerator(ILGenerator ilgen, Type type) {
                 if (ilgen == null) throw new ArgumentNullException("ilgen");
@@ -1983,7 +1981,7 @@ namespace LinqToStdf {
 
             public void GenerateUnconverter()
             {
-                var _Fields = GetFieldLayoutsAndAssignments();
+                _Fields = GetFieldLayoutsAndAssignments();
 
                 var node = new UnconverterShellNode(
                         new BlockNode(
@@ -1992,10 +1990,15 @@ namespace LinqToStdf {
                             where !(pair.Key is StdfDependencyProperty)
                             //this call through reflection is icky, but marginally better than the hard-coded table
                             //we're just binding to the generic GenerateAssignment method for the field's type
-                            let callInfo = typeof(ConverterGenerator).GetMethod("GenerateAssignment", BindingFlags.Instance | BindingFlags.NonPublic).MakeGenericMethod(pair.Key.FieldType)
+                            let callInfo = typeof(UnconverterGenerator).GetMethod("GenerateAssignment", BindingFlags.Instance | BindingFlags.NonPublic).MakeGenericMethod(pair.Key.FieldType)
                             select (CodeNode)callInfo.Invoke(this, new object[] { pair })
                             ));
 
+                new UnconverterEmittingVisitor
+                {
+                    ConcreteType = _Type,
+                    ILGen = _ILGen,
+                }.Visit(node);
             }
 
             //TODO: refactor this so we're not duplicated with ConverterFactory
@@ -2129,7 +2132,6 @@ namespace LinqToStdf {
 
                 CodeNode writeNode;
                 StdfFieldLayoutAttribute lengthLayout = _Fields[arrayLayout.ArrayLengthFieldIndex].Key;
-                LocalBuilder lengthLocal = null;
                 if (_FieldLocalsCreated.Contains(arrayLayout.ArrayLengthFieldIndex)) {
                     writeNode = new ValidateSharedLengthLocalNode(arrayLayout.FieldIndex, arrayLayout.ArrayLengthFieldIndex);
                 }
@@ -2147,21 +2149,6 @@ namespace LinqToStdf {
                     initialization: new BlockNode(initNodes),
                     sourceProperty: pair.Value,
                     writeOperation: writeNode);
-            }
-
-            void InitializeLocal(LocalBuilder local) {
-                if (local.LocalType.GetConstructor(new Type[0]) != null) {
-                    _ILGen.Newobj(local.LocalType);
-                    _ILGen.Stloc(local);
-                }
-                else if (local.LocalType.IsValueType) {
-                    _ILGen.Ldloca(local);
-                    _ILGen.Initobj(local.LocalType);
-                }
-                else {
-                    _ILGen.Ldnull();
-                    _ILGen.Stloc(local);
-                }
             }
         }
     }

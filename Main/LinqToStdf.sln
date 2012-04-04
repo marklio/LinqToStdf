@@ -13,8 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StdfDump", "StdfDump\StdfDu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleApp", "SampleApp\SampleApp.csproj", "{215B69CF-07FB-4BF4-B63A-0529D52C1239}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToStdfTest", "LinqToStdfTest\LinqToStdfTest.csproj", "{62402563-DE3D-40F1-A813-A43F0426238C}"
-EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = LinqToStdf.vsmdi
@@ -36,10 +34,6 @@ Global
 		{215B69CF-07FB-4BF4-B63A-0529D52C1239}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{215B69CF-07FB-4BF4-B63A-0529D52C1239}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{215B69CF-07FB-4BF4-B63A-0529D52C1239}.Release|Any CPU.Build.0 = Release|Any CPU
-		{62402563-DE3D-40F1-A813-A43F0426238C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{62402563-DE3D-40F1-A813-A43F0426238C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{62402563-DE3D-40F1-A813-A43F0426238C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{62402563-DE3D-40F1-A813-A43F0426238C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -15,9 +15,23 @@ namespace StdfDump {
     class Program {
         static void Main(string[] args) {
             var file = new StdfFile(args[0]);
-            foreach (var r in file.GetRecords()) {
-                Console.WriteLine("{0} at offset {1}", r.GetType(), r.Offset);
-                DumpRecord(r);
+            StdfFileWriter outFile = null;
+            if (args.Length > 1)
+            {
+                outFile = new StdfFileWriter(args[1], debug: true);
+            }
+            try
+            {
+                foreach (var r in file.GetRecords())
+                {
+                    if (outFile != null) outFile.WriteRecord(r);
+                    Console.WriteLine("{0} at offset {1}", r.GetType(), r.Offset);
+                    DumpRecord(r);
+                }
+            }
+            finally
+            {
+                if (outFile != null) outFile.Dispose();
             }
         }
 
