@@ -86,6 +86,15 @@
     <Compile Include="NonConsecutiveFieldIndexException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RecordConverterFactory.cs" />
+    <Compile Include="RecordConverting\CodeNode.cs" />
+    <Compile Include="RecordConverting\CodeNodeVisitor.cs" />
+    <Compile Include="RecordConverting\ConverterEmittingVisitor.cs" />
+    <Compile Include="RecordConverting\ConverterGenerator.cs" />
+    <Compile Include="RecordConverting\ConverterNodes.cs" />
+    <Compile Include="RecordConverting\PrettyPrintVisitor.cs" />
+    <Compile Include="RecordConverting\UnconverterGenerator.cs" />
+    <Compile Include="RecordConverting\UnconverterNodes.cs" />
+    <Compile Include="RecordConverting\UnconvertingEmittingVisitor.cs" />
     <Compile Include="RecordHeader.cs" />
     <Compile Include="Records\CorruptDataRecord.cs" />
     <Compile Include="Records\EndOfStreamRecord.cs" />

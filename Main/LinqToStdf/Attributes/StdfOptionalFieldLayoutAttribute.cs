@@ -8,9 +8,9 @@ using System.Text;
 
 namespace LinqToStdf.Attributes {
 
-	/// <summary>
-	/// Defines an STDF field whose "null" state is set by an external bitfield byte
-	/// </summary>
+    /// <summary>
+    /// Defines an STDF field whose "null" state is set by an external bitfield byte
+    /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
     public class StdfOptionalFieldLayoutAttribute : StdfFieldLayoutAttribute {
 

@@ -13,8 +13,8 @@ namespace LinqToStdf.Attributes {
     /// The result will be a byte[] that has been expanded so that each nibble
     /// is represented by a separate byte.
     /// </summary>
-	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-	public class StdfNibbleArrayLayoutAttribute : StdfArrayLayoutAttribute {
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+    public class StdfNibbleArrayLayoutAttribute : StdfArrayLayoutAttribute {
 
         /// <summary>
         /// Overridden to be hard-coded to byte.  Setting will throw.
@@ -23,5 +23,5 @@ namespace LinqToStdf.Attributes {
             get { return typeof(byte); }
             set { throw new NotSupportedException(); }
         }
-	}
+    }
 }
