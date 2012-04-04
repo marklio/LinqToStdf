@@ -800,7 +800,7 @@ namespace LinqToStdf {
                 var content = ILGen.DeclareLocal<byte[]>();
                 ILGen.Stloc(content);
                 ILGen.Ldloc(content);
-                ILGen.Callvirt(typeof(Array).GetMethod("Reverse", typeof(Array)));
+                ILGen.Call(typeof(Array).GetMethod("Reverse", typeof(Array)));
 
                 ILGen.BeginFinallyBlock();
                 //dispose the memorystream
@@ -1969,7 +1969,7 @@ namespace LinqToStdf {
         class UnconverterGenerator {
             ILGenerator _ILGen;
             Type _Type;
-            HashSet<int> _FieldLocalsCreated = new HashSet<int>();
+            HashSet<int> _FieldLocalsTouched = new HashSet<int>();
             List<KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo>> _Fields;
 
             public UnconverterGenerator(ILGenerator ilgen, Type type) {
@@ -2040,11 +2040,13 @@ namespace LinqToStdf {
 
                 var initNodes = new List<CodeNode>();
 
-                bool localWasPresent = false;
-                if (!(localWasPresent = _FieldLocalsCreated.Contains(pair.Key.FieldIndex)))
+                bool localWasPresent = true;
+                if (_FieldLocalsTouched.Add(pair.Key.FieldIndex))
                 {
+                    localWasPresent = false;
                     //add a create local node
                     initNodes.Add(new CreateFieldLocalForWritingNode(pair.Key.FieldIndex, pair.Key.FieldType));
+                    _FieldLocalsTouched.Add(pair.Key.FieldIndex);
                 }
 
                 //find out if there is an optional field flag that we need to manage
@@ -2053,7 +2055,7 @@ namespace LinqToStdf {
                 if (currentAsOptionalFieldLayout != null)
                 {
                     optionalFieldLayout = _Fields[currentAsOptionalFieldLayout.FlagIndex].Key;
-                    if (!_FieldLocalsCreated.Contains(currentAsOptionalFieldLayout.FlagIndex))
+                    if (_FieldLocalsTouched.Add(currentAsOptionalFieldLayout.FlagIndex))
                     {
                         initNodes.Add(new CreateFieldLocalForWritingNode(currentAsOptionalFieldLayout.FlagIndex, optionalFieldLayout.FieldType));
                     }
@@ -2072,9 +2074,10 @@ namespace LinqToStdf {
                     //if we have a missing value, set that as the write source
                     noValueWriteContingencySource = new LoadMissingValueNode(pair.Key.MissingValue, typeof(T));
                 }
-                else if (localWasPresent) //TODO: this used to be here, but I can't figure out why || optionalField != null)
+                else if (localWasPresent || optionalFieldLayout != null)
                 {
                     //if the local was present when we started, that means it was initialized by another field. We can safely write it
+                    //Similarly, if this is marked as an optional field, we can still write whatever the value of the local is (cheat)
                     noValueWriteContingencySource = new LoadFieldLocalNode(pair.Key.FieldIndex);
                 }
                 else if (typeof(T).IsValueType)
@@ -2123,8 +2126,14 @@ namespace LinqToStdf {
                 var initNodes = new List<CodeNode>();
 
                 //there are no array optionals, we should always have to create the local here
-                if (_FieldLocalsCreated.Contains(arrayLayout.FieldIndex)) throw new InvalidOperationException("Array local was created before we generated code for it.");
-                initNodes.Add(new CreateFieldLocalForWritingNode(arrayLayout.FieldIndex, typeof(T[])));
+                if (_FieldLocalsTouched.Add(arrayLayout.FieldIndex))
+                {
+                    initNodes.Add(new CreateFieldLocalForWritingNode(arrayLayout.FieldIndex, typeof(T[])));
+                }
+                else
+                {
+                    throw new InvalidOperationException("Array local was touched before we generated code for it.");
+                }
 
                 if (pair.Value == null) {
                     throw new InvalidOperationException(Resources.ArraysMustBeAssignable);
@@ -2132,13 +2141,14 @@ namespace LinqToStdf {
 
                 CodeNode writeNode;
                 StdfFieldLayoutAttribute lengthLayout = _Fields[arrayLayout.ArrayLengthFieldIndex].Key;
-                if (_FieldLocalsCreated.Contains(arrayLayout.ArrayLengthFieldIndex)) {
-                    writeNode = new ValidateSharedLengthLocalNode(arrayLayout.FieldIndex, arrayLayout.ArrayLengthFieldIndex);
-                }
-                else {
+                if (_FieldLocalsTouched.Add(arrayLayout.ArrayLengthFieldIndex))
+                {
                     writeNode = new BlockNode(
                         new CreateFieldLocalForWritingNode(arrayLayout.ArrayLengthFieldIndex, _Fields[arrayLayout.ArrayLengthFieldIndex].Key.FieldType),
                         new SetLengthLocalNode(arrayLayout.FieldIndex, arrayLayout.ArrayLengthFieldIndex));
+                }
+                else {
+                    writeNode = new ValidateSharedLengthLocalNode(arrayLayout.FieldIndex, arrayLayout.ArrayLengthFieldIndex);
                 }
 
                 writeNode = new BlockNode(

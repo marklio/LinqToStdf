@@ -28,7 +28,7 @@ namespace LinqToStdf {
     /// optional fields at the end of a record far simpler
     /// </para>
     /// </remarks>
-    class BinaryWriter {
+    public class BinaryWriter {
 
         //TODO: consolidate between reader/writers
         /// <summary>

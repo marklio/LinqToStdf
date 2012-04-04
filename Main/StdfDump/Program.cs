@@ -18,7 +18,7 @@ namespace StdfDump {
             StdfFileWriter outFile = null;
             if (args.Length > 1)
             {
-                outFile = new StdfFileWriter(args[1], debug: true);
+                outFile = new StdfFileWriter(args[1]);
             }
             try
             {

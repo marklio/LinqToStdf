@@ -23,6 +23,12 @@ namespace LinqToStdf {
             ilgen.Emit(OpCodes.Ret);
         }
 
+        /// <seealso cref="OpCodes.Pop"/>
+        public static void Pop(this ILGenerator ilgen)
+        {
+            ilgen.Emit(OpCodes.Pop);
+        }
+
         /// <seealso cref="OpCodes.Stloc"/>
         public static void Stloc(this ILGenerator ilgen, LocalBuilder local) {
             ilgen.Emit(OpCodes.Stloc, local);
@@ -380,6 +386,12 @@ namespace LinqToStdf {
         /// <seealso cref="OpCodes.Callvirt"/>
         public static void Callvirt(this ILGenerator ilgen, MethodInfo methodInfo) {
             ilgen.Emit(OpCodes.Callvirt, methodInfo);
+        }
+
+        /// <seealso cref="OpCodes.Call"/>
+        public static void Call(this ILGenerator ilgen, MethodInfo methodInfo)
+        {
+            ilgen.Emit(OpCodes.Call, methodInfo);
         }
 
         /// <summary>
