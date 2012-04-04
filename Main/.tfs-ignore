@@ -1,8 +1,0 @@
-<ignore xmlns='http://www.codeplex.com/schema/IgnoreListSchema-1.0.xsd'>
-  <add recursive='true'>Help</add>
-  <add recursive='true'>ClientBin</add>
-  <add recursive='true'>bin</add>
-  <add recursive='true'>slbin</add>
-  <add recursive='true'>obj</add>
-  <add recursive='true'>.suo</add>
-</ignore>

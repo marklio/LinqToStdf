@@ -27,7 +27,7 @@ namespace LinqToStdf.Attributes {
     /// FieldType is used to indicate the type of field being parsed.
     /// STDF field types have a very good mapping to CLR primitive types with a few exceptions.
     /// Character arrays map to strings, and have a special attribute (<see cref="StdfStringLayoutAttribute"/>)
-    /// which optionally allows you to set a specific length for strings that are self-length.
+    /// which optionally allows you to set a specific length for strings that are not self-length.
     /// </para>
     /// <para>
     /// Other kinds of arrays are treated differently.
@@ -74,7 +74,8 @@ namespace LinqToStdf.Attributes {
 
         /// <summary>
         /// This should be the case-sensitive name of a property on the record that the value
-        /// will be assigned to.  The property must match the type of FieldType (or be assignable from it).
+        /// will be assigned to.  The property must match the type of FieldType (or be assignable from it),
+        /// although there is an exception for making optional value types nullable.
         /// If this isn't set, the value will be thrown away after parsing, which is useful for array length
         /// fields.  However, if you want the record to be writeable, it must be recoverable at write time
         /// via an optional field layout or an array layout.
@@ -83,7 +84,7 @@ namespace LinqToStdf.Attributes {
 
         /// <summary>
         /// This let's you identify a value that indicates the field has no value.
-        /// The AssignTo property will be assigned null if the parsed value is equal to it.
+        /// The AssignTo property will be assigned null (or a null nullable) if the parsed value is equal to it.
         /// There must me a relevant relationship between the value used and the FieldType.
         /// </summary>
         public object MissingValue { get; set; }

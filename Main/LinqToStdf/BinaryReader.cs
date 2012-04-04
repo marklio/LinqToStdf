@@ -295,6 +295,9 @@ namespace LinqToStdf {
             return BinaryReader._Epoch + TimeSpan.FromSeconds((double)seconds);
         }
 
+        /// <summary>
+        /// Skips the indicated number of bytes
+        /// </summary>
         public void Skip(long bytes) {
             if (bytes < 0) {
                 throw new ArgumentOutOfRangeException("bytes", "bytes must be non-negative");
@@ -316,46 +319,86 @@ namespace LinqToStdf {
             }
         }
 
-        public void Skip1() {
+        /// <summary>
+        /// Skips 1 byte
+        /// </summary>
+        public void Skip1()
+        {
             Skip(1);
         }
 
-        public void Skip2() {
+        /// <summary>
+        /// Skips 2 bytes
+        /// </summary>
+        public void Skip2()
+        {
             Skip(2);
         }
 
-        public void Skip4() {
+        /// <summary>
+        /// Skips 4 bytes
+        /// </summary>
+        public void Skip4()
+        {
             Skip(4);
         }
 
-        public void Skip8() {
+        /// <summary>
+        /// Skips 8 bytes
+        /// </summary>
+        public void Skip8()
+        {
             Skip(8);
         }
 
-        public void Skip1Array(byte length) {
+        /// <summary>
+        /// Skips an array of 1-byte elements of the specified length
+        /// </summary>
+        public void Skip1Array(byte length)
+        {
             Skip(length);
         }
 
-        public void Skip2Array(byte length) {
+        /// <summary>
+        /// Skips an array of 2-byte elements of the specified length
+        /// </summary>
+        public void Skip2Array(byte length)
+        {
             Skip(2 * length);
         }
 
-        public void Skip4Array(byte length) {
+        /// <summary>
+        /// Skips an array of 4-byte elements of the specified length
+        /// </summary>
+        public void Skip4Array(byte length)
+        {
             Skip(4 * length);
         }
 
-        public void Skip8Array(byte length) {
+        /// <summary>
+        /// Skips an array of 8-byte elements of the specified length
+        /// </summary>
+        public void Skip8Array(byte length)
+        {
             Skip(8 * length);
         }
 
-        public void SkipString() {
+        /// <summary>
+        /// Skips a string
+        /// </summary>
+        public void SkipString()
+        {
             var length = ReadByte();
             if (length > 0) {
                 Skip(length);
             }
         }
 
-        public void SkipBitArray() {
+        /// <summary>
+        /// Skips a bit array
+        /// </summary>
+        public void SkipBitArray()
+        {
             int length = ReadUInt16();
             if (length > 0) {
                 var realLength = (length + 7) / 8;
@@ -363,7 +406,11 @@ namespace LinqToStdf {
             }
         }
 
-        public void SkipNibbleArray(byte length) {
+        /// <summary>
+        /// Skips a nibble array
+        /// </summary>
+        public void SkipNibbleArray(byte length)
+        {
             Skip((length + 1) / 2);
         }
 

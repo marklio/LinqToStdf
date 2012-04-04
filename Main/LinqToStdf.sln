@@ -1,12 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{EF63EF7A-6B61-45DB-BBEB-50020BC0D028}"
-	ProjectSection(SolutionItems) = preProject
-		LinqToStdf.vsmdi = LinqToStdf.vsmdi
-		LocalTestRun.testrunconfig = LocalTestRun.testrunconfig
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToStdf", "LinqToStdf\LinqToStdf.csproj", "{E251DABB-78AF-4451-93EF-B8C3420BEBC5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StdfDump", "StdfDump\StdfDump.csproj", "{9D6155E6-6C9F-40B2-9346-5B4CBAAE1E18}"
@@ -14,9 +8,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleApp", "SampleApp\SampleApp.csproj", "{215B69CF-07FB-4BF4-B63A-0529D52C1239}"
 EndProject
 Global
-	GlobalSection(TestCaseManagementSettings) = postSolution
-		CategoryFile = LinqToStdf.vsmdi
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
