@@ -12,9 +12,9 @@ using System.Diagnostics;
 
 namespace LinqToStdf {
 
-	/// <summary>
-	/// Knows how to read STDF-relevant binary data from a stream.
-	/// </summary>
+    /// <summary>
+    /// Knows how to read STDF-relevant binary data from a stream.
+    /// </summary>
     /// <remarks>
     /// Due to the lack of any endian-aware binary reader class in the framework,
     /// this class exists to abstract endian-ness issues.

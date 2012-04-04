@@ -41,7 +41,7 @@ namespace LinqToStdf {
         /// assumed to contain little endian data
         /// </summary>
         /// <param name="stream">The <see cref="Stream"/> to Write from</param>
-        public BinaryWriter(Stream stream) : this(stream, Endian.Little, false) { }
+        public BinaryWriter(Stream stream) : this(stream, Endian.Little, writeBackwards:false) { }
 
         /// <summary>
         /// Constructs a <see cref="BinaryWriter"/> on the given stream with

@@ -70,44 +70,62 @@ namespace LinqToStdf {
         /// <typeparam name="T">The type of constant to load</typeparam>
         /// <param name="ilgen">The ILGenerator</param>
         /// <param name="value">The value of the constant to load</param>
-        public static void Ldc<T>(this ILGenerator ilgen, object value) {
-            if (typeof(T) == typeof(byte)) {
+        public static void Ldc<T>(this ILGenerator ilgen, object value)
+        {
+            ilgen.Ldc(value, typeof(T));
+        }
+
+        public static void Ldc(this ILGenerator ilgen, object value, Type type)
+        {
+            if (type == typeof(byte))
+            {
                 ilgen.Ldc_I4_S((byte)value);
             }
-            else if (typeof(T) == typeof(sbyte)) {
+            else if (type == typeof(sbyte))
+            {
                 ilgen.Ldc_I4_S((sbyte)value);
             }
-            else if (typeof(T) == typeof(ushort)) {
+            else if (type == typeof(ushort))
+            {
                 ilgen.Ldc_I4((int)(ushort)value);
                 ilgen.Conv_I2();
             }
-            else if (typeof(T) == typeof(short)) {
+            else if (type == typeof(short))
+            {
                 ilgen.Ldc_I4((int)(short)value);
                 ilgen.Conv_I2();
             }
-            else if (typeof(T) == typeof(uint)) {
+            else if (type == typeof(uint))
+            {
                 ilgen.Ldc_I4((uint)value);
             }
-            else if (typeof(T) == typeof(int)) {
+            else if (type == typeof(int))
+            {
                 ilgen.Ldc_I4((int)value);
             }
-            else if (typeof(T) == typeof(ulong)) {
+            else if (type == typeof(ulong))
+            {
                 ilgen.Ldc_I8((ulong)value);
             }
-            else if (typeof(T) == typeof(long)) {
+            else if (type == typeof(long))
+            {
                 ilgen.Ldc_I8((long)value);
             }
-            else if (typeof(T) == typeof(float)) {
+            else if (type == typeof(float))
+            {
                 ilgen.Ldc_R4((float)value);
             }
-            else if (typeof(T) == typeof(double)) {
+            else if (type == typeof(double))
+            {
                 ilgen.Ldc_R8((double)value);
             }
-            else if (typeof(T) == typeof(string)) {
+            else if (type == typeof(string))
+            {
                 ilgen.Ldstr((string)value);
             }
-            else {
-                throw new NotSupportedException(string.Format(Resources.CodeGen_UnsupportedGenericLdc, typeof(T)));
+            else
+            {
+                throw new NotSupportedException(string.Format(Resources.CodeGen_UnsupportedGenericLdc, type));
             }
         }
 

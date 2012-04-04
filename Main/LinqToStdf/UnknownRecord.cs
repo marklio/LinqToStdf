@@ -94,7 +94,7 @@ namespace LinqToStdf {
 #else
         internal BinaryReader GetBinaryReaderForContent() {
 #endif
-            return new BinaryReader(new MemoryStream(_Content, false), _Endian, true);
+            return new BinaryReader(new MemoryStream(_Content, writable: false), _Endian, ownsStream: true);
         }
 	}
 }
