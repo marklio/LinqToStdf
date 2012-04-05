@@ -20,131 +20,68 @@ namespace LinqToStdf.CompiledQuerySupport {
     /// </summary>
     static class ExpressionInspector {
 
-        /// <summary>
-        /// Returns a delegate capable of inspecting an expression tree
-        /// and returning a <see cref="RecordsAndFields"/> object populated
-        /// with the records and fields needed to execute the query.
-        /// </summary>
-        static public Func<Expression, RecordsAndFields> Inspect = FuncOp.Create<Expression, RecordsAndFields>(
-            (self, expr) => {
-                switch (expr.NodeType) {
-                    case ExpressionType.ConvertChecked:
-                    case ExpressionType.Convert:
-                    case ExpressionType.TypeAs:
-                    case ExpressionType.TypeIs: {
-                            var tbe = (TypeBinaryExpression)expr;
-                            var rnf = self(tbe.Expression);
-                            rnf.AddType(tbe.TypeOperand);
-                            return rnf;
-                        }
-                    case ExpressionType.Conditional:
-                        var ce = (ConditionalExpression)expr;
-                        return self(ce.Test) + self(ce.IfTrue) + self(ce.IfFalse);
-                    case ExpressionType.MemberAccess: {
-                            var ma = (MemberExpression)expr;
-                            var rnf = self(ma.Expression);
-                            if (ma.Member.MemberType == System.Reflection.MemberTypes.Property
-                                && typeof(StdfRecord).IsAssignableFrom(ma.Member.DeclaringType)) {
-                                rnf.AddField(ma.Member.DeclaringType, ma.Member.Name);
-                            }
-                            return rnf;
-                        }
-                    case ExpressionType.Call: {
-                            var mce = (MethodCallExpression)expr;
-                            var rnf = self.VisitExpressionList(mce.Arguments);
-                            if (mce.Object != null) rnf += self(mce.Object);
-                            return rnf;
-                        }
-                    case ExpressionType.Lambda:
-                        var le = (LambdaExpression)expr;
-                        return self(le.Body);
-                    case ExpressionType.New:
-                        var ne = (NewExpression)expr;
-                        return self.VisitExpressionList(ne.Arguments);
-                    case ExpressionType.NewArrayInit:
-                    case ExpressionType.NewArrayBounds:
-                        var na = (NewArrayExpression)expr;
-                        return self.VisitExpressionList(na.Expressions);
-                    case ExpressionType.Invoke:
-                        var inv = (InvocationExpression)expr;
-                        return self(inv.Expression) + self.VisitExpressionList(inv.Arguments);
-                    case ExpressionType.MemberInit:
-                        var mi = (MemberInitExpression)expr;
-                        return self(mi.NewExpression) + self.VisitBindingList(mi.Bindings);
-                    case ExpressionType.ListInit:
-                        var li = (ListInitExpression)expr;
-                        return self(li.NewExpression) + self.VisitElementInitializerList(li.Initializers);
-                }
-
-                if (expr.IsBinary()) {
-                    var b = (BinaryExpression)expr;
-                    return self(b.Left) + self(b.Right);
-                }
-                else if (expr.IsUnary()) {
-                    var u = (UnaryExpression)expr;
-                    return self(u.Operand);
-                }
-                return new RecordsAndFields();
+        class InspectingVisitor : ExpressionVisitor
+        {
+            RecordsAndFields _RecordsAndFields = null;
+            public RecordsAndFields InspectExpression(LambdaExpression node)
+            {
+                _RecordsAndFields = new RecordsAndFields();
+                //first see if the node leaks any records:
+                EnsureTypeWontLeakRecords(node.ReturnType);
+                Visit(node);
+                return _RecordsAndFields;
             }
-        );
 
-        public static bool IsBinary(this Expression expr) {
-            return expr is BinaryExpression;
-        }
-
-        public static bool IsUnary(this Expression expr) {
-            return expr is UnaryExpression;
-        }
-
-        public static RecordsAndFields VisitBinding(this Func<Expression, RecordsAndFields> self, MemberBinding b) {
-            switch (b.BindingType) {
-                case MemberBindingType.Assignment:
-                    return self.VisitMemberAssignment((MemberAssignment)b);
-                case MemberBindingType.MemberBinding:
-                    return self.VisitMemberMemberBinding((MemberMemberBinding)b);
+            protected override Expression VisitMember(MemberExpression node)
+            {
+                var type = node.Member.DeclaringType;
+                if (typeof(StdfRecord).IsAssignableFrom(type))
+                {
+                    _RecordsAndFields.AddType(type);
+                    _RecordsAndFields.AddField(type, node.Member.Name);
+                }
+                return base.VisitMember(node);
             }
-            return self.VisitMemberListBinding((MemberListBinding)b);
 
-        }
+            HashSet<Type> _CheckedTypes = new HashSet<Type>();
+            void EnsureTypeWontLeakRecords(Type type)
+            {
+                if (type.IsPrimitive) return;
+                //see if we've checked this type
+                if (!_CheckedTypes.Add(type)) return;
+                //see if it's a record
+                if (typeof(StdfRecord).IsAssignableFrom(type)) throw new InvalidOperationException(string.Format("The compiled query can return {0} in its object graph or inheritance chain.  A compiled query can't return StdfRecords.  Just return the data you want in a new or anonymous type.", type));
+                //check any generics
+                if (type.IsGenericType)
+                {
+                    foreach (var genericType in type.GetGenericArguments())
+                    {
+                        EnsureTypeWontLeakRecords(genericType);
+                    }
+                }
+                EnsureTypesWontLeakRecords(type.GetInterfaces());
+                if (type.HasElementType)
+                {
+                    EnsureTypeWontLeakRecords(type.GetElementType());
+                }
+                //check publics
+                EnsureTypesWontLeakRecords(from f in type.GetFields() select f.FieldType);
+                EnsureTypesWontLeakRecords(from p in type.GetProperties() select p.PropertyType);
+                EnsureTypesWontLeakRecords(from m in type.GetMethods() select m.ReturnType);
 
-        public static RecordsAndFields VisitMemberAssignment(this Func<Expression, RecordsAndFields> self, MemberAssignment assignment) {
-            return self(assignment.Expression);
-        }
-
-        public static RecordsAndFields VisitMemberMemberBinding(this Func<Expression, RecordsAndFields> self, MemberMemberBinding binding) {
-            return self.VisitBindingList(binding.Bindings);
-        }
-
-        public static RecordsAndFields VisitMemberListBinding(this Func<Expression, RecordsAndFields> self, MemberListBinding binding) {
-            return self.VisitElementInitializerList(binding.Initializers);
-        }
-
-        public static RecordsAndFields VisitElementInitializer(this Func<Expression, RecordsAndFields> self, ElementInit initializer) {
-             return self.VisitExpressionList(initializer.Arguments);
-        }
-
-        public static RecordsAndFields VisitExpressionList(this Func<Expression, RecordsAndFields> self, ReadOnlyCollection<Expression> original) {
-            return VisitList(original, e => self(e));
-        }
-
-        public static RecordsAndFields VisitBindingList(this Func<Expression, RecordsAndFields> self, ReadOnlyCollection<MemberBinding> original) {
-
-            return VisitList(original, e => self.VisitBinding(e));
-
-        }
-
-        public static RecordsAndFields VisitElementInitializerList(this Func<Expression, RecordsAndFields> self, ReadOnlyCollection<ElementInit> original) {
-
-            return VisitList(original, e => self.VisitElementInitializer(e));
-
-        }
-
-        private static RecordsAndFields VisitList<T>(ReadOnlyCollection<T> original, Func<T, RecordsAndFields> op) {
-            RecordsAndFields @new = new RecordsAndFields();
-            for (int i = 0, n = original.Count; i < n; i++) {
-                @new += op(original[i]);
             }
-            return @new;
+            void EnsureTypesWontLeakRecords(IEnumerable<Type> types) {
+                foreach (var type in types)
+                {
+                    EnsureTypeWontLeakRecords(type);
+                }
+            }
+        }
+
+        static public RecordsAndFields Inspect(LambdaExpression exp)
+        {
+            return new InspectingVisitor().InspectExpression(exp);
+
         }
     }
 }

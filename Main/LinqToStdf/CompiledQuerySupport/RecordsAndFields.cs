@@ -20,8 +20,8 @@ namespace LinqToStdf.CompiledQuerySupport {
             GetFieldsForType(type);
         }
 
-        public void AddField(Type type, string fields) {
-            GetFieldsForType(type).Add(fields);
+        public void AddField(Type type, string field) {
+            GetFieldsForType(type).Add(field);
         }
 
         public void AddFields(Type type, IEnumerable<string> fields) {

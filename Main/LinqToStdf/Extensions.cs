@@ -21,11 +21,11 @@ namespace LinqToStdf {
         /// <typeparam name="TRecord"></typeparam>
         /// <param name="source"></param>
         /// <returns></returns>
-		public static IEnumerable<TRecord> OfExactType<TRecord>(this IEnumerable<StdfRecord> source) where TRecord : StdfRecord {
-			foreach (var r in source) {
-				if (r.GetType() == typeof(TRecord)) yield return (TRecord)r;
-			}
-		}
+        public static IEnumerable<TRecord> OfExactType<TRecord>(this IEnumerable<StdfRecord> source) where TRecord : StdfRecord {
+            foreach (var r in source) {
+                if (r.GetType() == typeof(TRecord)) yield return (TRecord)r;
+            }
+        }
 
         #region extending IRecordContext
 
@@ -41,7 +41,7 @@ namespace LinqToStdf {
         /// Gets the <see cref="Mrr"/> for the record context.
         /// </summary>
         public static Mrr GetMrr(this IRecordContext record) {
-			return (from mrr in record.StdfFile.GetRecords().OfExactType<Mrr>()
+            return (from mrr in record.StdfFile.GetRecords().OfExactType<Mrr>()
                     select mrr).FirstOrDefault();
         }
 
@@ -49,7 +49,7 @@ namespace LinqToStdf {
         /// Gets the <see cref="Pcr">Pcrs</see> for the record context.
         /// </summary>
         public static IEnumerable<Pcr> GetPcrs(this IRecordContext record) {
-			return record.StdfFile.GetRecords().OfExactType<Pcr>();
+            return record.StdfFile.GetRecords().OfExactType<Pcr>();
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace LinqToStdf {
         /// with the given head and site.
         /// </summary>
         public static IEnumerable<Pcr> GetPcrs(this IRecordContext record, byte headNumber, byte siteNumber) {
-			return from r in record.StdfFile.GetRecords().OfExactType<Pcr>()
+            return from r in record.StdfFile.GetRecords().OfExactType<Pcr>()
                    where r.HeadNumber == headNumber && r.SiteNumber == siteNumber
                    select r;
         }
@@ -77,7 +77,7 @@ namespace LinqToStdf {
         /// <param name="record">The record context</param>
         /// <returns>All the <see cref="Hbr">Hbrs</see>.</returns>
         public static IEnumerable<Hbr> GetHbrs(this IRecordContext record) {
-			return record.StdfFile.GetRecords().OfExactType<Hbr>();
+            return record.StdfFile.GetRecords().OfExactType<Hbr>();
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace LinqToStdf {
         /// Gets the summary (head 255) <see cref="Hbr">Hbrs</see> for the record context.
         /// </summary>
         public static IEnumerable<Hbr> GetSummaryHbrs(this IRecordContext record) {
-			return from r in record.StdfFile.GetRecords().OfExactType<Hbr>()
+            return from r in record.StdfFile.GetRecords().OfExactType<Hbr>()
                    where r.HeadNumber == 255
                    select r;
         }
@@ -101,7 +101,7 @@ namespace LinqToStdf {
         /// Gets the <see cref="Sbr">Sbrs</see> for the record context.
         /// </summary>
         public static IEnumerable<Sbr> GetSbrs(this IRecordContext record) {
-			return record.StdfFile.GetRecords().OfExactType<Sbr>();
+            return record.StdfFile.GetRecords().OfExactType<Sbr>();
         }
 
         /// <summary>
@@ -116,7 +116,7 @@ namespace LinqToStdf {
         /// Gets the summary (head 255) <see cref="Sbr">Sbrs</see> for the record context.
         /// </summary>
         public static IEnumerable<Sbr> GetSummarySbrs(this IRecordContext record) {
-			return from r in record.StdfFile.GetRecords().OfExactType<Sbr>()
+            return from r in record.StdfFile.GetRecords().OfExactType<Sbr>()
                    where r.HeadNumber == 255
                    select r;
         }
@@ -125,7 +125,7 @@ namespace LinqToStdf {
         /// Gets the <see cref="Tsr">Tsrs</see> for the record context.
         /// </summary>
         public static IEnumerable<Tsr> GetTsrs(this IRecordContext record) {
-			return record.StdfFile.GetRecords().OfExactType<Tsr>();
+            return record.StdfFile.GetRecords().OfExactType<Tsr>();
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace LinqToStdf {
         /// with the given head and site.
         /// </summary>
         public static IEnumerable<Tsr> GetTsrs(this IRecordContext record, byte headNumber, byte siteNumber) {
-			return from r in record.StdfFile.GetRecords().OfExactType<Tsr>()
+            return from r in record.StdfFile.GetRecords().OfExactType<Tsr>()
                    where r.HeadNumber == headNumber && r.SiteNumber == siteNumber
                    select r;
         }
@@ -142,7 +142,7 @@ namespace LinqToStdf {
         /// Gets the summary (head 255) <see cref="Tsr">Tsrs</see> for the record context.
         /// </summary>
         public static IEnumerable<Tsr> GetSummaryTsrs(IRecordContext record) {
-			return from r in record.StdfFile.GetRecords().OfExactType<Tsr>()
+            return from r in record.StdfFile.GetRecords().OfExactType<Tsr>()
                    where r.HeadNumber == 255
                    select r;
         }
@@ -150,7 +150,7 @@ namespace LinqToStdf {
         #region Helpers
 
         static IEnumerable<T> GetBinRecords<T>(IRecordContext record, byte head, byte site) where T : BinSummaryRecord {
-			return from r in record.StdfFile.GetRecords().OfExactType<T>()
+            return from r in record.StdfFile.GetRecords().OfExactType<T>()
                    where r.HeadNumber == head && r.SiteNumber == site
                    select r;
         }
@@ -187,7 +187,7 @@ namespace LinqToStdf {
         /// Gets the <see cref="Prr">Prrs</see> for this wafer.
         /// </summary>
         static public IEnumerable<Prr> GetPrrs(this Wrr wrr) {
-			return from prr in wrr.StdfFile.GetRecords().OfExactType<Prr>()
+            return from prr in wrr.StdfFile.GetRecords().OfExactType<Prr>()
                    where prr.HeadNumber == wrr.HeadNumber
                    select prr;
         }
@@ -200,7 +200,7 @@ namespace LinqToStdf {
         /// Gets the <see cref="Wir"/> for the current head
         /// </summary>
         public static Wir GetWir(this IHeadIndexable record) {
-			return (from wir in record.StdfFile.GetRecords().OfExactType<Wir>()
+            return (from wir in record.StdfFile.GetRecords().OfExactType<Wir>()
                     where wir.HeadNumber == record.HeadNumber
                     select wir).FirstOrDefault();
         }
@@ -209,7 +209,7 @@ namespace LinqToStdf {
         /// Gets the <see cref="Wrr"/> for the current head
         /// </summary>
         public static Wrr GetWrr(this IHeadIndexable record) {
-			return (from wrr in record.StdfFile.GetRecords().OfExactType<Wrr>()
+            return (from wrr in record.StdfFile.GetRecords().OfExactType<Wrr>()
                     where wrr.HeadNumber == record.HeadNumber
                     select wrr).FirstOrDefault();
         }
@@ -222,7 +222,7 @@ namespace LinqToStdf {
         /// Gets the current Prr associated with the head/site
         /// </summary>
         public static Prr GetPrr(this IHeadSiteIndexable record) {
-			return (from prr in record.StdfFile.GetRecords().OfExactType<Prr>()
+            return (from prr in record.StdfFile.GetRecords().OfExactType<Prr>()
                     where prr.HeadNumber == record.HeadNumber && prr.SiteNumber == record.SiteNumber
                     select prr).FirstOrDefault();
         }
@@ -231,7 +231,7 @@ namespace LinqToStdf {
         /// Gets the current Pir associated with the head/site
         /// </summary>
         public static Pir GetPir(this IHeadSiteIndexable record) {
-			return (from pir in record.StdfFile.GetRecords().OfExactType<Pir>()
+            return (from pir in record.StdfFile.GetRecords().OfExactType<Pir>()
                     where pir.HeadNumber == record.HeadNumber && pir.SiteNumber == record.SiteNumber
                     select pir).FirstOrDefault();
         }
@@ -242,14 +242,14 @@ namespace LinqToStdf {
 
         public static Prr GetMatchingPrr(this Pir pir) {
             return pir.After()
-				.OfExactType<Prr>()
+                .OfExactType<Prr>()
                 .Where(r => r.HeadNumber == pir.HeadNumber && r.SiteNumber == pir.SiteNumber)
                 .FirstOrDefault();
         }
 
         public static Pir GetMatchingPir(this Prr prr) {
             return prr.Before()
-				.OfExactType<Pir>()
+                .OfExactType<Pir>()
                 .Where(r => r.HeadNumber == prr.HeadNumber && r.SiteNumber == prr.SiteNumber)
                 .LastOrDefault();
         }
@@ -261,7 +261,6 @@ namespace LinqToStdf {
         /// <returns>The records associated with the part (between the <see cref="Pir"/>
         /// and <see cref="Prr"/> and sharing the same head/site information.</returns>
         public static IEnumerable<StdfRecord> GetChildRecords(this Pir pir) {
-			var prrHandle = typeof(Prr).TypeHandle;
             return pir.After()
                 .OfType<IHeadSiteIndexable>()
                 .Where(r => r.HeadNumber == pir.HeadNumber && r.SiteNumber == pir.SiteNumber)
