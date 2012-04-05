@@ -277,8 +277,8 @@ namespace LinqToStdf {
                     var endian = Endian.Little;
                     var far = new byte[6];
                     if (_Stream.Read(far, 6) < 6) {
-                        yield return new StartOfStreamRecord() { Endian = Endian.Unknown, ExpectedLength = _Stream.Length };
-                        yield return new FormatErrorRecord() {
+                        yield return new StartOfStreamRecord { Endian = Endian.Unknown, ExpectedLength = _Stream.Length };
+                        yield return new FormatErrorRecord {
                             Message = Resources.FarReadError,
                             Recoverable = false
                         };
@@ -289,32 +289,34 @@ namespace LinqToStdf {
                     var stdfVersion = far[5];
                     var length = (endian == Endian.Little ? far[0] : far[1]);
                     if (length != 2) {
-                        yield return new StartOfStreamRecord() { Endian = endian, ExpectedLength = _Stream.Length };
-                        yield return new FormatErrorRecord() {
+                        yield return new StartOfStreamRecord { Endian = endian, ExpectedLength = _Stream.Length };
+                        yield return new FormatErrorRecord {
                             Message = Resources.FarLengthError,
                             Recoverable = false
                         };
-                        yield return new EndOfStreamRecord();
+                        yield return new EndOfStreamRecord { Offset = 2 };
                         yield break;
                     }
                     //validate record type
                     if (far[2] != 0) {
-                        yield return new StartOfStreamRecord() { Endian = endian, ExpectedLength = _Stream.Length };
-                        yield return new FormatErrorRecord() {
+                        yield return new StartOfStreamRecord { Endian = endian, ExpectedLength = _Stream.Length };
+                        yield return new FormatErrorRecord {
+                            Offset = 2,
                             Message = Resources.FarRecordTypeError,
                             Recoverable = false
                         };
-                        yield return new EndOfStreamRecord();
+                        yield return new EndOfStreamRecord { Offset = 6 };
                         yield break;
                     }
                     //validate record type
                     if (far[3] != 10) {
-                        yield return new StartOfStreamRecord() { Endian = endian, ExpectedLength = _Stream.Length };
-                        yield return new FormatErrorRecord() {
+                        yield return new StartOfStreamRecord { Endian = endian, ExpectedLength = _Stream.Length };
+                        yield return new FormatErrorRecord {
+                            Offset = 3,
                             Message = Resources.FarRecordSubTypeError,
                             Recoverable = false
                         };
-                        yield return new EndOfStreamRecord();
+                        yield return new EndOfStreamRecord { Offset = 3 };
                         yield break;
                     }
                     //OK we're satisfied, let's go

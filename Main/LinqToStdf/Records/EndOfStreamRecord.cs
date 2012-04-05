@@ -15,6 +15,11 @@ namespace LinqToStdf.Records {
     /// </summary>
     public class EndOfStreamRecord : StdfRecord {
 
+        public EndOfStreamRecord()
+        {
+            Synthesized = true;
+        }
+
         public override RecordType RecordType {
             get { throw new NotSupportedException(); }
         }

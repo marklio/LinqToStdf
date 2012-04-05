@@ -97,12 +97,12 @@ namespace LinqToStdf {
             public IEnumerable<StdfRecord> Filter(IEnumerable<StdfRecord> input) {
                 foreach (var r in input) {
                     if (r.GetType() == typeof(T)) {
-						T br = (T)r;
+                        T br = (T)r;
                         _Brs.Add(br);
                         if (br.HeadNumber == 255) _FoundSummary = true;
                     }
                     else if (r.GetType() == typeof(Mrr) && !_FoundSummary) {
-                        foreach (var gen in GenerateSummaries()) {
+                        foreach (var gen in GenerateSummaries(r.Offset)) {
                             yield return gen;
                         }
                     }
@@ -113,17 +113,20 @@ namespace LinqToStdf {
             /// <summary>
             /// Generates the summary records
             /// </summary>
-            private IEnumerable<StdfRecord> GenerateSummaries() {
+            private IEnumerable<StdfRecord> GenerateSummaries(long offset) {
                 var q = from b in _Brs
                         group b by b.BinNumber into g
-                        select new T() {
-                                   HeadNumber = 255,
-                                   SiteNumber = 0,
-                                   BinNumber = g.Key,
-                                   BinName = g.First().BinName,
-                                   BinPassFail = g.First().BinPassFail,
-                                   BinCount = (uint)g.Sum((b) => b.BinCount),
-                               };
+                        select new T()
+                        {
+                            Synthesized = true,
+                            Offset = offset,
+                            HeadNumber = 255,
+                            SiteNumber = 0,
+                            BinNumber = g.Key,
+                            BinName = g.First().BinName,
+                            BinPassFail = g.First().BinPassFail,
+                            BinCount = (uint)g.Sum((b) => b.BinCount),
+                        };
 
                 foreach (var b in q) {
                     yield return b;
@@ -150,14 +153,16 @@ namespace LinqToStdf {
         #region MissingPcrSummaryFilter implementation
 
         class MissingPcrSummaryFilterImpl {
-            Pcr _Summary = new Pcr() {
-                               HeadNumber = 255,
-                               SiteNumber = 0
-                           };
+            Pcr _Summary = new Pcr()
+            {
+                Synthesized = true,
+                HeadNumber = 255,
+                SiteNumber = 0
+            };
             public IEnumerable<StdfRecord> Filter(IEnumerable<StdfRecord> input) {
-				foreach (var r in input) {
+                foreach (var r in input) {
                     if (r.GetType() == typeof(Pcr) && _Summary != null) {
-						Pcr p = (Pcr)r;
+                        Pcr p = (Pcr)r;
                         if (p.HeadNumber == 255) _Summary = null;
                         else {
                             _Summary.AbortCount = _Summary.AbortCount.Combine(p.AbortCount);
@@ -168,6 +173,7 @@ namespace LinqToStdf {
                         }
                     }
                     else if (r.GetType() == typeof(Mrr) && _Summary != null) {
+                        _Summary.Offset = r.Offset;
                         yield return _Summary;
                     }
                     yield return r;
@@ -190,14 +196,14 @@ namespace LinqToStdf {
             bool _FoundSummary;
             List<Tsr> _Tsrs = new List<Tsr>();
             public IEnumerable<StdfRecord> Filter(IEnumerable<StdfRecord> input) {
-				foreach (var r in input) {
+                foreach (var r in input) {
                     if (r.GetType() == typeof(Tsr)) {
-						var tsr = (Tsr)r;
+                        var tsr = (Tsr)r;
                         _Tsrs.Add(tsr);
                         if (tsr.HeadNumber == 255) _FoundSummary = true;
                     }
                     else if (r.GetType() == typeof(Mrr) && !_FoundSummary) {
-                        foreach (var gen in GenerateSummaries()) {
+                        foreach (var gen in GenerateSummaries(r.Offset)) {
                             yield return gen;
                         }
                     }
@@ -205,26 +211,29 @@ namespace LinqToStdf {
                 }
             }
 
-            private IEnumerable<StdfRecord> GenerateSummaries() {
+            private IEnumerable<StdfRecord> GenerateSummaries(long offset) {
                 var q = from t in _Tsrs
                         group t by t.TestNumber into g
-                        select new Tsr() {
-                                   HeadNumber = 255,
-                                   SiteNumber = 0,
-                                   TestNumber = g.Key,
-                                   TestName = g.First().TestName,
-                                   TestLabel = g.First().TestLabel,
-                                   AlarmCount = (uint?)g.Sum((t)=>t.AlarmCount),
-                                   ExecutedCount = (uint?)g.Sum((t) => t.ExecutedCount),
-                                   FailedCount = (uint?)g.Sum((t) => t.FailedCount),
-                                   SequencerName = g.First().SequencerName,
-                                   TestMax = g.Max((t)=>t.TestMax),
-                                   TestMin = g.Min((t)=>t.TestMin),
-                                   TestSum = g.Sum((t)=>t.TestSum),
-                                   TestSumOfSquares = g.Sum((t)=>t.TestSumOfSquares),
-                                   TestTime = g.Sum((t)=>t.TestTime),
-                                   TestType = g.First().TestType,
-                               };
+                        select new Tsr()
+                        {
+                            Synthesized = true,
+                            Offset = offset,
+                            HeadNumber = 255,
+                            SiteNumber = 0,
+                            TestNumber = g.Key,
+                            TestName = g.First().TestName,
+                            TestLabel = g.First().TestLabel,
+                            AlarmCount = (uint?)g.Sum((t) => t.AlarmCount),
+                            ExecutedCount = (uint?)g.Sum((t) => t.ExecutedCount),
+                            FailedCount = (uint?)g.Sum((t) => t.FailedCount),
+                            SequencerName = g.First().SequencerName,
+                            TestMax = g.Max((t) => t.TestMax),
+                            TestMin = g.Min((t) => t.TestMin),
+                            TestSum = g.Sum((t) => t.TestSum),
+                            TestSumOfSquares = g.Sum((t) => t.TestSumOfSquares),
+                            TestTime = g.Sum((t) => t.TestTime),
+                            TestType = g.First().TestType,
+                        };
 
                 foreach (var b in q) {
                     yield return b;
@@ -282,7 +291,7 @@ namespace LinqToStdf {
         /// <summary>
         /// These records are not allowed after the initial sequence, or before the Mrr
         /// </summary>
-		static HashSet<RuntimeTypeHandle> _InitialSequenceSet = new HashSet<RuntimeTypeHandle>() { typeof(Far).TypeHandle, typeof(Atr).TypeHandle, typeof(Mir).TypeHandle, typeof(Rdr).TypeHandle, typeof(Sdr).TypeHandle, typeof(EndOfStreamRecord).TypeHandle };
+        static HashSet<RuntimeTypeHandle> _InitialSequenceSet = new HashSet<RuntimeTypeHandle>() { typeof(Far).TypeHandle, typeof(Atr).TypeHandle, typeof(Mir).TypeHandle, typeof(Rdr).TypeHandle, typeof(Sdr).TypeHandle, typeof(EndOfStreamRecord).TypeHandle };
 
         /// <summary>
         /// Uses a state machine to enforce the V4 content spec (initial sequence and mrr at the end)
@@ -357,7 +366,7 @@ namespace LinqToStdf {
                 }
                 //TODO: does IsWritable prevent informational and error records from violating the content spec (we want that)?
                 if (!transitioned && r.IsWritable) {
-                    yield return new V4ContentErrorRecord() { Message = string.Format(Resources.InitialSequenceError, r.GetType().Name, currentState.Message) };
+                    yield return new V4ContentErrorRecord() { Offset = r.Offset, Message = string.Format(Resources.InitialSequenceError, r.GetType().Name, currentState.Message) };
                 }
                 yield return r;
             }
@@ -393,8 +402,8 @@ namespace LinqToStdf {
             Mrr mrr = null;
             foreach (var r in input) {
                 if (r.GetType() == typeof(Mrr)) mrr = (Mrr)r;
-				else if (r.GetType() == typeof(EndOfStreamRecord) && (mrr == null)) {
-                    yield return new Mrr();
+                else if (r.GetType() == typeof(EndOfStreamRecord) && (mrr == null)) {
+                    yield return new Mrr() { Synthesized = true, Offset = r.Offset };
                 }
                 yield return r;
             }
