@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>LinqToStdf</RootNamespace>
     <AssemblyName>LinqToStdf</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
@@ -30,6 +30,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -81,6 +82,9 @@
     <Compile Include="IHeadIndexable.cs" />
     <Compile Include="IHeadSiteIndexable.cs" />
     <Compile Include="ILGenHelpers.cs" />
+    <Compile Include="Indexing\IIndexingStrategy.cs" />
+    <Compile Include="Indexing\TypeHelper.cs" />
+    <Compile Include="Indexing\V4StructureIndexingStrategy.cs" />
     <Compile Include="InvalidRecordConversionException.cs" />
     <Compile Include="IRecordContext.cs" />
     <Compile Include="NonConsecutiveFieldIndexException.cs" />
