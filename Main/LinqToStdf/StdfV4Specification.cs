@@ -28,6 +28,7 @@ namespace LinqToStdf {
 			converterFactory.RegisterRecordType(new RecordType(1, 60), typeof(Pmr));
 			converterFactory.RegisterRecordType(new RecordType(1, 62), typeof(Pgr));
 			converterFactory.RegisterRecordConverter(new RecordType(1, 63), Plr.ConvertToPlr);
+			converterFactory.RegisterRecordUnconverter(typeof(Plr), Plr.ConvertFromPlr);
 			converterFactory.RegisterRecordType(new RecordType(1, 70), typeof(Rdr));
 			converterFactory.RegisterRecordType(new RecordType(1, 80), typeof(Sdr));
 			converterFactory.RegisterRecordType(new RecordType(2, 10), typeof(Wir));

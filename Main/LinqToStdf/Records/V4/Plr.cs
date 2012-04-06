@@ -22,7 +22,6 @@ namespace LinqToStdf.Records.V4 {
         public string[] ProgramStatesLeft { get; set; }
         public string[] ReturnStatesLeft { get; set; }
 
-        //TODO: make an unconverter
         internal static Plr ConvertToPlr(UnknownRecord unknownRecord) {
             Plr plr = new Plr();
             using (BinaryReader reader = new BinaryReader(new MemoryStream(unknownRecord.Content), unknownRecord.Endian, true)) {
@@ -79,5 +78,24 @@ namespace LinqToStdf.Records.V4 {
             }
             return plr;
         }
+
+        internal static UnknownRecord ConvertFromPlr(StdfRecord record, Endian endian) {
+            Plr plr = (Plr)record;
+            using (MemoryStream stream = new MemoryStream()) {
+                BinaryWriter writer = new BinaryWriter(stream, endian, true);
+				
+				// Temporary throw 
+				throw new NotImplementedException(string.Format(Resources.NoRegisteredUnconverter, plr.GetType()));
+
+				// The last array field in the record is allowed to be truncated instead of padding the end with missing items
+
+				// Array elements are written in reverse, because writer is in backwards mode
+
+				// The not-last arrays can have larger lengths, but those lengths must match
+
+				// The maximum array's length is written
+
+                return new UnknownRecord(plr.RecordType, stream.ToArray(), endian);
+            }
     }
 }
