@@ -32,7 +32,7 @@ namespace LinqToStdf.RecordConverting
             if (type == null) throw new ArgumentNullException("type");
             _ILGen = ilgen;
             _Type = type;
-            _Fields = new HashSet<string>(fields);
+            if (fields != null) _Fields = new HashSet<string>(fields);
         }
 
         /// <summary>
