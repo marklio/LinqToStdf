@@ -26,15 +26,18 @@ namespace LinqToStdf.RecordConverting
         /// <param name="ilgen">The il generator to use</param>
         /// <param name="type">The type we're converting to</param>
         /// <param name="fields">The fields we should parse (null if we should parse everything, empty if we shouldn't parse at all)</param>
-        public ConverterGenerator(ILGenerator ilgen, Type type, HashSet<string> fields)
+        public ConverterGenerator(ILGenerator ilgen, Type type, IEnumerable<string> fields)
         {
             if (ilgen == null) throw new ArgumentNullException("ilgen");
             if (type == null) throw new ArgumentNullException("type");
             _ILGen = ilgen;
             _Type = type;
-            _Fields = fields;
+            _Fields = new HashSet<string>(fields);
         }
 
+        /// <summary>
+        /// Indicates whether we should parse the given field
+        /// </summary>
         bool ShouldParseField(string field)
         {
             return _Fields == null ? true : _Fields.Contains(field);

@@ -75,7 +75,6 @@
     <Compile Include="BuiltInFilters.cs" />
     <Compile Include="CompiledQuery.cs" />
     <Compile Include="CompiledQuerySupport\ExpressionInspector.cs" />
-    <Compile Include="CompiledQuerySupport\FuncOp.cs" />
     <Compile Include="CompiledQuerySupport\RecordsAndFields.cs" />
     <Compile Include="Endian.cs" />
     <Compile Include="Extensions.cs" />

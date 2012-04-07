@@ -215,7 +215,7 @@ namespace LinqToStdf {
             }
             Converter<UnknownRecord, StdfRecord> converter = null;
             //only bother creating a converter if we need to parse fields
-            if (_RecordsAndFields == null || _RecordsAndFields.GetFieldsForType(type).Count > 0) {
+            if (_RecordsAndFields == null || _RecordsAndFields.TypeHasFields(type)) {
                 //TODO:consider making the pattern more clear here
                 return (ur) => {
                     //there's a subtle race condition here, but unlikely to cause problems

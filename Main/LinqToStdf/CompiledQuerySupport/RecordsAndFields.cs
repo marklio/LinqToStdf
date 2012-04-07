@@ -14,21 +14,44 @@ namespace LinqToStdf.CompiledQuerySupport {
     /// ones should be parsed for a compiled query.
     /// </summary>
     class RecordsAndFields {
+        /// <summary>
+        /// The internal datastructure Type is a record type, and the hashset is a set of property names
+        /// </summary>
         Dictionary<Type, HashSet<string>> _Fields = new Dictionary<Type, HashSet<string>>();
 
-        public void AddType(Type type) {
-            GetFieldsForType(type);
-        }
-
+        /// <summary>
+        /// adds a field for a type
+        /// </summary>
         public void AddField(Type type, string field) {
-            GetFieldsForType(type).Add(field);
+            GetFieldsForAdding(type).Add(field);
         }
 
+        /// <summary>
+        /// Adds a set of fields for a type
+        /// </summary>
         public void AddFields(Type type, IEnumerable<string> fields) {
-            GetFieldsForType(type).UnionWith(fields);
+            GetFieldsForAdding(type).UnionWith(fields);
         }
 
-        public HashSet<string> GetFieldsForType(Type type) {
+        public bool TypeHasFields(Type type)
+        {
+            return _Fields.ContainsKey(type);
+        }
+
+        public IEnumerable<string> GetFieldsForType(Type type)
+        {
+            HashSet<string> fields = null;
+            if (_Fields.TryGetValue(type, out fields))
+            {
+                return fields.ToList();
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the fields for a type
+        /// </summary>
+        HashSet<string> GetFieldsForAdding(Type type) {
             HashSet<string> fields;
             if (!_Fields.TryGetValue(type, out fields)) {
                 fields = new HashSet<string>();
@@ -37,21 +60,11 @@ namespace LinqToStdf.CompiledQuerySupport {
             return fields;
         }
 
-
+        /// <summary>
+        /// Gets all the types
+        /// </summary>
         public IEnumerable<Type> Types {
             get { return _Fields.Keys; }
-        }
-
-        public static RecordsAndFields operator +(RecordsAndFields first, RecordsAndFields second) {
-            var allTypes = new HashSet<Type>(first.Types);
-            allTypes.UnionWith(second.Types);
-            var rnf = new RecordsAndFields();
-            foreach (var type in allTypes) {
-                rnf.AddType(type);
-                rnf.AddFields(type, first.GetFieldsForType(type));
-                rnf.AddFields(type, second.GetFieldsForType(type));
-            }
-            return rnf;
         }
     }
 }
