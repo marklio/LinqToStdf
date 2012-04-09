@@ -89,6 +89,33 @@ namespace LinqToStdf {
         }
 
         /// <summary>
+        /// Helper function capable of reading an array of any type
+        /// given a length, an element reader function, the ability
+        /// to resize the array to a shorter length on end of stream.
+        /// </summary>
+        /// <typeparam name="T">The array element type</typeparam>
+        /// <param name="length">The length of the array to read</param>
+        /// <param name="readFunc">The function that will read a single element</param>
+        /// <param name="throwOnEndOfStream">The function that will read a single element</param>
+        /// <returns>The array that was read</returns>
+        T[] ReadArray<T>(int length, Func<T> readFunc, bool throwOnEndOfStream) {
+            // TODO: Consider combining with 2-param ReadArray (problem is ReadArray is static and potential performance hit)
+            Debug.Assert(readFunc != null, "The readFunc delegate is null.");
+            var value = new T[length];
+            for (var i = 0; i < value.Length; i++) {
+                if (throwOnEndOfStream || !AtEndOfStream) {
+                    value[i] = readFunc();
+                } else {
+                    if (i == 0)
+                        return null;
+                    Array.Resize<T>(ref value, i);
+                    break;
+                }
+            }
+            return value;
+        }
+
+        /// <summary>
         /// Reads a byte
         /// </summary>
         public byte ReadByte() {
@@ -104,6 +131,13 @@ namespace LinqToStdf {
         /// </summary>
         public byte[] ReadByteArray(int length) {
             return ReadArray<byte>(length, ReadByte);
+        }
+
+        /// <summary>
+        /// Reads a byte array, with an option to not throw on unexpected end of stream
+        /// </summary>
+        public byte[] ReadByteArray(int length, bool throwOnEndOfStream) {
+            return ReadArray<byte>(length, ReadByte, throwOnEndOfStream);
         }
 
         /// <summary>
@@ -161,6 +195,13 @@ namespace LinqToStdf {
             return ReadArray<ushort>(length, ReadUInt16);
         }
 
+        /// <summary>
+        /// Reads a Uint16 array, with an option to not throw on unexpected end of stream
+        /// </summary>
+        public ushort[] ReadUInt16Array(int length, bool throwOnEndOfStream) {
+            return ReadArray<ushort>(length, ReadUInt16, throwOnEndOfStream);
+        }
+        
         /// <summary>
         /// Reads a 2-byte integer
         /// </summary>
@@ -285,6 +326,13 @@ namespace LinqToStdf {
             else {
                 return string.Empty;
             }
+        }
+
+        /// <summary>
+        /// Reads an array of strings where the first byte of each string indicates the length
+        /// </summary>
+        public string[] ReadStringArray(int arrayLength, bool throwOnEndOfStream) {
+            return ReadArray<string>(arrayLength, ReadString, throwOnEndOfStream);
         }
 
         /// <summary>

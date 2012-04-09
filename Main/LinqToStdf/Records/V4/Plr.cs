@@ -27,53 +27,14 @@ namespace LinqToStdf.Records.V4 {
             using (BinaryReader reader = new BinaryReader(new MemoryStream(unknownRecord.Content), unknownRecord.Endian, true)) {
                 ushort groupCount = reader.ReadUInt16();
                 if (groupCount > 0) {
-                    ushort[] groupIndexes = new ushort[groupCount];
-                    for (int i = 0; i < groupCount; i++) {
-                        groupIndexes[i] = reader.ReadUInt16();
-                    }
-                    plr.GroupIndexes = groupIndexes;
-                    if (!reader.AtEndOfStream) {
-                        ushort[] groupModes = new ushort[groupCount];
-                        for (int i = 0; i < groupCount; i++) {
-                            groupModes[i] = reader.ReadUInt16();
-                        }
-                        plr.GroupModes = groupModes;
-                        if (!reader.AtEndOfStream) {
-                            byte[] groupRadixes = new byte[groupCount];
-                            for (int i = 0; i < groupCount; i++) {
-                                groupRadixes[i] = reader.ReadByte();
-                            }
-                            plr.GroupRadixes = groupRadixes;
-                            if (!reader.AtEndOfStream) {
-                                string[] programStatesRight = new string[groupCount];
-                                for (int i = 0; i < groupCount; i++) {
-                                    programStatesRight[i] = reader.ReadString(1);
-                                }
-                                plr.ProgramStatesRight = programStatesRight;
-                                if (!reader.AtEndOfStream) {
-                                    string[] returnStatesRight = new string[groupCount];
-                                    for (int i = 0; i < groupCount; i++) {
-                                        returnStatesRight[i] = reader.ReadString(1);
-                                    }
-                                    plr.ReturnStatesRight = returnStatesRight;
-                                    if (!reader.AtEndOfStream) {
-                                        string[] programStatesLeft = new string[groupCount];
-                                        for (int i = 0; i < groupCount; i++) {
-                                            programStatesLeft[i] = reader.ReadString(1);
-                                        }
-                                        plr.ProgramStatesLeft = programStatesLeft;
-                                        if (!reader.AtEndOfStream) {
-                                            string[] returnStatesLeft = new string[groupCount];
-                                            for (int i = 0; i < groupCount; i++) {
-                                                returnStatesLeft[i] = reader.ReadString(1);
-                                            }
-                                            plr.ReturnStatesLeft = returnStatesLeft;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    // TODO: Now that we have end-of-stream tolerant uint16, byte and variable-length string array readers, this maybe could be code-generated...
+                    plr.GroupIndexes = reader.ReadUInt16Array(groupCount);
+                    plr.GroupModes = reader.ReadUInt16Array(groupCount, false);
+                    plr.GroupRadixes = reader.ReadByteArray(groupCount, false);
+                    plr.ProgramStatesRight = reader.ReadStringArray(groupCount, false);
+                    plr.ReturnStatesRight = reader.ReadStringArray(groupCount, false);
+                    plr.ProgramStatesLeft = reader.ReadStringArray(groupCount, false);
+                    plr.ReturnStatesLeft = reader.ReadStringArray(groupCount, false);
                 }
             }
             return plr;
