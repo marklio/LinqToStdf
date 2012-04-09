@@ -83,17 +83,17 @@ namespace LinqToStdf.Records.V4 {
             Plr plr = (Plr)record;
             using (MemoryStream stream = new MemoryStream()) {
                 BinaryWriter writer = new BinaryWriter(stream, endian, true);
-				
-				// Temporary throw 
-				throw new NotImplementedException(string.Format(Resources.NoRegisteredUnconverter, plr.GetType()));
+                
+                // Temporary throw 
+                throw new NotImplementedException(string.Format(Resources.NoRegisteredUnconverter, plr.GetType()));
 
-				// The last array field in the record is allowed to be truncated instead of padding the end with missing items
+                // The last array field in the record is allowed to be truncated instead of padding the end with missing items
 
-				// Array elements are written in reverse, because writer is in backwards mode
+                // Array elements are written in reverse, because writer is in backwards mode
 
-				// The not-last arrays can have larger lengths, but those lengths must match
+                // The not-last arrays can have larger lengths, but those lengths must match
 
-				// The maximum array's length is written
+                // The maximum array's length is written
 
                 return new UnknownRecord(plr.RecordType, stream.ToArray(), endian);
             }
