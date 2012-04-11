@@ -44,7 +44,7 @@ namespace LinqToStdf.Records.V4 {
             Plr plr = (Plr)record;
             using (MemoryStream stream = new MemoryStream()) {
                 BinaryWriter writer = new BinaryWriter(stream, endian, true);
-                
+
                 // Temporary throw 
                 throw new NotImplementedException(string.Format(Resources.NoRegisteredUnconverter, plr.GetType()));
 
@@ -58,5 +58,6 @@ namespace LinqToStdf.Records.V4 {
 
                 return new UnknownRecord(plr.RecordType, stream.ToArray(), endian);
             }
+        }
     }
 }
