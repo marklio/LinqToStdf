@@ -19,5 +19,10 @@ namespace LinqToStdf.Attributes {
         /// Indicates the field that provides the length information for the array.
         /// </summary>
         public int ArrayLengthFieldIndex { get; set; }
+
+        /// <summary>
+        /// Indicates that the array may be prematurely truncated by end of record.
+        /// </summary>
+        public bool AllowTruncation { get; set; }
     }
 }

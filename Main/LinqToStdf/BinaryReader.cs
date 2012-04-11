@@ -73,41 +73,26 @@ namespace LinqToStdf {
 
         /// <summary>
         /// Helper function capable of reading an array of any type
-        /// given a length and an element reader function.
-        /// </summary>
-        /// <typeparam name="T">The array element type</typeparam>
-        /// <param name="length">The length of the array to read</param>
-        /// <param name="readFunc">The function that will read a single element</param>
-        /// <returns>The array that was read</returns>
-        static T[] ReadArray<T>(int length, Func<T> readFunc) {
-            Debug.Assert(readFunc != null, "The readFunc delegate is null.");
-            var value = new T[length];
-            for (var i = 0; i < value.Length; i++) {
-                value[i] = readFunc();
-            }
-            return value;
-        }
-
-        /// <summary>
-        /// Helper function capable of reading an array of any type
-        /// given a length, an element reader function, the ability
-        /// to resize the array to a shorter length on end of stream.
+        /// given a length, an element reader function, and an option
+        /// to resize the array to a shorter length on end of stream,
+        /// or throw.
         /// </summary>
         /// <typeparam name="T">The array element type</typeparam>
         /// <param name="length">The length of the array to read</param>
         /// <param name="readFunc">The function that will read a single element</param>
         /// <param name="throwOnEndOfStream">The function that will read a single element</param>
         /// <returns>The array that was read</returns>
-        T[] ReadArray<T>(int length, Func<T> readFunc, bool throwOnEndOfStream) {
+        private T[] ReadArray<T>(int length, Func<T> readFunc, bool throwOnEndOfStream) {
             // TODO: Consider combining with 2-param ReadArray (problem is ReadArray is static and potential performance hit)
             Debug.Assert(readFunc != null, "The readFunc delegate is null.");
             var value = new T[length];
             for (var i = 0; i < value.Length; i++) {
                 if (throwOnEndOfStream || !AtEndOfStream) {
                     value[i] = readFunc();
-                } else {
+                }
+                else {
                     if (i == 0)
-                        return null;
+                        return new T[0];
                     Array.Resize<T>(ref value, i);
                     break;
                 }
@@ -130,11 +115,11 @@ namespace LinqToStdf {
         /// Reads a byte array
         /// </summary>
         public byte[] ReadByteArray(int length) {
-            return ReadArray<byte>(length, ReadByte);
+            return ReadByteArray(length, true);
         }
 
         /// <summary>
-        /// Reads a byte array, with an option to not throw on unexpected end of stream
+        /// Reads a byte array
         /// </summary>
         public byte[] ReadByteArray(int length, bool throwOnEndOfStream) {
             return ReadArray<byte>(length, ReadByte, throwOnEndOfStream);
@@ -144,12 +129,27 @@ namespace LinqToStdf {
         /// Reads a nibble array
         /// </summary>
         public byte[] ReadNibbleArray(int length) {
+            return ReadNibbleArray(length, true);
+        }
+
+        /// <summary>
+        /// Reads a nibble array
+        /// </summary>
+        public byte[] ReadNibbleArray(int length, bool throwOnEndOfStream) {
             var value = new byte[length];
             for (var i = 0; i < value.Length; i++) {
-                var temp = ReadByte();
-                value[i] = (byte)(temp & 0x0F);
-                if (++i >= value.Length) break;
-                value[i] = (byte)(temp >> 4);
+                if (throwOnEndOfStream || !AtEndOfStream) {
+                    var temp = ReadByte();
+                    value[i] = (byte)(temp & 0x0F);
+                    if (++i >= value.Length) break;
+                    value[i] = (byte)(temp >> 4);
+                }
+                else {
+                    if (i == 0)
+                        return new byte[0];
+                    Array.Resize<byte>(ref value, i);
+                    break;
+                }
             }
             return value;
         }
@@ -177,7 +177,14 @@ namespace LinqToStdf {
         /// Reads an SByte array
         /// </summary>
         public sbyte[] ReadSByteArray(int length) {
-            return ReadArray<sbyte>(length, ReadSByte);
+            return ReadSByteArray(length, true);
+        }
+
+        /// <summary>
+        /// Reads an SByte array
+        /// </summary>
+        public sbyte[] ReadSByteArray(int length, bool throwOnEndOfStream) {
+            return ReadArray<sbyte>(length, ReadSByte, throwOnEndOfStream);
         }
 
         /// <summary>
@@ -192,16 +199,16 @@ namespace LinqToStdf {
         /// Reads a Uint16 array
         /// </summary>
         public ushort[] ReadUInt16Array(int length) {
-            return ReadArray<ushort>(length, ReadUInt16);
+            return ReadUInt16Array(length, true);
         }
 
         /// <summary>
-        /// Reads a Uint16 array, with an option to not throw on unexpected end of stream
+        /// Reads a Uint16 array
         /// </summary>
         public ushort[] ReadUInt16Array(int length, bool throwOnEndOfStream) {
             return ReadArray<ushort>(length, ReadUInt16, throwOnEndOfStream);
         }
-        
+
         /// <summary>
         /// Reads a 2-byte integer
         /// </summary>
@@ -214,7 +221,14 @@ namespace LinqToStdf {
         /// Reads an Int16 array
         /// </summary>
         public short[] ReadInt16Array(int length) {
-            return ReadArray<short>(length, ReadInt16);
+            return ReadInt16Array(length, true);
+        }
+
+        /// <summary>
+        /// Reads an Int16 array
+        /// </summary>
+        public short[] ReadInt16Array(int length, bool throwOnEndOfStream) {
+            return ReadArray<short>(length, ReadInt16, throwOnEndOfStream);
         }
 
         /// <summary>
@@ -229,7 +243,14 @@ namespace LinqToStdf {
         /// Reads a UInt32 array
         /// </summary>
         public uint[] ReadUInt32Array(int length) {
-            return ReadArray<uint>(length, ReadUInt32);
+            return ReadUInt32Array(length, true);
+        }
+
+        /// <summary>
+        /// Reads a UInt32 array
+        /// </summary>
+        public uint[] ReadUInt32Array(int length, bool throwOnEndOfStream) {
+            return ReadArray<uint>(length, ReadUInt32, throwOnEndOfStream);
         }
 
         /// <summary>
@@ -244,7 +265,14 @@ namespace LinqToStdf {
         /// Reads an Int32 array
         /// </summary>
         public int[] ReadInt32Array(int length) {
-            return ReadArray<int>(length, ReadInt32);
+            return ReadInt32Array(length, true);
+        }
+
+        /// <summary>
+        /// Reads an Int32 array
+        /// </summary>
+        public int[] ReadInt32Array(int length, bool throwOnEndOfStream) {
+            return ReadArray<int>(length, ReadInt32, throwOnEndOfStream);
         }
 
         /// <summary>
@@ -259,7 +287,14 @@ namespace LinqToStdf {
         /// Reads a UInt64 array
         /// </summary>
         public ulong[] ReadUInt64Array(int length) {
-            return ReadArray<ulong>(length, ReadUInt64);
+            return ReadUInt64Array(length, true);
+        }
+
+        /// <summary>
+        /// Reads a UInt64 array
+        /// </summary>
+        public ulong[] ReadUInt64Array(int length, bool throwOnEndOfStream) {
+            return ReadArray<ulong>(length, ReadUInt64, throwOnEndOfStream);
         }
 
         /// <summary>
@@ -274,7 +309,14 @@ namespace LinqToStdf {
         /// Reads an Int64 array
         /// </summary>
         public long[] ReadInt64Array(int length) {
-            return ReadArray<long>(length, ReadInt64);
+            return ReadInt64Array(length, true);
+        }
+
+        /// <summary>
+        /// Reads an Int64 array
+        /// </summary>
+        public long[] ReadInt64Array(int length, bool throwOnEndOfStream) {
+            return ReadArray<long>(length, ReadInt64, throwOnEndOfStream);
         }
 
         /// <summary>
@@ -289,7 +331,14 @@ namespace LinqToStdf {
         /// Reads an array of 4-byte IEEE floating point numbers
         /// </summary>
         public float[] ReadSingleArray(int length) {
-            return ReadArray<float>(length, ReadSingle);
+            return ReadSingleArray(length, true);
+        }
+
+        /// <summary>
+        /// Reads an array of 4-byte IEEE floating point numbers
+        /// </summary>
+        public float[] ReadSingleArray(int length, bool throwOnEndOfStream) {
+            return ReadArray<float>(length, ReadSingle, throwOnEndOfStream);
         }
 
         /// <summary>
@@ -304,7 +353,29 @@ namespace LinqToStdf {
         /// Reads an array of 8-byte IEEE floating point numbers
         /// </summary>
         public double[] ReadDoubleArray(int length) {
-            return ReadArray<double>(length, ReadDouble);
+            return ReadDoubleArray(length, true);
+        }
+
+        /// <summary>
+        /// Reads an array of 8-byte IEEE floating point numbers
+        /// </summary>
+        public double[] ReadDoubleArray(int length, bool throwOnEndOfStream) {
+            return ReadArray<double>(length, ReadDouble, throwOnEndOfStream);
+        }
+
+        /// <summary>
+        /// Reads a character
+        /// </summary>
+        public char ReadCharacter() {
+            ReadToBuffer(1, false);
+            return Encoding.UTF8.GetChars(_Buffer, 0, 1)[0];
+        }
+
+        /// <summary>
+        /// Reads an array of characters
+        /// </summary>
+        public char[] ReadCharacterArray(int length, bool throwOnEndOfStream) {
+            return ReadArray<char>(length, ReadCharacter, throwOnEndOfStream);
         }
 
         /// <summary>
@@ -326,6 +397,15 @@ namespace LinqToStdf {
             else {
                 return string.Empty;
             }
+        }
+
+        // TODO: The current STDF spec indicates no need for this, but do we want a ReadStringArray method for non-single-character fixed-length strings?
+
+        /// <summary>
+        /// Reads an array of strings where the first byte of each string indicates the length
+        /// </summary>
+        public string[] ReadStringArray(int arrayLength) {
+            return ReadStringArray(arrayLength, true);
         }
 
         /// <summary>
@@ -370,72 +450,63 @@ namespace LinqToStdf {
         /// <summary>
         /// Skips 1 byte
         /// </summary>
-        public void Skip1()
-        {
+        public void Skip1() {
             Skip(1);
         }
 
         /// <summary>
         /// Skips 2 bytes
         /// </summary>
-        public void Skip2()
-        {
+        public void Skip2() {
             Skip(2);
         }
 
         /// <summary>
         /// Skips 4 bytes
         /// </summary>
-        public void Skip4()
-        {
+        public void Skip4() {
             Skip(4);
         }
 
         /// <summary>
         /// Skips 8 bytes
         /// </summary>
-        public void Skip8()
-        {
+        public void Skip8() {
             Skip(8);
         }
 
         /// <summary>
         /// Skips an array of 1-byte elements of the specified length
         /// </summary>
-        public void Skip1Array(byte length)
-        {
+        public void Skip1Array(int length) {
             Skip(length);
         }
 
         /// <summary>
         /// Skips an array of 2-byte elements of the specified length
         /// </summary>
-        public void Skip2Array(byte length)
-        {
+        public void Skip2Array(int length) {
             Skip(2 * length);
         }
 
         /// <summary>
         /// Skips an array of 4-byte elements of the specified length
         /// </summary>
-        public void Skip4Array(byte length)
-        {
+        public void Skip4Array(int length) {
             Skip(4 * length);
         }
 
         /// <summary>
         /// Skips an array of 8-byte elements of the specified length
         /// </summary>
-        public void Skip8Array(byte length)
-        {
+        public void Skip8Array(int length) {
             Skip(8 * length);
         }
 
         /// <summary>
         /// Skips a string
         /// </summary>
-        public void SkipString()
-        {
+        public void SkipString() {
             var length = ReadByte();
             if (length > 0) {
                 Skip(length);
@@ -443,10 +514,18 @@ namespace LinqToStdf {
         }
 
         /// <summary>
+        /// Skips a string array of the specified length
+        /// </summary>
+        public void SkipStringArray(int length) {
+            for (int i = 0; i < length; i++) {
+                SkipString();
+            }
+        }
+
+        /// <summary>
         /// Skips a bit array
         /// </summary>
-        public void SkipBitArray()
-        {
+        public void SkipBitArray() {
             int length = ReadUInt16();
             if (length > 0) {
                 var realLength = (length + 7) / 8;
@@ -457,8 +536,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Skips a nibble array
         /// </summary>
-        public void SkipNibbleArray(byte length)
-        {
+        public void SkipNibbleArray(byte length) {
             Skip((length + 1) / 2);
         }
 

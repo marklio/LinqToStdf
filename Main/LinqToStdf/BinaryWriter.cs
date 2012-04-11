@@ -41,7 +41,7 @@ namespace LinqToStdf {
         /// assumed to contain little endian data
         /// </summary>
         /// <param name="stream">The <see cref="Stream"/> to Write from</param>
-        public BinaryWriter(Stream stream) : this(stream, Endian.Little, writeBackwards:false) { }
+        public BinaryWriter(Stream stream) : this(stream, Endian.Little, writeBackwards: false) { }
 
         /// <summary>
         /// Constructs a <see cref="BinaryWriter"/> on the given stream with
@@ -131,7 +131,7 @@ namespace LinqToStdf {
             if (value == null || value.Length == 0) return;
             var newArray = new byte[(value.Length + 1) / 2];
             for (var i = 0; i < newArray.Length; i++) {
-                var temp = value[(2*i)];
+                var temp = value[(2 * i)];
                 if (((2 * i) + 1) < newArray.Length) {
                     temp |= (byte)(value[(2 * i) + 1] << 4);
                 }
@@ -297,7 +297,23 @@ namespace LinqToStdf {
         }
 
         /// <summary>
-        /// Writes a string of the given length, truncating the rest.
+        /// Writes a single character
+        /// </summary>
+        public void WriteCharacter(char value) {
+            EnsureBufferLength(1);
+            Encoding.UTF8.GetBytes(value.ToString(), 0, 1, _Buffer, 0);
+            WriteToStream(1);
+        }
+
+        /// <summary>
+        /// Writes an array of single characters
+        /// </summary>
+        public void WriteCharacterArray(char[] value) {
+            WriteArray(value, WriteCharacter);
+        }
+
+        /// <summary>
+        /// Writes a string of the given length, truncating the rest
         /// </summary>
         public void WriteString(string value, int length) {
             EnsureBufferLength(length);
@@ -323,6 +339,15 @@ namespace LinqToStdf {
                 WriteByte((byte)value.Length);
             }
         }
+
+        /// <summary>
+        /// Writes a string where the first byte indicates the length
+        /// </summary>
+        public void WriteStringArray(string[] value) {
+            WriteArray(value, WriteString);
+        }
+
+        // TODO: The current STDF spec indicates no need for this, but do we want a WriteStringArray method for non-single-character fixed-length strings?
 
         /// <summary>
         /// Writes an STDF datetime (4-byte integer seconds since the epoch)

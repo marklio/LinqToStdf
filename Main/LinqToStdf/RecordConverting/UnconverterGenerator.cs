@@ -10,25 +10,21 @@ using System.Reflection;
 using System.Reflection.Emit;
 using LinqToStdf.Attributes;
 
-namespace LinqToStdf.RecordConverting
-{
-    class UnconverterGenerator
-    {
+namespace LinqToStdf.RecordConverting {
+    class UnconverterGenerator {
         ILGenerator _ILGen;
         Type _Type;
         HashSet<int> _FieldLocalsTouched = new HashSet<int>();
         List<KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo>> _Fields;
 
-        public UnconverterGenerator(ILGenerator ilgen, Type type)
-        {
+        public UnconverterGenerator(ILGenerator ilgen, Type type) {
             if (ilgen == null) throw new ArgumentNullException("ilgen");
             if (type == null) throw new ArgumentNullException("type");
             _ILGen = ilgen;
             _Type = type;
         }
 
-        public void GenerateUnconverter()
-        {
+        public void GenerateUnconverter() {
             _Fields = GetFieldLayoutsAndAssignments();
 
             var node = new UnconverterShellNode(
@@ -42,24 +38,21 @@ namespace LinqToStdf.RecordConverting
                         select (CodeNode)callInfo.Invoke(this, new object[] { pair })
                         ));
 
-            new UnconverterEmittingVisitor
-            {
+            new UnconverterEmittingVisitor {
                 ConcreteType = _Type,
                 ILGen = _ILGen,
             }.Visit(node);
         }
 
         //TODO: refactor this so we're not duplicated with ConverterFactory
-        private List<KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo>> GetFieldLayoutsAndAssignments()
-        {
+        private List<KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo>> GetFieldLayoutsAndAssignments() {
             //get the list
             var attributes = from a in _Type.GetCustomAttributes(typeof(StdfFieldLayoutAttribute), true).Cast<StdfFieldLayoutAttribute>()
                              orderby a.FieldIndex
                              select a;
             var list = new List<StdfFieldLayoutAttribute>(attributes);
             //make sure they are consecutive
-            for (int i = 0; i < list.Count; i++)
-            {
+            for (int i = 0; i < list.Count; i++) {
                 if (list[i].FieldIndex != i) throw new NonconsecutiveFieldIndexException(_Type);
             }
             var withPropInfo = from l in list
@@ -70,19 +63,16 @@ namespace LinqToStdf.RecordConverting
             return new List<KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo>>(withPropInfo);
         }
 
-        CodeNode GenerateAssignment<T>(KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo> pair)
-        {
+        CodeNode GenerateAssignment<T>(KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo> pair) {
             StdfStringLayoutAttribute stringLayout = pair.Key as StdfStringLayoutAttribute;
             StdfArrayLayoutAttribute arrayLayout = pair.Key as StdfArrayLayoutAttribute;
             //if it is an array, defer to GenerateArrayAssignment
-            if (arrayLayout != null)
-            {
-                if (typeof(T) == typeof(string))
-                {
+            if (arrayLayout != null) {
+                if (typeof(T) == typeof(string)) {
+                    // TODO: Accept string arrays
                     throw new InvalidOperationException(Resources.NoStringArrays);
                 }
-                if (typeof(T) == typeof(BitArray))
-                {
+                if (typeof(T) == typeof(BitArray)) {
                     throw new InvalidOperationException(Resources.NoBitArrayArrays);
                 }
                 return GenerateArrayAssignment<T>(pair);
@@ -91,8 +81,7 @@ namespace LinqToStdf.RecordConverting
             var initNodes = new List<CodeNode>();
 
             bool localWasPresent = true;
-            if (_FieldLocalsTouched.Add(pair.Key.FieldIndex))
-            {
+            if (_FieldLocalsTouched.Add(pair.Key.FieldIndex)) {
                 localWasPresent = false;
                 //add a create local node
                 initNodes.Add(new CreateFieldLocalForWritingNode(pair.Key.FieldIndex, pair.Key.FieldType));
@@ -102,11 +91,9 @@ namespace LinqToStdf.RecordConverting
             //find out if there is an optional field flag that we need to manage
             StdfFieldLayoutAttribute optionalFieldLayout = null;
             StdfOptionalFieldLayoutAttribute currentAsOptionalFieldLayout = pair.Key as StdfOptionalFieldLayoutAttribute;
-            if (currentAsOptionalFieldLayout != null)
-            {
+            if (currentAsOptionalFieldLayout != null) {
                 optionalFieldLayout = _Fields[currentAsOptionalFieldLayout.FlagIndex].Key;
-                if (_FieldLocalsTouched.Add(currentAsOptionalFieldLayout.FlagIndex))
-                {
+                if (_FieldLocalsTouched.Add(currentAsOptionalFieldLayout.FlagIndex)) {
                     initNodes.Add(new CreateFieldLocalForWritingNode(currentAsOptionalFieldLayout.FlagIndex, optionalFieldLayout.FieldType));
                 }
             }
@@ -119,28 +106,23 @@ namespace LinqToStdf.RecordConverting
             //Decide what to do if we don't have a value to write.
             //This will happen if we don't store the value in a property, it is "missing" from the property source, or something else
             //TODO: should these have a different precedence?
-            if (pair.Key.MissingValue != null)
-            {
+            if (pair.Key.MissingValue != null) {
                 //if we have a missing value, set that as the write source
                 noValueWriteContingencySource = new LoadMissingValueNode(pair.Key.MissingValue, typeof(T));
             }
-            else if (localWasPresent || optionalFieldLayout != null)
-            {
+            else if (localWasPresent || optionalFieldLayout != null) {
                 //if the local was present when we started, that means it was initialized by another field. We can safely write it
                 //Similarly, if this is marked as an optional field, we can still write whatever the value of the local is (cheat)
                 noValueWriteContingencySource = new LoadFieldLocalNode(pair.Key.FieldIndex);
             }
-            else if (typeof(T).IsValueType)
-            {
+            else if (typeof(T).IsValueType) {
                 //if T is a value type, we're up a creek with nothing to write.
                 //this is obviously not a good place, so throw in the converter
                 noValueWriteContingency = new ThrowInvalidOperationNode(string.Format(Resources.NonNullableField, pair.Key.FieldIndex, _Type));
             }
-            else
-            {
+            else {
                 //otherwise, we can try to write null (unless it is a fixed-length string, which should have a default instead)
-                if (stringLayout != null && stringLayout.Length > 0)
-                {
+                if (stringLayout != null && stringLayout.Length > 0) {
                     //TODO: move this check into StdfStringLayout if we can, along with a check that the missing value length matches
                     throw new NotSupportedException(Resources.FixedLengthStringMustHaveDefault);
                 }
@@ -149,13 +131,11 @@ namespace LinqToStdf.RecordConverting
 
             //create the write node and the no-value contingency if we don't already have one
             CodeNode writeNode;
-            if (stringLayout != null && stringLayout.Length > 0)
-            {
+            if (stringLayout != null && stringLayout.Length > 0) {
                 noValueWriteContingency = noValueWriteContingency ?? new WriteFixedStringNode(stringLayout.Length, noValueWriteContingencySource);
                 writeNode = new WriteFixedStringNode(stringLayout.Length, new LoadFieldLocalNode(pair.Key.FieldIndex));
             }
-            else
-            {
+            else {
                 noValueWriteContingency = noValueWriteContingency ?? new WriteTypeNode(typeof(T), noValueWriteContingencySource);
                 writeNode = new WriteTypeNode(typeof(T), new LoadFieldLocalNode(pair.Key.FieldIndex));
             }
@@ -170,37 +150,31 @@ namespace LinqToStdf.RecordConverting
                 optionalFieldMask: optionalFieldLayout == null ? (byte)0 : currentAsOptionalFieldLayout.FlagMask);
         }
 
-        CodeNode GenerateArrayAssignment<T>(KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo> pair)
-        {
+        CodeNode GenerateArrayAssignment<T>(KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo> pair) {
             StdfArrayLayoutAttribute arrayLayout = (StdfArrayLayoutAttribute)pair.Key;
 
             var initNodes = new List<CodeNode>();
 
             //there are no array optionals, we should always have to create the local here
-            if (_FieldLocalsTouched.Add(arrayLayout.FieldIndex))
-            {
+            if (_FieldLocalsTouched.Add(arrayLayout.FieldIndex)) {
                 initNodes.Add(new CreateFieldLocalForWritingNode(arrayLayout.FieldIndex, typeof(T[])));
             }
-            else
-            {
+            else {
                 throw new InvalidOperationException("Array local was touched before we generated code for it.");
             }
 
-            if (pair.Value == null)
-            {
+            if (pair.Value == null) {
                 throw new InvalidOperationException(Resources.ArraysMustBeAssignable);
             }
 
             CodeNode writeNode;
             StdfFieldLayoutAttribute lengthLayout = _Fields[arrayLayout.ArrayLengthFieldIndex].Key;
-            if (_FieldLocalsTouched.Add(arrayLayout.ArrayLengthFieldIndex))
-            {
+            if (_FieldLocalsTouched.Add(arrayLayout.ArrayLengthFieldIndex)) {
                 writeNode = new BlockNode(
                     new CreateFieldLocalForWritingNode(arrayLayout.ArrayLengthFieldIndex, _Fields[arrayLayout.ArrayLengthFieldIndex].Key.FieldType),
                     new SetLengthLocalNode(arrayLayout.FieldIndex, arrayLayout.ArrayLengthFieldIndex));
             }
-            else
-            {
+            else {
                 writeNode = new ValidateSharedLengthLocalNode(arrayLayout.FieldIndex, arrayLayout.ArrayLengthFieldIndex);
             }
 

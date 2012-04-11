@@ -130,6 +130,7 @@ namespace LinqToStdf.RecordConverting
                 else if (typeof(T) == typeof(double)) skipTypeMethodName = "Skip8";
                 else if (typeof(T) == typeof(double[])) skipTypeMethodName = "Skip8Array";
                 else if (typeof(T) == typeof(string)) skipTypeMethodName = "SkipString";
+                else if (typeof(T) == typeof(string[])) skipTypeMethodName = "SkipStringArray";
                 else if (typeof(T) == typeof(DateTime)) skipTypeMethodName = "Skip4";
                 else if (typeof(T) == typeof(BitArray)) skipTypeMethodName = "SkipBitArray";
                 else
