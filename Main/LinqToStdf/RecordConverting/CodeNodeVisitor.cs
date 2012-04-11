@@ -52,7 +52,7 @@ namespace LinqToStdf.RecordConverting
         {
             return node;
         }
-        public virtual CodeNode VisitSkipType<T>(SkipTypeNode<T> node)
+        public virtual CodeNode VisitSkipType(SkipTypeNode node)
         {
             return node;
         }
@@ -60,26 +60,26 @@ namespace LinqToStdf.RecordConverting
         {
             return node;
         }
-        public virtual CodeNode VisitReadType<T>(ReadTypeNode<T> node)
+        public virtual CodeNode VisitReadType(ReadTypeNode node)
         {
             return node;
         }
-        public virtual CodeNode VisitFieldAssignment<T>(FieldAssignmentNode<T> node)
+        public virtual CodeNode VisitFieldAssignment(FieldAssignmentNode node)
         {
             var visitedReadNode = Visit(node.ReadNode);
             var visitedConditionalsBlock = Visit(node.AssignmentBlock);
             if (visitedReadNode == node.ReadNode && visitedConditionalsBlock == node.AssignmentBlock) return node;
-            else return new FieldAssignmentNode<T>(node.FieldIndex, visitedReadNode, visitedConditionalsBlock as BlockNode ?? new BlockNode(visitedConditionalsBlock));
+            else return new FieldAssignmentNode(node.Type, node.FieldIndex, visitedReadNode, visitedConditionalsBlock as BlockNode ?? new BlockNode(visitedConditionalsBlock));
         }
         public virtual CodeNode VisitSkipAssignmentIfFlagSet(SkipAssignmentIfFlagSetNode node)
         {
             return node;
         }
-        public virtual CodeNode VisitSkipAssignmentIfMissingValue<T>(SkipAssignmentIfMissingValueNode<T> node)
+        public virtual CodeNode VisitSkipAssignmentIfMissingValue(SkipAssignmentIfMissingValueNode node)
         {
             return node;
         }
-        public virtual CodeNode VisitAssignFieldToProperty<T>(AssignFieldToPropertyNode<T> node)
+        public virtual CodeNode VisitAssignFieldToProperty(AssignFieldToPropertyNode node)
         {
             return node;
         }

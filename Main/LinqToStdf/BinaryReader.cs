@@ -368,7 +368,7 @@ namespace LinqToStdf {
         /// </summary>
         public char ReadCharacter() {
             ReadToBuffer(1, false);
-            return Encoding.UTF8.GetChars(_Buffer, 0, 1)[0];
+            return Encoding.ASCII.GetChars(_Buffer, 0, 1)[0];
         }
 
         /// <summary>
@@ -383,7 +383,7 @@ namespace LinqToStdf {
         /// </summary>
         public string ReadString(int length) {
             ReadToBuffer(length, false);
-            return Encoding.UTF8.GetString(_Buffer, 0, length);
+            return Encoding.ASCII.GetString(_Buffer, 0, length);
         }
 
         /// <summary>

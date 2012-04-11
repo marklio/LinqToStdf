@@ -37,6 +37,21 @@ namespace LinqToStdf {
         static readonly DateTime _Epoch = new DateTime(1970, 1, 1);
 
         /// <summary>
+        /// Encoder used to encoding strings and characters
+        /// </summary>
+        static Encoding _Encoding = CreateEncoding();
+
+        /// <summary>
+        /// Creates an ASCII encoder that throws if we can't encode the string to ASCII
+        /// </summary>
+        /// <returns></returns>
+        static Encoding CreateEncoding() {
+            var encoding = (ASCIIEncoding)Encoding.ASCII.Clone();
+            encoding.EncoderFallback = EncoderFallback.ExceptionFallback;
+            return encoding;
+        }
+
+        /// <summary>
         /// Constructs a <see cref="BinaryWriter"/> on the given stream.  The stream is
         /// assumed to contain little endian data
         /// </summary>
@@ -301,7 +316,7 @@ namespace LinqToStdf {
         /// </summary>
         public void WriteCharacter(char value) {
             EnsureBufferLength(1);
-            Encoding.UTF8.GetBytes(value.ToString(), 0, 1, _Buffer, 0);
+            _Encoding.GetBytes(value.ToString(), 0, 1, _Buffer, 0);
             WriteToStream(1);
         }
 
@@ -317,7 +332,7 @@ namespace LinqToStdf {
         /// </summary>
         public void WriteString(string value, int length) {
             EnsureBufferLength(length);
-            Encoding.UTF8.GetBytes(value, 0, length, _Buffer, 0);
+            _Encoding.GetBytes(value, 0, length, _Buffer, 0);
             WriteToStream(length);
         }
 
@@ -332,7 +347,7 @@ namespace LinqToStdf {
             }
             if (value.Length > 0) {
                 EnsureBufferLength(value.Length);
-                Encoding.UTF8.GetBytes(value, 0, value.Length, _Buffer, 0);
+                _Encoding.GetBytes(value, 0, value.Length, _Buffer, 0);
                 WriteToStream(value.Length);
             }
             if (_WriteBackwards) {

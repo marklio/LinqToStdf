@@ -34,9 +34,7 @@ namespace LinqToStdf.RecordConverting {
                         where !(pair.Key is StdfDependencyProperty)
                         //this call through reflection is icky, but marginally better than the hard-coded table
                         //we're just binding to the generic GenerateAssignment method for the field's type
-                        let callInfo = typeof(UnconverterGenerator).GetMethod("GenerateAssignment", BindingFlags.Instance | BindingFlags.NonPublic).MakeGenericMethod(pair.Key.FieldType)
-                        select (CodeNode)callInfo.Invoke(this, new object[] { pair })
-                        ));
+                        select GenerateAssignment(pair)));
 
             new UnconverterEmittingVisitor {
                 ConcreteType = _Type,
@@ -63,19 +61,20 @@ namespace LinqToStdf.RecordConverting {
             return new List<KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo>>(withPropInfo);
         }
 
-        CodeNode GenerateAssignment<T>(KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo> pair) {
+        CodeNode GenerateAssignment(KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo> pair) {
+            var fieldType = pair.Key.FieldType;
             StdfStringLayoutAttribute stringLayout = pair.Key as StdfStringLayoutAttribute;
             StdfArrayLayoutAttribute arrayLayout = pair.Key as StdfArrayLayoutAttribute;
             //if it is an array, defer to GenerateArrayAssignment
             if (arrayLayout != null) {
-                if (typeof(T) == typeof(string)) {
+                if (fieldType == typeof(string)) {
                     // TODO: Accept string arrays
                     throw new InvalidOperationException(Resources.NoStringArrays);
                 }
-                if (typeof(T) == typeof(BitArray)) {
+                if (fieldType == typeof(BitArray)) {
                     throw new InvalidOperationException(Resources.NoBitArrayArrays);
                 }
-                return GenerateArrayAssignment<T>(pair);
+                return GenerateArrayAssignment(pair);
             }
 
             var initNodes = new List<CodeNode>();
@@ -108,14 +107,14 @@ namespace LinqToStdf.RecordConverting {
             //TODO: should these have a different precedence?
             if (pair.Key.MissingValue != null) {
                 //if we have a missing value, set that as the write source
-                noValueWriteContingencySource = new LoadMissingValueNode(pair.Key.MissingValue, typeof(T));
+                noValueWriteContingencySource = new LoadMissingValueNode(pair.Key.MissingValue, fieldType);
             }
             else if (localWasPresent || optionalFieldLayout != null) {
                 //if the local was present when we started, that means it was initialized by another field. We can safely write it
                 //Similarly, if this is marked as an optional field, we can still write whatever the value of the local is (cheat)
                 noValueWriteContingencySource = new LoadFieldLocalNode(pair.Key.FieldIndex);
             }
-            else if (typeof(T).IsValueType) {
+            else if (fieldType.IsValueType) {
                 //if T is a value type, we're up a creek with nothing to write.
                 //this is obviously not a good place, so throw in the converter
                 noValueWriteContingency = new ThrowInvalidOperationNode(string.Format(Resources.NonNullableField, pair.Key.FieldIndex, _Type));
@@ -136,12 +135,12 @@ namespace LinqToStdf.RecordConverting {
                 writeNode = new WriteFixedStringNode(stringLayout.Length, new LoadFieldLocalNode(pair.Key.FieldIndex));
             }
             else {
-                noValueWriteContingency = noValueWriteContingency ?? new WriteTypeNode(typeof(T), noValueWriteContingencySource);
-                writeNode = new WriteTypeNode(typeof(T), new LoadFieldLocalNode(pair.Key.FieldIndex));
+                noValueWriteContingency = noValueWriteContingency ?? new WriteTypeNode(fieldType, noValueWriteContingencySource);
+                writeNode = new WriteTypeNode(fieldType, new LoadFieldLocalNode(pair.Key.FieldIndex));
             }
             //return the crazy node
             //TODO: refactor this better, this sucks
-            return new WriteFieldNode(pair.Key.FieldIndex, typeof(T),
+            return new WriteFieldNode(pair.Key.FieldIndex, fieldType,
                 initialization: new BlockNode(initNodes),
                 sourceProperty: pair.Value,
                 writeOperation: writeNode,
@@ -150,14 +149,15 @@ namespace LinqToStdf.RecordConverting {
                 optionalFieldMask: optionalFieldLayout == null ? (byte)0 : currentAsOptionalFieldLayout.FlagMask);
         }
 
-        CodeNode GenerateArrayAssignment<T>(KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo> pair) {
+        CodeNode GenerateArrayAssignment(KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo> pair) {
+            var fieldType = pair.Key.FieldType;
             StdfArrayLayoutAttribute arrayLayout = (StdfArrayLayoutAttribute)pair.Key;
 
             var initNodes = new List<CodeNode>();
 
             //there are no array optionals, we should always have to create the local here
             if (_FieldLocalsTouched.Add(arrayLayout.FieldIndex)) {
-                initNodes.Add(new CreateFieldLocalForWritingNode(arrayLayout.FieldIndex, typeof(T[])));
+                initNodes.Add(new CreateFieldLocalForWritingNode(arrayLayout.FieldIndex, fieldType.MakeArrayType()));
             }
             else {
                 throw new InvalidOperationException("Array local was touched before we generated code for it.");
@@ -180,9 +180,9 @@ namespace LinqToStdf.RecordConverting {
 
             writeNode = new BlockNode(
                 writeNode,
-                new WriteTypeNode(typeof(T[]), new LoadFieldLocalNode(arrayLayout.FieldIndex)));
+                new WriteTypeNode(fieldType.MakeArrayType(), new LoadFieldLocalNode(arrayLayout.FieldIndex)));
 
-            return new WriteFieldNode(arrayLayout.FieldIndex, typeof(T[]),
+            return new WriteFieldNode(arrayLayout.FieldIndex, fieldType.MakeArrayType(),
                 initialization: new BlockNode(initNodes),
                 sourceProperty: pair.Value,
                 writeOperation: writeNode);

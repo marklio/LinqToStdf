@@ -55,7 +55,8 @@ namespace LinqToStdf.Records.V4 {
             using (MemoryStream stream = new MemoryStream()) {
                 BinaryWriter writer = new BinaryWriter(stream, endian, true);
 
-                throw new NotImplementedException("Plr uncoversion is ugly.");
+                // Temporary throw 
+                throw new NotImplementedException(string.Format(Resources.NoRegisteredUnconverter, plr.GetType()));
 
                 // The last array field in the record is allowed to be truncated instead of padding the end with missing items
                 // Array elements are written in reverse, because writer is in backwards mode
