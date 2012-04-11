@@ -8,6 +8,16 @@ using System.IO;
 using System.Text;
 
 namespace LinqToStdf.Records.V4 {
+    using Attributes;
+
+    [StdfFieldLayout(FieldIndex = 0, FieldType = typeof(ushort)),
+    StdfArrayLayout(FieldIndex = 1, FieldType = typeof(ushort), ArrayLengthFieldIndex = 0, AssignTo = "GroupIndexes"),
+    StdfArrayLayout(FieldIndex = 2, FieldType = typeof(ushort), ArrayLengthFieldIndex = 0, AllowTruncation = true, MissingValue = ushort.MinValue, AssignTo = "GroupModes"),
+    StdfArrayLayout(FieldIndex = 3, FieldType = typeof(byte), ArrayLengthFieldIndex = 0, AllowTruncation = true, MissingValue = byte.MinValue, AssignTo = "GroupRadixes"),
+    StdfArrayLayout(FieldIndex = 4, FieldType = typeof(string), ArrayLengthFieldIndex = 0, AllowTruncation = true, MissingValue = String.Empty, AssignTo = "ProgramStatesRight"),
+    StdfArrayLayout(FieldIndex = 5, FieldType = typeof(string), ArrayLengthFieldIndex = 0, AllowTruncation = true, MissingValue = String.Empty, AssignTo = "ReturnStatesRight"),
+    StdfArrayLayout(FieldIndex = 6, FieldType = typeof(string), ArrayLengthFieldIndex = 0, AllowTruncation = true, MissingValue = String.Empty, AssignTo = "ProgramStatesLeft"),
+    StdfArrayLayout(FieldIndex = 7, FieldType = typeof(string), ArrayLengthFieldIndex = 0, AllowTruncation = true, MissingValue = String.Empty, AssignTo = "ReturnStatesLeft")]
     public class Plr : StdfRecord {
 
         public override RecordType RecordType {
@@ -44,19 +54,36 @@ namespace LinqToStdf.Records.V4 {
             Plr plr = (Plr)record;
             using (MemoryStream stream = new MemoryStream()) {
                 BinaryWriter writer = new BinaryWriter(stream, endian, true);
-                
-                // Temporary throw 
-                throw new NotImplementedException(string.Format(Resources.NoRegisteredUnconverter, plr.GetType()));
+
+                throw new NotImplementedException("Plr uncoversion is ugly.");
 
                 // The last array field in the record is allowed to be truncated instead of padding the end with missing items
-
                 // Array elements are written in reverse, because writer is in backwards mode
-
                 // The not-last arrays can have larger lengths, but those lengths must match
-
                 // The maximum array's length is written
+                int fieldsWritten = 0;
+                int groupCount = 0;
+
+
+                if (plr.ReturnStatesLeft != null) {
+                    writer.WriteStringArray(plr.ReturnStatesLeft);
+                    fieldsWritten += 1;
+                    groupCount = plr.ReturnStatesLeft.Length;
+                }
+
+                if (plr.ProgramStatesLeft != null) {
+                    if (((fieldsWritten > 0) && (plr.ProgramStatesLeft.Length < groupCount)) || ((fieldsWritten > 1) && (plr.ProgramStatesLeft.Length != groupCount)))
+                        throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, 6));
+                    writer.WriteStringArray(plr.ProgramStatesLeft);
+                    fieldsWritten += 1;
+                    groupCount = plr.ProgramStatesLeft.Length;
+                }
+                else {
+                    throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, 6));
+                }
 
                 return new UnknownRecord(plr.RecordType, stream.ToArray(), endian);
             }
+        }
     }
 }
