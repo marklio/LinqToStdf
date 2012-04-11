@@ -190,6 +190,7 @@ namespace LinqToStdf.RecordConverting
                 else if (node.Type == typeof(double)) readTypeMethodName = "ReadDouble";
                 else if (node.Type == typeof(double[])) readTypeMethodName = "ReadDoubleArray";
                 else if (node.Type == typeof(string)) readTypeMethodName = "ReadString";
+                else if (node.Type == typeof(string[])) readTypeMethodName = "ReadStringArray";
                 else if (node.Type == typeof(DateTime)) readTypeMethodName = "ReadDateTime";
                 else if (node.Type == typeof(BitArray)) readTypeMethodName = "ReadBitArray";
                 else

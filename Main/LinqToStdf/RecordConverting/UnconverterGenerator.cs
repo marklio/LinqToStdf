@@ -67,6 +67,7 @@ namespace LinqToStdf.RecordConverting {
             StdfArrayLayoutAttribute arrayLayout = pair.Key as StdfArrayLayoutAttribute;
             //if it is an array, defer to GenerateArrayAssignment
             if (arrayLayout != null) {
+                // TODO: Why do we need these fieldType checks at all?
                 if (fieldType == typeof(string)) {
                     // TODO: Accept string arrays
                     throw new InvalidOperationException(Resources.NoStringArrays);

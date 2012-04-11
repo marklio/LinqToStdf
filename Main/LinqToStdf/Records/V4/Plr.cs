@@ -14,10 +14,10 @@ namespace LinqToStdf.Records.V4 {
     StdfArrayLayout(FieldIndex = 1, FieldType = typeof(ushort), ArrayLengthFieldIndex = 0, AssignTo = "GroupIndexes"),
     StdfArrayLayout(FieldIndex = 2, FieldType = typeof(ushort), ArrayLengthFieldIndex = 0, AllowTruncation = true, MissingValue = ushort.MinValue, AssignTo = "GroupModes"),
     StdfArrayLayout(FieldIndex = 3, FieldType = typeof(byte), ArrayLengthFieldIndex = 0, AllowTruncation = true, MissingValue = byte.MinValue, AssignTo = "GroupRadixes"),
-    StdfArrayLayout(FieldIndex = 4, FieldType = typeof(string), ArrayLengthFieldIndex = 0, AllowTruncation = true, MissingValue = String.Empty, AssignTo = "ProgramStatesRight"),
-    StdfArrayLayout(FieldIndex = 5, FieldType = typeof(string), ArrayLengthFieldIndex = 0, AllowTruncation = true, MissingValue = String.Empty, AssignTo = "ReturnStatesRight"),
-    StdfArrayLayout(FieldIndex = 6, FieldType = typeof(string), ArrayLengthFieldIndex = 0, AllowTruncation = true, MissingValue = String.Empty, AssignTo = "ProgramStatesLeft"),
-    StdfArrayLayout(FieldIndex = 7, FieldType = typeof(string), ArrayLengthFieldIndex = 0, AllowTruncation = true, MissingValue = String.Empty, AssignTo = "ReturnStatesLeft")]
+    StdfArrayLayout(FieldIndex = 4, FieldType = typeof(string), ArrayLengthFieldIndex = 0, AllowTruncation = true, MissingValue = "", AssignTo = "ProgramStatesRight"),
+    StdfArrayLayout(FieldIndex = 5, FieldType = typeof(string), ArrayLengthFieldIndex = 0, AllowTruncation = true, MissingValue = "", AssignTo = "ReturnStatesRight"),
+    StdfArrayLayout(FieldIndex = 6, FieldType = typeof(string), ArrayLengthFieldIndex = 0, AllowTruncation = true, MissingValue = "", AssignTo = "ProgramStatesLeft"),
+    StdfArrayLayout(FieldIndex = 7, FieldType = typeof(string), ArrayLengthFieldIndex = 0, AllowTruncation = true, MissingValue = "", AssignTo = "ReturnStatesLeft")]
     public class Plr : StdfRecord {
 
         public override RecordType RecordType {
@@ -38,13 +38,19 @@ namespace LinqToStdf.Records.V4 {
                 ushort groupCount = reader.ReadUInt16();
                 if (groupCount > 0) {
                     // TODO: Now that we have end-of-stream tolerant uint16, byte and variable-length string array readers, this maybe could be code-generated...
-                    plr.GroupIndexes = reader.ReadUInt16Array(groupCount);
-                    plr.GroupModes = reader.ReadUInt16Array(groupCount, false);
-                    plr.GroupRadixes = reader.ReadByteArray(groupCount, false);
-                    plr.ProgramStatesRight = reader.ReadStringArray(groupCount, false);
-                    plr.ReturnStatesRight = reader.ReadStringArray(groupCount, false);
-                    plr.ProgramStatesLeft = reader.ReadStringArray(groupCount, false);
-                    plr.ReturnStatesLeft = reader.ReadStringArray(groupCount, false);
+                    plr.GroupIndexes = reader.ReadUInt16Array(groupCount, true);
+                    if (!reader.AtEndOfStream)
+                        plr.GroupModes = reader.ReadUInt16Array(groupCount, false);
+                    if (!reader.AtEndOfStream)
+                        plr.GroupRadixes = reader.ReadByteArray(groupCount, false);
+                    if (!reader.AtEndOfStream)
+                        plr.ProgramStatesRight = reader.ReadStringArray(groupCount, false);
+                    if (!reader.AtEndOfStream)
+                        plr.ReturnStatesRight = reader.ReadStringArray(groupCount, false);
+                    if (!reader.AtEndOfStream)
+                        plr.ProgramStatesLeft = reader.ReadStringArray(groupCount, false);
+                    if (!reader.AtEndOfStream)
+                        plr.ReturnStatesLeft = reader.ReadStringArray(groupCount, false);
                 }
             }
             return plr;
@@ -55,33 +61,189 @@ namespace LinqToStdf.Records.V4 {
             using (MemoryStream stream = new MemoryStream()) {
                 BinaryWriter writer = new BinaryWriter(stream, endian, true);
 
-                // Temporary throw 
-                throw new NotImplementedException(string.Format(Resources.NoRegisteredUnconverter, plr.GetType()));
-
                 // The last array field in the record is allowed to be truncated instead of padding the end with missing items
                 // Array elements are written in reverse, because writer is in backwards mode
                 // The not-last arrays can have larger lengths, but those lengths must match
-                // The maximum array's length is written
-                int fieldsWritten = 0;
+                // The GroupIndexes array's length is always the one written
                 int groupCount = 0;
+                int fieldIndex = 7;
+                int fieldsWritten = 0;
 
-
+                // TODO: Make this CodeGen'ed (I'm following a pattern here)
                 if (plr.ReturnStatesLeft != null) {
+                    // No field can ever have a smaller length than the one that follows it
+                    if (plr.ReturnStatesLeft.Length < groupCount)
+                        throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, fieldIndex));
+                    // The last field can have different (smaller) groupCount, but no others can
+                    if ((fieldsWritten > 1) && (plr.ReturnStatesLeft.Length != groupCount))
+                        throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, fieldIndex));
+                    // Write the field
                     writer.WriteStringArray(plr.ReturnStatesLeft);
-                    fieldsWritten += 1;
+                    // Keep track of the shared array length
                     groupCount = plr.ReturnStatesLeft.Length;
+                    fieldsWritten += 1;
                 }
+                else if (fieldsWritten > 0) {
+                    // Here's where the transition to CodeGen breaks down, if a field has already been written and we
+                    //  need to fill with a missing values array, we don't know for certain how long it should be, so
+                    //  we look "ahead" to plr.GroupIndexes.Length, which must be the correct length
+                    if (fieldsWritten == 1)
+                        groupCount = plr.GroupIndexes.Length;
+                    // Fill an array of missing values and write
+                    string[] arr = new string[groupCount];
+                    Array.ForEach<string>(arr, delegate(string a) { a = ""; });
+                    writer.WriteStringArray(arr);
+                }
+                fieldIndex -= 1;
 
                 if (plr.ProgramStatesLeft != null) {
-                    if (((fieldsWritten > 0) && (plr.ProgramStatesLeft.Length < groupCount)) || ((fieldsWritten > 1) && (plr.ProgramStatesLeft.Length != groupCount)))
-                        throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, 6));
+                    // No field can ever have a smaller length than the one that follows it
+                    if (plr.ProgramStatesLeft.Length < groupCount)
+                        throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, fieldIndex));
+                    // The last field can have different (smaller) groupCount, but no others can
+                    if ((fieldsWritten > 1) && (plr.ProgramStatesLeft.Length != groupCount))
+                        throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, fieldIndex));
+                    // Write the field
                     writer.WriteStringArray(plr.ProgramStatesLeft);
-                    fieldsWritten += 1;
+                    // Keep track of the shared array length
                     groupCount = plr.ProgramStatesLeft.Length;
+                    fieldsWritten += 1;
+                }
+                else if (fieldsWritten > 0) {
+                    // Here's where the transition to CodeGen breaks down, if a field has already been written and we
+                    //  need to fill with a missing values array, we don't know for certain how long it should be, so
+                    //  we look "ahead" to plr.GroupIndexes.Length, which must be the correct length
+                    if (fieldsWritten == 1)
+                        groupCount = plr.GroupIndexes.Length;
+                    // Fill an array of missing values and write
+                    string[] arr = new string[groupCount];
+                    Array.ForEach<string>(arr, delegate(string a) { a = ""; });
+                    writer.WriteStringArray(arr);
+                }
+                fieldIndex -= 1;
+
+                if (plr.ReturnStatesRight != null) {
+                    // No field can ever have a smaller length than the one that follows it
+                    if (plr.ReturnStatesRight.Length < groupCount)
+                        throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, fieldIndex));
+                    // The last field can have different (smaller) groupCount, but no others can
+                    if ((fieldsWritten > 1) && (plr.ReturnStatesRight.Length != groupCount))
+                        throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, fieldIndex));
+                    // Write the field
+                    writer.WriteStringArray(plr.ReturnStatesRight);
+                    // Keep track of the shared array length
+                    groupCount = plr.ReturnStatesRight.Length;
+                    fieldsWritten += 1;
+                }
+                else if (fieldsWritten > 0) {
+                    // Here's where the transition to CodeGen breaks down, if a field has already been written and we
+                    //  need to fill with a missing values array, we don't know for certain how long it should be, so
+                    //  we look "ahead" to plr.GroupIndexes.Length, which must be the correct length
+                    if (fieldsWritten == 1)
+                        groupCount = plr.GroupIndexes.Length;
+                    // Fill an array of missing values and write
+                    string[] arr = new string[groupCount];
+                    Array.ForEach<string>(arr, delegate(string a) { a = ""; });
+                    writer.WriteStringArray(arr);
+                }
+                fieldIndex -= 1;
+
+                if (plr.ProgramStatesRight != null) {
+                    // No field can ever have a smaller length than the one that follows it
+                    if (plr.ProgramStatesRight.Length < groupCount)
+                        throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, fieldIndex));
+                    // The last field can have different (smaller) groupCount, but no others can
+                    if ((fieldsWritten > 1) && (plr.ProgramStatesRight.Length != groupCount))
+                        throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, fieldIndex));
+                    // Write the field
+                    writer.WriteStringArray(plr.ProgramStatesRight);
+                    // Keep track of the shared array length
+                    groupCount = plr.ProgramStatesRight.Length;
+                    fieldsWritten += 1;
+                }
+                else if (fieldsWritten > 0) {
+                    // Here's where the transition to CodeGen breaks down, if a field has already been written and we
+                    //  need to fill with a missing values array, we don't know for certain how long it should be, so
+                    //  we look "ahead" to plr.GroupIndexes.Length, which must be the correct length
+                    if (fieldsWritten == 1)
+                        groupCount = plr.GroupIndexes.Length;
+                    // Fill an array of missing values and write
+                    string[] arr = new string[groupCount];
+                    Array.ForEach<string>(arr, delegate(string a) { a = ""; });
+                    writer.WriteStringArray(arr);
+                }
+                fieldIndex -= 1;
+
+                if (plr.GroupRadixes != null) {
+                    // No field can ever have a smaller length than the one that follows it
+                    if (plr.GroupRadixes.Length < groupCount)
+                        throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, fieldIndex));
+                    // The last field can have different (smaller) groupCount, but no others can
+                    if ((fieldsWritten > 1) && (plr.GroupRadixes.Length != groupCount))
+                        throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, fieldIndex));
+                    // Write the field
+                    writer.WriteByteArray(plr.GroupRadixes);
+                    // Keep track of the shared array length
+                    groupCount = plr.GroupRadixes.Length;
+                    fieldsWritten += 1;
+                }
+                else if (fieldsWritten > 0) {
+                    // Here's where the transition to CodeGen breaks down, if a field has already been written and we
+                    //  need to fill with a missing values array, we don't know for certain how long it should be, so
+                    //  we look "ahead" to plr.GroupIndexes.Length, which must be the correct length
+                    if (fieldsWritten == 1)
+                        groupCount = plr.GroupIndexes.Length;
+                    // Fill an array of missing values and write
+                    byte[] arr = new byte[groupCount];
+                    Array.ForEach<byte>(arr, delegate(byte a) { a = byte.MinValue; });
+                    writer.WriteByteArray(arr);
+                }
+                fieldIndex -= 1;
+
+                if (plr.GroupModes != null) {
+                    // No field can ever have a smaller length than the one that follows it
+                    if (plr.GroupModes.Length < groupCount)
+                        throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, fieldIndex));
+                    // The last field can have different (smaller) groupCount, but no others can
+                    if ((fieldsWritten > 1) && (plr.GroupModes.Length != groupCount))
+                        throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, fieldIndex));
+                    // Write the field
+                    writer.WriteUInt16Array(plr.GroupModes);
+                    // Keep track of the shared array length
+                    groupCount = plr.GroupModes.Length;
+                    fieldsWritten += 1;
+                }
+                else if (fieldsWritten > 0) {
+                    // Here's where the transition to CodeGen breaks down, if a field has already been written and we
+                    //  need to fill with a missing values array, we don't know for certain how long it should be, so
+                    //  we look "ahead" to plr.GroupIndexes.Length, which must be the correct length
+                    if (fieldsWritten == 1)
+                        groupCount = plr.GroupIndexes.Length;
+                    // Fill an array of missing values and write
+                    ushort[] arr = new ushort[groupCount];
+                    Array.ForEach<ushort>(arr, delegate(ushort a) { a = ushort.MinValue; });
+                    writer.WriteUInt16Array(arr);
+                }
+                fieldIndex -= 1;
+
+                if (plr.GroupIndexes != null) {
+                    // No field can ever have a smaller length than the one that follows it
+                    if (plr.GroupIndexes.Length < groupCount)
+                        throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, fieldIndex));
+                    // The last field can have different (smaller) groupCount, but no others can
+                    if ((fieldsWritten > 1) && (plr.GroupIndexes.Length != groupCount))
+                        throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, fieldIndex));
+                    // Write the field
+                    writer.WriteUInt16Array(plr.GroupIndexes);
+                    // Keep track of the shared array length
+                    groupCount = plr.GroupIndexes.Length;
+                    fieldsWritten += 1;
                 }
                 else {
-                    throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, 6));
+                    throw new InvalidOperationException(String.Format(Resources.NonNullableField, fieldIndex, 7));
                 }
+                fieldIndex -= 1;
+
 
                 return new UnknownRecord(plr.RecordType, stream.ToArray(), endian);
             }

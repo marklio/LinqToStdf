@@ -92,7 +92,7 @@ namespace LinqToStdf {
                 }
                 else {
                     if (i == 0)
-                        return new T[0];
+                        return null;
                     Array.Resize<T>(ref value, i);
                     break;
                 }

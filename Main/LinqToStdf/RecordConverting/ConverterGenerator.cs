@@ -3,6 +3,7 @@
 // See http://www.microsoft.com/resources/sharedsource/licensingbasics/sharedsourcelicenses.mspx.
 // All other rights reserved.
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -116,11 +117,14 @@ namespace LinqToStdf.RecordConverting {
             var fieldType = pair.Key.FieldType;
             //if this is an array, defer to GenerateArrayAssignment
             if (pair.Key is StdfArrayLayoutAttribute) {
+                // TODO: Why do we need these fieldType checks at all?
                 if (fieldType == typeof(string)) {
                     // TODO: Accept string arrays
                     throw new InvalidOperationException(Resources.NoStringArrays);
                 }
-                // TODO: Check for bit array arrays?
+                if (fieldType == typeof(BitArray)) {
+                    throw new InvalidOperationException(Resources.NoBitArrayArrays);
+                }
                 return GenerateArrayAssignment(pair);
             }
 
