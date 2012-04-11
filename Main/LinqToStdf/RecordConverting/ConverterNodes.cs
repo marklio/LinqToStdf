@@ -99,25 +99,28 @@ namespace LinqToStdf.RecordConverting
         }
 
     }
-    class SkipTypeNode<T> : CodeNode
+    class SkipTypeNode : CodeNode
     {
         public int? LengthIndex { get; private set; }
         public bool IsNibble { get; private set; }
-        public SkipTypeNode()
+        public Type Type { get; private set; }
+        public SkipTypeNode(Type type)
         {
-            if (typeof(T).IsArray)
+            if (type.IsArray)
             {
                 throw new InvalidOperationException("SkipTypeNode on an array type must be constructed with a length index.");
             }
+            Type = type;
         }
-        public SkipTypeNode(int lengthIndex, bool isNibble = false)
+        public SkipTypeNode(Type type, int lengthIndex, bool isNibble = false)
         {
-            if (!typeof(T).IsArray)
+            if (!type.IsArray)
             {
                 throw new InvalidOperationException("SkipTypeNode on an non-array type can't be constructed with a length index.");
             }
+            Type = type;
             LengthIndex = lengthIndex;
-            if (isNibble && typeof(T) != typeof(byte)) throw new InvalidOperationException("Nibble arrays can only be read into byte arrays.");
+            if (isNibble && type != typeof(byte)) throw new InvalidOperationException("Nibble arrays can only be read into byte arrays.");
             IsNibble = isNibble;
         }
         public override CodeNode Accept(CodeNodeVisitor visitor)
@@ -137,25 +140,28 @@ namespace LinqToStdf.RecordConverting
             return visitor.VisitReadFixedString(this);
         }
     }
-    class ReadTypeNode<T> : CodeNode
+    class ReadTypeNode : CodeNode
     {
         public int? LengthIndex { get; private set; }
         public bool IsNibble { get; private set; }
-        public ReadTypeNode()
+        public Type Type { get; private set; }
+        public ReadTypeNode(Type type)
         {
-            if (typeof(T).IsArray)
+            if (type.IsArray)
             {
                 throw new InvalidOperationException("ReadTypeNode on an array type must be constructed with a length index.");
             }
+            Type = type;
         }
-        public ReadTypeNode(int lengthIndex, bool isNibble = false)
+        public ReadTypeNode(Type type, int lengthIndex, bool isNibble = false)
         {
-            if (!typeof(T).IsArray)
+            if (!type.IsArray)
             {
                 throw new InvalidOperationException("ReadTypeNode on an non-array type can't be constructed with a length index.");
             }
+            Type = type;
             LengthIndex = lengthIndex;
-            if (isNibble && typeof(T) != typeof(byte[])) throw new InvalidOperationException("Nibble arrays can only be read into byte arrays.");
+            if (isNibble && type != typeof(byte[])) throw new InvalidOperationException("Nibble arrays can only be read into byte arrays.");
             IsNibble = isNibble;
         }
         public override CodeNode Accept(CodeNodeVisitor visitor)
@@ -163,14 +169,16 @@ namespace LinqToStdf.RecordConverting
             return visitor.VisitReadType(this);
         }
     }
-    class FieldAssignmentNode<T> : CodeNode
+    class FieldAssignmentNode : CodeNode
     {
-        public FieldAssignmentNode(int index, CodeNode readNode, BlockNode assignmentBlock)
+        public FieldAssignmentNode(Type type, int index, CodeNode readNode, BlockNode assignmentBlock)
         {
+            Type = type;
             FieldIndex = index;
             ReadNode = readNode;
             AssignmentBlock = assignmentBlock;
         }
+        public Type Type { get; private set; }
         public int FieldIndex { get; private set; }
         public CodeNode ReadNode { get; private set; }
         public BlockNode AssignmentBlock { get; private set; }
@@ -193,24 +201,27 @@ namespace LinqToStdf.RecordConverting
             return visitor.VisitSkipAssignmentIfFlagSet(this);
         }
     }
-    class SkipAssignmentIfMissingValueNode<T> : CodeNode
+    class SkipAssignmentIfMissingValueNode : CodeNode
     {
-        public SkipAssignmentIfMissingValueNode(T missingValue)
+        //TODO: find out if we need to be more explicit about type, or if we can infer it from the missing value.
+        public SkipAssignmentIfMissingValueNode(object missingValue)
         {
             MissingValue = missingValue;
         }
-        public T MissingValue { get; private set; }
+        public object MissingValue { get; private set; }
         public override CodeNode Accept(CodeNodeVisitor visitor)
         {
             return visitor.VisitSkipAssignmentIfMissingValue(this);
         }
     }
-    class AssignFieldToPropertyNode<T> : CodeNode
+    class AssignFieldToPropertyNode : CodeNode
     {
-        public AssignFieldToPropertyNode(PropertyInfo property)
+        public AssignFieldToPropertyNode(Type fieldType, PropertyInfo property)
         {
+            FieldType = fieldType;
             Property = property;
         }
+        public Type FieldType { get; private set; }
         public PropertyInfo Property { get; private set; }
         public override CodeNode Accept(CodeNodeVisitor visitor)
         {
