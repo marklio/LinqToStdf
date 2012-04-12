@@ -25,7 +25,7 @@ namespace StdfDump {
                 foreach (var r in file.GetRecords())
                 {
                     if (outFile != null) outFile.WriteRecord(r);
-                    Console.WriteLine("{0} at offset {1}", r.GetType(), r.Offset);
+                    Console.WriteLine("{0}", r.GetType(), r.Offset);
                     DumpRecord(r);
                 }
             }
@@ -65,6 +65,8 @@ namespace StdfDump {
             var writeLine = typeof(Console).GetMethod("WriteLine", new[] { typeof(string), typeof(object[]) });
             foreach (var prop in type.GetProperties()) {
                 if (prop.Name == "RecordType") continue;
+                if (prop.Name == "StdfFile") continue;
+                if (prop.Name == "Offset") continue;
                 var propLocal = ilgen.DeclareLocal(prop.PropertyType);
                 var getter = prop.GetGetMethod();
                 //store the value in the local

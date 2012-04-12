@@ -92,9 +92,9 @@
     <Compile Include="RecordConverting\ConverterGenerator.cs" />
     <Compile Include="RecordConverting\ConverterNodes.cs" />
     <Compile Include="RecordConverting\PrettyPrintVisitor.cs" />
+    <Compile Include="RecordConverting\UnconverterEmittingVisitor.cs" />
     <Compile Include="RecordConverting\UnconverterGenerator.cs" />
     <Compile Include="RecordConverting\UnconverterNodes.cs" />
-    <Compile Include="RecordConverting\UnconvertingEmittingVisitor.cs" />
     <Compile Include="RecordHeader.cs" />
     <Compile Include="Records\CorruptDataRecord.cs" />
     <Compile Include="Records\EndOfStreamRecord.cs" />

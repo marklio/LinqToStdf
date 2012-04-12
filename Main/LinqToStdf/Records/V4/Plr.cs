@@ -244,8 +244,15 @@ namespace LinqToStdf.Records.V4 {
                 }
                 fieldIndex -= 1;
 
+                writer.WriteUInt16((ushort)groupCount);
 
-                return new UnknownRecord(plr.RecordType, stream.ToArray(), endian);
+                long length = stream.Length;
+                if (length > UInt16.MaxValue)
+                    throw new InvalidOperationException(Resources.RecordTooLong);
+                byte[] sa = stream.ToArray();
+                Array.Reverse(sa, 0, (int)length);
+
+                return new UnknownRecord(plr.RecordType, sa, endian);
             }
         }
     }
