@@ -223,7 +223,7 @@
     <value>Stdf strings must be at least 1 character long.</value>
   </data>
   <data name="StringTooLong" xml:space="preserve">
-    <value>STDF only supports strings &lt; 256 characters long.</value>
+    <value>STDF only supports strings up to 255 characters long.</value>
   </data>
   <data name="UnconvertEndianMismatch" xml:space="preserve">
     <value>Can't unconvert unknown records with the wrong Endianness.</value>
@@ -280,6 +280,9 @@
     <value>Attempting to write outside of a StartOfStreamRecord/EndOfStreamRecord pair.</value>
   </data>
   <data name="RecordTooLong" xml:space="preserve">
-    <value>STDF only supports records &lt; 65535 bytes long.</value>
+    <value>STDF only supports records up to 65535 bytes long.</value>
+  </data>
+  <data name="ArrayTooLong" xml:space="preserve">
+    <value>STDF only supports arrays up to {0} in length for field index {1} of {2}.</value>
   </data>
 </root>

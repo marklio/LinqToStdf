@@ -70,6 +70,15 @@ namespace LinqToStdf {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to STDF only supports arrays up to {0} in length for field index {1} of {2}..
+        /// </summary>
+        internal static string ArrayTooLong {
+            get {
+                return ResourceManager.GetString("ArrayTooLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Nested iterations cannot be triggered inside RecordFilter implementations when caching is enabled..
         /// </summary>
         internal static string CachingReEntrancy {
@@ -340,7 +349,7 @@ namespace LinqToStdf {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to STDF only supports records &lt; 65535 bytes long..
+        ///   Looks up a localized string similar to STDF only supports records up to 65535 bytes long..
         /// </summary>
         internal static string RecordTooLong {
             get {
@@ -385,7 +394,7 @@ namespace LinqToStdf {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to STDF only supports strings &lt; 256 characters long..
+        ///   Looks up a localized string similar to STDF only supports strings up to 255 characters long..
         /// </summary>
         internal static string StringTooLong {
             get {

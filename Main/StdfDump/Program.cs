@@ -16,21 +16,24 @@ namespace StdfDump {
         static void Main(string[] args) {
             var file = new StdfFile(args[0]);
             StdfFileWriter outFile = null;
-            if (args.Length > 1)
-            {
+            if (args.Length > 1) {
                 outFile = new StdfFileWriter(args[1]);
             }
-            try
-            {
-                foreach (var r in file.GetRecords())
-                {
-                    if (outFile != null) outFile.WriteRecord(r);
-                    Console.WriteLine("{0}", r.GetType(), r.Offset);
+            try {
+                int bytesWritten = 0;
+                long bytesRead = 0;
+                foreach (var r in file.GetRecords()) {
+                    Console.WriteLine("Read Length: {0}", r.Offset - bytesRead);
+                    bytesRead = r.Offset;
+                    Console.WriteLine("{0}", r.GetType());
                     DumpRecord(r);
+                    if (outFile != null) {
+                        bytesWritten = outFile.WriteRecord(r);
+                        Console.WriteLine("Written Length: {0}", bytesWritten);
+                    }
                 }
             }
-            finally
-            {
+            finally {
                 if (outFile != null) outFile.Dispose();
             }
         }

@@ -43,16 +43,16 @@ namespace LinqToStdf {
         public StdfFileWriter(string path, bool debug = false) : this(path, Endian.Unknown, debug) { }
 
         /// <summary>
-        /// Writes a single record to the file
+        /// Writes a single record to the file, returning the number of bytes written
         /// </summary>
         /// <param name="record"></param>
-        public void WriteRecord(StdfRecord record) {
+        public int WriteRecord(StdfRecord record) {
             if (_Endian == Endian.Unknown) {
                 //we must be able to infer the endianness based on the first record
                 if (record.GetType() == typeof(StartOfStreamRecord)) {
-					var sos = (StartOfStreamRecord)record;
+                    var sos = (StartOfStreamRecord)record;
                     _Endian = sos.Endian;
-                    return;
+                    return 0;
                 }
                 else if (record.GetType() == typeof(Far)) {
                     InferEndianFromFar((Far)record);
@@ -64,7 +64,9 @@ namespace LinqToStdf {
                 var ur = _Factory.Unconvert(record, _Endian);
                 writer.WriteHeader(new RecordHeader((ushort)ur.Content.Length, ur.RecordType));
                 _Stream.Write(ur.Content, 0, ur.Content.Length);
+                return ur.Content.Length + 4;
             }
+            return 0;
         }
 
         private void InferEndianFromFar(Far far) {
@@ -83,10 +85,12 @@ namespace LinqToStdf {
         /// Writes a stream of records to the file.
         /// </summary>
         /// <param name="records"></param>
-        public void WriteRecords(IEnumerable<StdfRecord> records) {
+        public int WriteRecords(IEnumerable<StdfRecord> records) {
+            int bytesWritten = 0;
             foreach (var r in records) {
-                WriteRecord(r);
+                bytesWritten += WriteRecord(r);
             }
+            return bytesWritten;
         }
 
         #region IDisposable Members
