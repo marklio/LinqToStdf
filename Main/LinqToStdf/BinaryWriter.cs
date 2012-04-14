@@ -44,7 +44,6 @@ namespace LinqToStdf {
         /// <summary>
         /// Creates an ASCII encoder that throws if we can't encode the string to ASCII
         /// </summary>
-        /// <returns></returns>
         static Encoding CreateEncoding() {
             var encoding = (ASCIIEncoding)Encoding.ASCII.Clone();
             encoding.EncoderFallback = EncoderFallback.ExceptionFallback;
