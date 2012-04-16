@@ -29,15 +29,15 @@ namespace LinqToStdf.Records.V4 {
 	StdfArrayLayout(FieldIndex = 16, FieldType = typeof(ushort), ArrayLengthFieldIndex = 13, AssignTo = "ProgrammedIndexes"),
 	StdfNibbleArrayLayout(FieldIndex = 17, ArrayLengthFieldIndex = 13, AssignTo = "ProgrammedStates"),
 	StdfFieldLayout(FieldIndex = 18, FieldType = typeof(BitArray), AssignTo = "FailingPinBitfield"),
-	StdfStringLayout(FieldIndex = 19, AssignTo = "VectorName"),
-	StdfStringLayout(FieldIndex = 20, AssignTo = "TimeSet"),
-	StdfStringLayout(FieldIndex = 21, AssignTo = "OpCode"),
-	StdfStringLayout(FieldIndex = 22, AssignTo = "TestText"),
-	StdfStringLayout(FieldIndex = 23, AssignTo = "AlarmId"),
-	StdfStringLayout(FieldIndex = 24, AssignTo = "ProgrammedText"),
-	StdfStringLayout(FieldIndex = 25, AssignTo = "ResultText"),
-	StdfFieldLayout(FieldIndex = 26, FieldType = typeof(byte), AssignTo = "PatternGeneratorNumber"),
-    StdfFieldLayout(FieldIndex = 27, FieldType = typeof(BitArray), AssignTo = "SpinMap")]
+    StdfStringLayout(FieldIndex = 19, AssignTo = "VectorName", MissingValue = ""),
+    StdfStringLayout(FieldIndex = 20, AssignTo = "TimeSet", MissingValue = ""),
+    StdfStringLayout(FieldIndex = 21, AssignTo = "OpCode", MissingValue = ""),
+    StdfStringLayout(FieldIndex = 22, AssignTo = "TestText", MissingValue = ""),
+    StdfStringLayout(FieldIndex = 23, AssignTo = "AlarmId", MissingValue = ""),
+    StdfStringLayout(FieldIndex = 24, AssignTo = "ProgrammedText", MissingValue = ""),
+    StdfStringLayout(FieldIndex = 25, AssignTo = "ResultText", MissingValue = ""),
+    StdfFieldLayout(FieldIndex = 26, FieldType = typeof(byte), AssignTo = "PatternGeneratorNumber", MissingValue = ""),
+    StdfFieldLayout(FieldIndex = 27, FieldType = typeof(BitArray), AssignTo = "SpinMap", MissingValue = "")]
 	public class Ftr : StdfRecord, IHeadSiteIndexable  {
 
 		public override RecordType RecordType {

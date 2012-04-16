@@ -10,7 +10,7 @@ namespace LinqToStdf.Records.V4 {
 	using Attributes;
 
     [StdfFieldLayout(FieldIndex = 0, FieldType = typeof(ushort), AssignTo = "GroupIndex"),
-    StdfStringLayout(FieldIndex = 1, AssignTo = "GroupName"),
+    StdfStringLayout(FieldIndex = 1, AssignTo = "GroupName", MissingValue = ""),
     StdfFieldLayout(FieldIndex = 2, FieldType = typeof(ushort)),
     StdfArrayLayout(FieldIndex = 3, FieldType = typeof(ushort), ArrayLengthFieldIndex = 2, AssignTo = "PinIndexes")]
     public class Pgr : StdfRecord {

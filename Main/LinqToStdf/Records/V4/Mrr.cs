@@ -11,8 +11,8 @@ namespace LinqToStdf.Records.V4 {
 
     [StdfFieldLayout(FieldIndex = 0, FieldType = typeof(DateTime), AssignTo = "FinishTime"),
     StdfStringLayout(FieldIndex = 1, Length = 1, MissingValue = " ", AssignTo = "DispositionCode"),
-    StdfStringLayout(FieldIndex = 2, AssignTo = "UserDescription"),
-    StdfStringLayout(FieldIndex = 3, AssignTo = "ExecDescription")]
+    StdfStringLayout(FieldIndex = 2, AssignTo = "UserDescription", MissingValue = ""),
+    StdfStringLayout(FieldIndex = 3, AssignTo = "ExecDescription", MissingValue = "")]
     public class Mrr : StdfRecord {
 
         public override RecordType RecordType {

@@ -14,7 +14,7 @@ namespace LinqToStdf.Records.V4 {
 	StdfFieldLayout(FieldIndex = 2, FieldType  = typeof(ushort), AssignTo = "BinNumber"),
 	StdfFieldLayout(FieldIndex = 3, FieldType  = typeof(uint), AssignTo = "BinCount"),
 	StdfStringLayout(FieldIndex = 4, Length = 1, MissingValue=" ", AssignTo = "BinPassFail"),
-	StdfStringLayout(FieldIndex = 5, AssignTo = "BinName")]
+	StdfStringLayout(FieldIndex = 5, AssignTo = "BinName", MissingValue="")]
 	public abstract class BinSummaryRecord : StdfRecord, IHeadSiteIndexable {
 		public abstract BinType BinType { get;}
         public byte HeadNumber { get; set; }

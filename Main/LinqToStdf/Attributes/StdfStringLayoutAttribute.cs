@@ -18,7 +18,6 @@ namespace LinqToStdf.Attributes {
 
         public StdfStringLayoutAttribute() {
             base.FieldType = typeof(string);
-            base.MissingValue = string.Empty;
         }
 
         private int _Length = int.MinValue;

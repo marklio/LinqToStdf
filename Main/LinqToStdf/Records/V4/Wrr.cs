@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace LinqToStdf.Records.V4 {
-	using Attributes;
+    using Attributes;
 
     [StdfFieldLayout(FieldIndex = 0, FieldType = typeof(byte), AssignTo = "HeadNumber"),
     StdfFieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = byte.MaxValue, AssignTo = "SiteGroup"),
@@ -17,12 +17,12 @@ namespace LinqToStdf.Records.V4 {
     StdfFieldLayout(FieldIndex = 5, FieldType = typeof(uint), MissingValue = uint.MaxValue, AssignTo = "AbortCount"),
     StdfFieldLayout(FieldIndex = 6, FieldType = typeof(uint), MissingValue = uint.MaxValue, AssignTo = "GoodCount"),
     StdfFieldLayout(FieldIndex = 7, FieldType = typeof(uint), MissingValue = uint.MaxValue, AssignTo = "FunctionalCount"),
-    StdfStringLayout(FieldIndex = 8, AssignTo = "WaferId"),
-    StdfStringLayout(FieldIndex = 9, AssignTo = "FabWaferId"),
-    StdfStringLayout(FieldIndex = 10, AssignTo = "FrameId"),
-    StdfStringLayout(FieldIndex = 11, AssignTo = "MaskId"),
-    StdfStringLayout(FieldIndex = 12, AssignTo = "UserDescription"),
-    StdfStringLayout(FieldIndex = 13, AssignTo = "ExecDescription")]
+    StdfStringLayout(FieldIndex = 8, AssignTo = "WaferId", MissingValue = ""),
+    StdfStringLayout(FieldIndex = 9, AssignTo = "FabWaferId", MissingValue = ""),
+    StdfStringLayout(FieldIndex = 10, AssignTo = "FrameId", MissingValue = ""),
+    StdfStringLayout(FieldIndex = 11, AssignTo = "MaskId", MissingValue = ""),
+    StdfStringLayout(FieldIndex = 12, AssignTo = "UserDescription", MissingValue = ""),
+    StdfStringLayout(FieldIndex = 13, AssignTo = "ExecDescription", MissingValue = "")]
     public class Wrr : StdfRecord, IHeadIndexable {
 
         public override RecordType RecordType {

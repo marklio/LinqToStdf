@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace LinqToStdf.Records.V4 {
-	using Attributes;
+    using Attributes;
 
     [StdfFieldLayout(FieldIndex = 0, FieldType = typeof(float), MissingValue = (float)0, AssignTo = "WaferSize"),
     StdfFieldLayout(FieldIndex = 1, FieldType = typeof(float), MissingValue = (float)0, AssignTo = "DieHeight"),
