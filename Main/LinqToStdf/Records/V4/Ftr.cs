@@ -36,8 +36,8 @@ namespace LinqToStdf.Records.V4 {
     StdfStringLayout(FieldIndex = 23, AssignTo = "AlarmId", MissingValue = ""),
     StdfStringLayout(FieldIndex = 24, AssignTo = "ProgrammedText", MissingValue = ""),
     StdfStringLayout(FieldIndex = 25, AssignTo = "ResultText", MissingValue = ""),
-    StdfFieldLayout(FieldIndex = 26, FieldType = typeof(byte), AssignTo = "PatternGeneratorNumber", MissingValue = ""),
-    StdfFieldLayout(FieldIndex = 27, FieldType = typeof(BitArray), AssignTo = "SpinMap", MissingValue = "")]
+    StdfFieldLayout(FieldIndex = 26, FieldType = typeof(byte), AssignTo = "PatternGeneratorNumber"),
+    StdfFieldLayout(FieldIndex = 27, FieldType = typeof(BitArray), AssignTo = "SpinMap")]
 	public class Ftr : StdfRecord, IHeadSiteIndexable  {
 
 		public override RecordType RecordType {
