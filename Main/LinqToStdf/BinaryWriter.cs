@@ -340,6 +340,7 @@ namespace LinqToStdf {
         /// Writes a string where the first byte indicates the length
         /// </summary>
         public void WriteString(string value) {
+            // TODO: This should be setting value to the fields MissingValue
             value = value ?? String.Empty;
             if (value.Length > 255) throw new InvalidOperationException(Resources.StringTooLong);
             if (!_WriteBackwards) {
