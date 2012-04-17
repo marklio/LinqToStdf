@@ -40,18 +40,72 @@ namespace LinqToStdf.Records.V4 {
                 plr.GroupIndexes = reader.ReadUInt16Array(groupCount, true);
 
                 // Latter arrays are optional, and may be truncated
-                if (!reader.AtEndOfStream)
-                    plr.GroupModes = reader.ReadUInt16Array(groupCount, false);
-                if (!reader.AtEndOfStream)
-                    plr.GroupRadixes = reader.ReadByteArray(groupCount, false);
-                if (!reader.AtEndOfStream)
-                    plr.ProgramStatesRight = reader.ReadStringArray(groupCount, false);
-                if (!reader.AtEndOfStream)
-                    plr.ReturnStatesRight = reader.ReadStringArray(groupCount, false);
-                if (!reader.AtEndOfStream)
-                    plr.ProgramStatesLeft = reader.ReadStringArray(groupCount, false);
-                if (!reader.AtEndOfStream)
-                    plr.ReturnStatesLeft = reader.ReadStringArray(groupCount, false);
+                if (!reader.AtEndOfStream) {
+                    ushort[] groupModes = reader.ReadUInt16Array(groupCount, false);
+                    // Expand a truncated array, filling with missing value
+                    if ((groupModes != null) && (groupModes.Length < groupCount)) {
+                        int i = groupModes.Length;
+                        Array.Resize<ushort>(ref groupModes, groupCount);
+                        for (; i < groupModes.Length; i++)
+                            groupModes[i] = ushort.MinValue;
+                    }
+                    plr.GroupModes = groupModes;
+                }
+                if (!reader.AtEndOfStream) {
+                    byte[] groupRadixes = reader.ReadByteArray(groupCount, false);
+                    // Expand a truncated array, filling with missing value
+                    if ((groupRadixes != null) && (groupRadixes.Length < groupCount)) {
+                        int i = groupRadixes.Length;
+                        Array.Resize<byte>(ref groupRadixes, groupCount);
+                        for (; i < groupRadixes.Length; i++)
+                            groupRadixes[i] = byte.MinValue;
+                    }
+                    plr.GroupRadixes = groupRadixes;
+                }
+                if (!reader.AtEndOfStream) {
+                    string[] programStatesRight = reader.ReadStringArray(groupCount, false);
+                    // Expand a truncated array, filling with missing value
+                    if ((programStatesRight != null) && (programStatesRight.Length < groupCount)) {
+                        int i = programStatesRight.Length;
+                        Array.Resize<string>(ref programStatesRight, groupCount);
+                        for (; i < programStatesRight.Length; i++)
+                            programStatesRight[i] = "";
+                    }
+                    plr.ProgramStatesRight = programStatesRight;
+                }
+                if (!reader.AtEndOfStream) {
+                    string[] returnStatesRight = reader.ReadStringArray(groupCount, false);
+                    // Expand a truncated array, filling with missing value
+                    if ((returnStatesRight != null) && (returnStatesRight.Length < groupCount)) {
+                        int i = returnStatesRight.Length;
+                        Array.Resize<string>(ref returnStatesRight, groupCount);
+                        for (; i < returnStatesRight.Length; i++)
+                            returnStatesRight[i] = "";
+                    }
+                    plr.ReturnStatesRight = returnStatesRight;
+                }
+                if (!reader.AtEndOfStream) {
+                    string[] programStatesLeft = reader.ReadStringArray(groupCount, false);
+                    // Expand a truncated array, filling with missing value
+                    if ((programStatesLeft != null) && (programStatesLeft.Length < groupCount)) {
+                        int i = programStatesLeft.Length;
+                        Array.Resize<string>(ref programStatesLeft, groupCount);
+                        for (; i < programStatesLeft.Length; i++)
+                            programStatesLeft[i] = "";
+                    }
+                    plr.ProgramStatesLeft = programStatesLeft;
+                }
+                if (!reader.AtEndOfStream) {
+                    string[] returnStatesLeft = reader.ReadStringArray(groupCount, false);
+                    // Expand a truncated array, filling with missing value
+                    if ((returnStatesLeft != null) && (returnStatesLeft.Length < groupCount)) {
+                        int i = returnStatesLeft.Length;
+                        Array.Resize<string>(ref returnStatesLeft, groupCount);
+                        for (; i < returnStatesLeft.Length; i++)
+                            returnStatesLeft[i] = "";
+                    }
+                    plr.ReturnStatesLeft = returnStatesLeft;
+                }
             }
             return plr;
         }
