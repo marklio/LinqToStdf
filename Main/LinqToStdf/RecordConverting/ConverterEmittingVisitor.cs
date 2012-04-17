@@ -277,6 +277,7 @@ namespace LinqToStdf.RecordConverting
                 ILGen.Box(_FieldLocal.LocalType);
             }
             ILGen.Constrained(_FieldLocal.LocalType);
+            // TODO: if (!node.AllowMissingValue) { do the next two lines... }
             ILGen.Callvirt(typeof(object).GetMethod("Equals", typeof(object)));
             ILGen.Brtrue(_SkipAssignmentLabel);
             return node;
