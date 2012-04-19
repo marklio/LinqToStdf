@@ -25,17 +25,16 @@ namespace LinqToStdf {
         RecordConverterFactory _Factory;
         Stream _Stream;
         Endian _Endian;
-        public StdfFileWriter(string path, Endian endian, bool debug = false)
-        {
+        public StdfFileWriter(string path, Endian endian, bool debug = false) {
+            if (path == null)
+                throw new ArgumentNullException("path");
             _Stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read);
             _Endian = endian;
-            if (debug)
-            {
+            if (debug) {
                 _Factory = new RecordConverterFactory() { Debug = debug };
                 StdfV4Specification.RegisterRecords(_Factory);
             }
-            else
-            {
+            else {
                 _Factory = new RecordConverterFactory(StdfFile._V4ConverterFactory);
             }
         }
@@ -47,6 +46,8 @@ namespace LinqToStdf {
         /// </summary>
         /// <param name="record"></param>
         public int WriteRecord(StdfRecord record) {
+            if (record == null)
+                throw new ArgumentNullException("record");
             if (_Endian == Endian.Unknown) {
                 //we must be able to infer the endianness based on the first record
                 if (record.GetType() == typeof(StartOfStreamRecord)) {
@@ -70,6 +71,8 @@ namespace LinqToStdf {
         }
 
         private void InferEndianFromFar(Far far) {
+            if (far == null)
+                throw new ArgumentNullException("far");
             switch (far.CpuType) {
                 case 0:
                 case 1:
@@ -87,8 +90,11 @@ namespace LinqToStdf {
         /// <param name="records"></param>
         public int WriteRecords(IEnumerable<StdfRecord> records) {
             int bytesWritten = 0;
-            foreach (var r in records) {
-                bytesWritten += WriteRecord(r);
+            if (records != null) {
+                foreach (var r in records) {
+                    if (r != null)
+                        bytesWritten += WriteRecord(r);
+                }
             }
             return bytesWritten;
         }
