@@ -10,6 +10,7 @@ using System.Collections;
 using System.Diagnostics;
 
 namespace LinqToStdf {
+    using Attributes;
 
     /// <summary>
     /// Knows how to write STDF-relevant binary data to a stream.
@@ -29,12 +30,6 @@ namespace LinqToStdf {
     /// </para>
     /// </remarks>
     public class BinaryWriter {
-
-        //TODO: consolidate between reader/writers
-        /// <summary>
-        /// The epoch used for STDF dates
-        /// </summary>
-        static readonly DateTime _Epoch = new DateTime(1970, 1, 1);
 
         /// <summary>
         /// Encoder used to encoding strings and characters
@@ -368,7 +363,7 @@ namespace LinqToStdf {
         /// Writes an STDF datetime (4-byte integer seconds since the epoch)
         /// </summary>
         public void WriteDateTime(DateTime value) {
-            var seconds = (uint)(value - BinaryWriter._Epoch).TotalSeconds;
+            var seconds = (uint)(value - TimeFieldLayoutAttribute.Epoch).TotalSeconds;
             WriteUInt32(seconds);
         }
 

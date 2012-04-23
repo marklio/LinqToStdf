@@ -9,7 +9,7 @@ using System.Text;
 namespace LinqToStdf.Records.V4 {
 	using Attributes;
 	
-	[FieldLayout(FieldIndex = 0, FieldType  = typeof(DateTime), RecordProperty = "ModifiedTime"),
+	[TimeFieldLayout(FieldIndex = 0, RecordProperty = "ModifiedTime"),
 	StringFieldLayout(FieldIndex = 1, RecordProperty = "CommandLine")]
 	public class Atr : StdfRecord {
 

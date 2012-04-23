@@ -376,15 +376,6 @@ namespace LinqToStdf {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to StdfStringLayoutAttribute can only define fields of type string..
-        /// </summary>
-        internal static string StdfStringLayoutNonString {
-            get {
-                return ResourceManager.GetString("StdfStringLayoutNonString", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Stdf strings must be at least 1 character long..
         /// </summary>
         internal static string StdfStringLessThanOne {
@@ -394,11 +385,29 @@ namespace LinqToStdf {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to StringFieldLayoutAttribute can only define fields of type String..
+        /// </summary>
+        internal static string StringFieldLayoutNonString {
+            get {
+                return ResourceManager.GetString("StringFieldLayoutNonString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to STDF only supports strings up to 255 characters long..
         /// </summary>
         internal static string StringTooLong {
             get {
                 return ResourceManager.GetString("StringTooLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to TimeFieldLayoutAttribute can only define fields of type DateTime..
+        /// </summary>
+        internal static string TimeFieldLayoutNonDateTime {
+            get {
+                return ResourceManager.GetString("TimeFieldLayoutNonDateTime", resourceCulture);
             }
         }
         

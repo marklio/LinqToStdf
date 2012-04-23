@@ -216,8 +216,8 @@
   <data name="SOFBeforeEOF" xml:space="preserve">
     <value>Cannot start a new file before ending the current one.</value>
   </data>
-  <data name="StdfStringLayoutNonString" xml:space="preserve">
-    <value>StdfStringLayoutAttribute can only define fields of type string.</value>
+  <data name="StringFieldLayoutNonString" xml:space="preserve">
+    <value>StringFieldLayoutAttribute can only define fields of type String.</value>
   </data>
   <data name="StdfStringLessThanOne" xml:space="preserve">
     <value>Stdf strings must be at least 1 character long.</value>
@@ -284,5 +284,8 @@
   </data>
   <data name="ArrayTooLong" xml:space="preserve">
     <value>STDF only supports arrays up to {0} in length for field index {1} of {2}.</value>
+  </data>
+  <data name="TimeFieldLayoutNonDateTime" xml:space="preserve">
+    <value>TimeFieldLayoutAttribute can only define fields of type DateTime.</value>
   </data>
 </root>

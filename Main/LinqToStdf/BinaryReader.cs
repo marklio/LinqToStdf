@@ -11,6 +11,7 @@ using System.Collections;
 using System.Diagnostics;
 
 namespace LinqToStdf {
+    using Attributes;
 
     /// <summary>
     /// Knows how to read STDF-relevant binary data from a stream.
@@ -22,11 +23,6 @@ namespace LinqToStdf {
     /// such as variable-length strings and dates.
     /// </remarks>
     public class BinaryReader : IDisposable {
-        /// <summary>
-        /// The epoch used for STDF dates
-        /// </summary>
-        static readonly DateTime _Epoch = new DateTime(1970, 1, 1);
-
         /// <summary>
         /// Constructs a <see cref="BinaryReader"/> on the given stream.  The stream is
         /// assumed to contain little endian data
@@ -420,7 +416,7 @@ namespace LinqToStdf {
         /// </summary>
         public DateTime ReadDateTime() {
             var seconds = ReadUInt32();
-            return BinaryReader._Epoch + TimeSpan.FromSeconds((double)seconds);
+            return TimeFieldLayoutAttribute.Epoch + TimeSpan.FromSeconds((double)seconds);
         }
 
         /// <summary>
