@@ -47,7 +47,7 @@ namespace LinqToStdf.Attributes {
             get { return base.FieldType; }
             set {
                 if (value != typeof(string)) {
-                    throw new InvalidOperationException(Resources.StdfStringLayoutNonString);
+                    throw new InvalidOperationException(Resources.StringFieldLayoutNonString);
                 }
             }
         }
