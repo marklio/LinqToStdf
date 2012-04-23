@@ -9,10 +9,10 @@ using System.Text;
 namespace LinqToStdf.Records.V4 {
 	using Attributes;
 
-    [StdfFieldLayout(FieldIndex = 0, FieldType = typeof(ushort), AssignTo = "GroupIndex"),
-    StdfStringLayout(FieldIndex = 1, AssignTo = "GroupName", MissingValue = ""),
-    StdfFieldLayout(FieldIndex = 2, FieldType = typeof(ushort)),
-    StdfArrayLayout(FieldIndex = 3, FieldType = typeof(ushort), ArrayLengthFieldIndex = 2, AssignTo = "PinIndexes")]
+    [FieldLayout(FieldIndex = 0, FieldType = typeof(ushort), RecordProperty = "GroupIndex"),
+    StringFieldLayout(FieldIndex = 1, RecordProperty = "GroupName", MissingValue = ""),
+    FieldLayout(FieldIndex = 2, FieldType = typeof(ushort)),
+    ArrayFieldLayout(FieldIndex = 3, FieldType = typeof(ushort), ArrayLengthFieldIndex = 2, RecordProperty = "PinIndexes")]
     public class Pgr : StdfRecord {
 
         public override RecordType RecordType {

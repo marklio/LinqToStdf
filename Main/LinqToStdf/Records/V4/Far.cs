@@ -9,8 +9,8 @@ using System.Text;
 namespace LinqToStdf.Records.V4 {
 	using Attributes;
 
-	[StdfFieldLayout(FieldIndex = 0, FieldType = typeof(byte), AssignTo = "CpuType"),
-	StdfFieldLayout(FieldIndex = 1, FieldType = typeof(byte), AssignTo ="StdfVersion")]
+	[FieldLayout(FieldIndex = 0, FieldType = typeof(byte), RecordProperty = "CpuType"),
+	FieldLayout(FieldIndex = 1, FieldType = typeof(byte), RecordProperty ="StdfVersion")]
 	public class Far : StdfRecord {
 
 		public override RecordType RecordType {

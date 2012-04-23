@@ -9,26 +9,26 @@ using System.Text;
 namespace LinqToStdf.Records.V4 {
 	using Attributes;
 
-    [StdfFieldLayout(FieldIndex = 0, FieldType = typeof(byte), AssignTo = "HeadNumber"),
-    StdfFieldLayout(FieldIndex = 1, FieldType = typeof(byte), AssignTo = "SiteGroup"),
-    StdfFieldLayout(FieldIndex = 2, FieldType = typeof(byte)),
-    StdfArrayLayout(FieldIndex = 3, FieldType = typeof(byte), ArrayLengthFieldIndex = 2, AssignTo = "Sites"),
-    StdfStringLayout(FieldIndex = 4, AssignTo = "HandlerType", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 5, AssignTo = "HandlerId", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 6, AssignTo = "CardType", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 7, AssignTo = "CardId", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 8, AssignTo = "LoadboardType", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 9, AssignTo = "LoadboardId", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 10, AssignTo = "DibType", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 11, AssignTo = "DibId", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 12, AssignTo = "CableType", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 13, AssignTo = "CableId", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 14, AssignTo = "ContactorType", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 15, AssignTo = "ContactorId", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 16, AssignTo = "LaserType", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 17, AssignTo = "LaserId", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 18, AssignTo = "ExtraType", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 19, AssignTo = "ExtraId", MissingValue = "")]
+    [FieldLayout(FieldIndex = 0, FieldType = typeof(byte), RecordProperty = "HeadNumber"),
+    FieldLayout(FieldIndex = 1, FieldType = typeof(byte), RecordProperty = "SiteGroup"),
+    FieldLayout(FieldIndex = 2, FieldType = typeof(byte)),
+    ArrayFieldLayout(FieldIndex = 3, FieldType = typeof(byte), ArrayLengthFieldIndex = 2, RecordProperty = "Sites"),
+    StringFieldLayout(FieldIndex = 4, RecordProperty = "HandlerType", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 5, RecordProperty = "HandlerId", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 6, RecordProperty = "CardType", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 7, RecordProperty = "CardId", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 8, RecordProperty = "LoadboardType", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 9, RecordProperty = "LoadboardId", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 10, RecordProperty = "DibType", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 11, RecordProperty = "DibId", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 12, RecordProperty = "CableType", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 13, RecordProperty = "CableId", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 14, RecordProperty = "ContactorType", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 15, RecordProperty = "ContactorId", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 16, RecordProperty = "LaserType", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 17, RecordProperty = "LaserId", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 18, RecordProperty = "ExtraType", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 19, RecordProperty = "ExtraId", MissingValue = "")]
     public class Sdr : StdfRecord, IHeadIndexable {
 
         public override RecordType RecordType {

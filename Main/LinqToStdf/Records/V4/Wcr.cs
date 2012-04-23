@@ -9,15 +9,15 @@ using System.Text;
 namespace LinqToStdf.Records.V4 {
     using Attributes;
 
-    [StdfFieldLayout(FieldIndex = 0, FieldType = typeof(float), MissingValue = (float)0, AssignTo = "WaferSize"),
-    StdfFieldLayout(FieldIndex = 1, FieldType = typeof(float), MissingValue = (float)0, AssignTo = "DieHeight"),
-    StdfFieldLayout(FieldIndex = 2, FieldType = typeof(float), MissingValue = (float)0, AssignTo = "DieWidth"),
-    StdfFieldLayout(FieldIndex = 3, FieldType = typeof(byte), MissingValue = byte.MinValue, AssignTo = "Units"),
-    StdfStringLayout(FieldIndex = 4, Length = 1, MissingValue = " ", AssignTo = "Flat"),
-    StdfFieldLayout(FieldIndex = 5, FieldType = typeof(short), MissingValue = short.MinValue, AssignTo = "CenterX"),
-    StdfFieldLayout(FieldIndex = 6, FieldType = typeof(short), MissingValue = short.MinValue, AssignTo = "CenterY"),
-    StdfStringLayout(FieldIndex = 7, Length = 1, MissingValue = " ", AssignTo = "PositiveX"),
-    StdfStringLayout(FieldIndex = 8, Length = 1, MissingValue = " ", AssignTo = "PositiveY")]
+    [FieldLayout(FieldIndex = 0, FieldType = typeof(float), MissingValue = (float)0, RecordProperty = "WaferSize"),
+    FieldLayout(FieldIndex = 1, FieldType = typeof(float), MissingValue = (float)0, RecordProperty = "DieHeight"),
+    FieldLayout(FieldIndex = 2, FieldType = typeof(float), MissingValue = (float)0, RecordProperty = "DieWidth"),
+    FieldLayout(FieldIndex = 3, FieldType = typeof(byte), MissingValue = byte.MinValue, RecordProperty = "Units"),
+    StringFieldLayout(FieldIndex = 4, Length = 1, MissingValue = " ", RecordProperty = "Flat"),
+    FieldLayout(FieldIndex = 5, FieldType = typeof(short), MissingValue = short.MinValue, RecordProperty = "CenterX"),
+    FieldLayout(FieldIndex = 6, FieldType = typeof(short), MissingValue = short.MinValue, RecordProperty = "CenterY"),
+    StringFieldLayout(FieldIndex = 7, Length = 1, MissingValue = " ", RecordProperty = "PositiveX"),
+    StringFieldLayout(FieldIndex = 8, Length = 1, MissingValue = " ", RecordProperty = "PositiveY")]
     public class Wcr : StdfRecord {
 
         public override RecordType RecordType {

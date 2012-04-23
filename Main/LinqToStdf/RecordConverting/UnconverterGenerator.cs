@@ -15,7 +15,7 @@ namespace LinqToStdf.RecordConverting {
         ILGenerator _ILGen;
         Type _Type;
         HashSet<int> _FieldLocalsTouched = new HashSet<int>();
-        List<KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo>> _Fields;
+        List<KeyValuePair<FieldLayoutAttribute, PropertyInfo>> _Fields;
 
         public UnconverterGenerator(ILGenerator ilgen, Type type) {
             if (ilgen == null) throw new ArgumentNullException("ilgen");
@@ -31,7 +31,7 @@ namespace LinqToStdf.RecordConverting {
                     new BlockNode(
                         from pair in _Fields.AsEnumerable().Reverse()
                         //don't generate code for dependency properties
-                        where !(pair.Key is StdfDependencyProperty)
+                        where !(pair.Key is DependencyProperty)
                         //this call through reflection is icky, but marginally better than the hard-coded table
                         //we're just binding to the generic GenerateAssignment method for the field's type
                         select GenerateAssignment(pair)));
@@ -43,28 +43,28 @@ namespace LinqToStdf.RecordConverting {
         }
 
         //TODO: refactor this so we're not duplicated with ConverterFactory
-        private List<KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo>> GetFieldLayoutsAndAssignments() {
+        private List<KeyValuePair<FieldLayoutAttribute, PropertyInfo>> GetFieldLayoutsAndAssignments() {
             //get the list
-            var attributes = from a in _Type.GetCustomAttributes(typeof(StdfFieldLayoutAttribute), true).Cast<StdfFieldLayoutAttribute>()
+            var attributes = from a in _Type.GetCustomAttributes(typeof(FieldLayoutAttribute), true).Cast<FieldLayoutAttribute>()
                              orderby a.FieldIndex
                              select a;
-            var list = new List<StdfFieldLayoutAttribute>(attributes);
+            var list = new List<FieldLayoutAttribute>(attributes);
             //make sure they are consecutive
             for (int i = 0; i < list.Count; i++) {
                 if (list[i].FieldIndex != i) throw new NonconsecutiveFieldIndexException(_Type);
             }
             var withPropInfo = from l in list
-                               select new KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo>(
+                               select new KeyValuePair<FieldLayoutAttribute, PropertyInfo>(
                                           l,
-                                          (l.AssignTo == null) ? null : _Type.GetProperty(l.AssignTo));
+                                          (l.RecordProperty == null) ? null : _Type.GetProperty(l.RecordProperty));
 
-            return new List<KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo>>(withPropInfo);
+            return new List<KeyValuePair<FieldLayoutAttribute, PropertyInfo>>(withPropInfo);
         }
 
-        CodeNode GenerateAssignment(KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo> pair) {
+        CodeNode GenerateAssignment(KeyValuePair<FieldLayoutAttribute, PropertyInfo> pair) {
             var fieldType = pair.Key.FieldType;
-            StdfStringLayoutAttribute stringLayout = pair.Key as StdfStringLayoutAttribute;
-            StdfArrayLayoutAttribute arrayLayout = pair.Key as StdfArrayLayoutAttribute;
+            StringFieldLayoutAttribute stringLayout = pair.Key as StringFieldLayoutAttribute;
+            ArrayFieldLayoutAttribute arrayLayout = pair.Key as ArrayFieldLayoutAttribute;
             //if it is an array, defer to GenerateArrayAssignment
             if (arrayLayout != null) {
                 // TODO: Why do we need these fieldType checks at all?
@@ -89,8 +89,8 @@ namespace LinqToStdf.RecordConverting {
             }
 
             //find out if there is an optional field flag that we need to manage
-            StdfFieldLayoutAttribute optionalFieldLayout = null;
-            StdfOptionalFieldLayoutAttribute currentAsOptionalFieldLayout = pair.Key as StdfOptionalFieldLayoutAttribute;
+            FieldLayoutAttribute optionalFieldLayout = null;
+            FlaggedFieldLayoutAttribute currentAsOptionalFieldLayout = pair.Key as FlaggedFieldLayoutAttribute;
             if (currentAsOptionalFieldLayout != null) {
                 optionalFieldLayout = _Fields[currentAsOptionalFieldLayout.FlagIndex].Key;
                 if (_FieldLocalsTouched.Add(currentAsOptionalFieldLayout.FlagIndex)) {
@@ -150,9 +150,9 @@ namespace LinqToStdf.RecordConverting {
                 optionalFieldMask: optionalFieldLayout == null ? (byte)0 : currentAsOptionalFieldLayout.FlagMask);
         }
 
-        CodeNode GenerateArrayAssignment(KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo> pair) {
+        CodeNode GenerateArrayAssignment(KeyValuePair<FieldLayoutAttribute, PropertyInfo> pair) {
             var fieldType = pair.Key.FieldType;
-            StdfArrayLayoutAttribute arrayLayout = (StdfArrayLayoutAttribute)pair.Key;
+            ArrayFieldLayoutAttribute arrayLayout = (ArrayFieldLayoutAttribute)pair.Key;
 
             var initNodes = new List<CodeNode>();
 
@@ -169,7 +169,7 @@ namespace LinqToStdf.RecordConverting {
             }
 
             CodeNode writeNode;
-            StdfFieldLayoutAttribute lengthLayout = _Fields[arrayLayout.ArrayLengthFieldIndex].Key;
+            FieldLayoutAttribute lengthLayout = _Fields[arrayLayout.ArrayLengthFieldIndex].Key;
             if (_FieldLocalsTouched.Add(arrayLayout.ArrayLengthFieldIndex)) {
                 writeNode = new BlockNode(
                     new CreateFieldLocalForWritingNode(arrayLayout.ArrayLengthFieldIndex, _Fields[arrayLayout.ArrayLengthFieldIndex].Key.FieldType),

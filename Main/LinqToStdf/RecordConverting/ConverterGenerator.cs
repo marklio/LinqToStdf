@@ -41,21 +41,21 @@ namespace LinqToStdf.RecordConverting {
         /// Does the work of generating the appropriate code.
         /// </summary>
         internal void GenerateConverter() {
-            List<KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo>> fields = GetFieldLayoutsAndAssignments(_Type);
+            List<KeyValuePair<FieldLayoutAttribute, PropertyInfo>> fields = GetFieldLayoutsAndAssignments(_Type);
             //pick up any fields that are required to parse the fields we need
             if (_Fields != null) {
                 foreach (var pair in fields) {
                     //if it's an assigned field that we are parsing
                     if (pair.Value != null && _Fields.Contains(pair.Value.Name)) {
                         //if it's an optional field
-                        var op = pair.Key as StdfOptionalFieldLayoutAttribute;
+                        var op = pair.Key as FlaggedFieldLayoutAttribute;
                         if (op != null) {
                             //if the flag index is an assigned field, add it to our list of parsed fields
                             var prop = fields[op.FlagIndex].Value;
                             if (prop != null) _Fields.Add(prop.Name);
                         }
                         else {
-                            var dep = pair.Key as StdfDependencyProperty;
+                            var dep = pair.Key as DependencyProperty;
                             if (dep != null) {
                                 var prop = fields[dep.DependentOnIndex].Value;
                                 if (prop != null) _Fields.Add(prop.Name);
@@ -69,7 +69,7 @@ namespace LinqToStdf.RecordConverting {
             //generate the assignment nodes
             var assignments = from pair in fields
                               //don't generate code for dependency properties
-                              where !(pair.Key is StdfDependencyProperty)
+                              where !(pair.Key is DependencyProperty)
                               //this call through reflection is icky, but marginally better than the hard-coded table
                               //we're just binding to the generic GenerateAssignment method for the field's type
                               select GenerateAssignment(pair);
@@ -95,28 +95,28 @@ namespace LinqToStdf.RecordConverting {
             }.Visit(block);
         }
 
-        static List<KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo>> GetFieldLayoutsAndAssignments(Type recordType) {
+        static List<KeyValuePair<FieldLayoutAttribute, PropertyInfo>> GetFieldLayoutsAndAssignments(Type recordType) {
             //get the list
-            var attributes = from a in ((Type)recordType).GetCustomAttributes(typeof(StdfFieldLayoutAttribute), true).Cast<StdfFieldLayoutAttribute>()
+            var attributes = from a in ((Type)recordType).GetCustomAttributes(typeof(FieldLayoutAttribute), true).Cast<FieldLayoutAttribute>()
                              orderby a.FieldIndex
                              select a;
-            var list = new List<StdfFieldLayoutAttribute>(attributes);
+            var list = new List<FieldLayoutAttribute>(attributes);
             //make sure they are consecutive
             for (int i = 0; i < list.Count; i++) {
                 if (list[i].FieldIndex != i) throw new NonconsecutiveFieldIndexException(recordType);
             }
             var withPropInfo = from l in list
-                               select new KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo>(
+                               select new KeyValuePair<FieldLayoutAttribute, PropertyInfo>(
                                           l,
-                                          (l.AssignTo == null) ? null : ((Type)recordType).GetProperty(l.AssignTo));
+                                          (l.RecordProperty == null) ? null : ((Type)recordType).GetProperty(l.RecordProperty));
 
-            return new List<KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo>>(withPropInfo);
+            return new List<KeyValuePair<FieldLayoutAttribute, PropertyInfo>>(withPropInfo);
         }
 
-        CodeNode GenerateAssignment(KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo> pair) {
+        CodeNode GenerateAssignment(KeyValuePair<FieldLayoutAttribute, PropertyInfo> pair) {
             var fieldType = pair.Key.FieldType;
             //if this is an array, defer to GenerateArrayAssignment
-            if (pair.Key is StdfArrayLayoutAttribute) {
+            if (pair.Key is ArrayFieldLayoutAttribute) {
                 // TODO: Why do we need these fieldType checks at all?
                 if (fieldType == typeof(string)) {
                     // TODO: Accept string arrays
@@ -129,7 +129,7 @@ namespace LinqToStdf.RecordConverting {
             }
 
             //get the length if this is a fixed-length string
-            StdfStringLayoutAttribute stringLayout = pair.Key as StdfStringLayoutAttribute;
+            StringFieldLayoutAttribute stringLayout = pair.Key as StringFieldLayoutAttribute;
             var stringLength = -1;
             if (stringLayout != null && stringLayout.Length > 0) {
                 stringLength = stringLayout.Length;
@@ -159,7 +159,7 @@ namespace LinqToStdf.RecordConverting {
             if (pair.Value != null) {
                 var assignmentNodes = new List<CodeNode>();
                 //if this is optional, set us up to skip if the missing flag is set
-                StdfOptionalFieldLayoutAttribute optionalLayout = pair.Key as StdfOptionalFieldLayoutAttribute;
+                FlaggedFieldLayoutAttribute optionalLayout = pair.Key as FlaggedFieldLayoutAttribute;
                 if (optionalLayout != null) {
                     assignmentNodes.Add(new SkipAssignmentIfFlagSetNode(optionalLayout.FlagIndex, optionalLayout.FlagMask));
                 }
@@ -176,10 +176,10 @@ namespace LinqToStdf.RecordConverting {
             return new FieldAssignmentNode(fieldType, pair.Key.FieldIndex, readerNode, assignmentBlock);
         }
 
-        CodeNode GenerateArrayAssignment(KeyValuePair<StdfFieldLayoutAttribute, PropertyInfo> pair) {
+        CodeNode GenerateArrayAssignment(KeyValuePair<FieldLayoutAttribute, PropertyInfo> pair) {
             var fieldType = pair.Key.FieldType;
-            bool isNibbleArray = pair.Key is StdfNibbleArrayLayoutAttribute;
-            int lengthIndex = ((StdfArrayLayoutAttribute)pair.Key).ArrayLengthFieldIndex;
+            bool isNibbleArray = pair.Key is NibbleArrayFieldLayoutAttribute;
+            int lengthIndex = ((ArrayFieldLayoutAttribute)pair.Key).ArrayLengthFieldIndex;
 
             //we can skip entirely if the length field was zero
             //we'll combine this as part of the "reading" of the field

@@ -9,20 +9,20 @@ using System.Text;
 namespace LinqToStdf.Records.V4 {
     using Attributes;
 
-    [StdfFieldLayout(FieldIndex = 0, FieldType = typeof(byte), AssignTo = "HeadNumber"),
-    StdfFieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = byte.MaxValue, AssignTo = "SiteGroup"),
-    StdfFieldLayout(FieldIndex = 2, FieldType = typeof(DateTime), AssignTo = "FinishTime"),
-    StdfFieldLayout(FieldIndex = 3, FieldType = typeof(uint), AssignTo = "PartCount"),
-    StdfFieldLayout(FieldIndex = 4, FieldType = typeof(uint), MissingValue = uint.MaxValue, AssignTo = "RetestCount"),
-    StdfFieldLayout(FieldIndex = 5, FieldType = typeof(uint), MissingValue = uint.MaxValue, AssignTo = "AbortCount"),
-    StdfFieldLayout(FieldIndex = 6, FieldType = typeof(uint), MissingValue = uint.MaxValue, AssignTo = "GoodCount"),
-    StdfFieldLayout(FieldIndex = 7, FieldType = typeof(uint), MissingValue = uint.MaxValue, AssignTo = "FunctionalCount"),
-    StdfStringLayout(FieldIndex = 8, AssignTo = "WaferId", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 9, AssignTo = "FabWaferId", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 10, AssignTo = "FrameId", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 11, AssignTo = "MaskId", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 12, AssignTo = "UserDescription", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 13, AssignTo = "ExecDescription", MissingValue = "")]
+    [FieldLayout(FieldIndex = 0, FieldType = typeof(byte), RecordProperty = "HeadNumber"),
+    FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = byte.MaxValue, RecordProperty = "SiteGroup"),
+    FieldLayout(FieldIndex = 2, FieldType = typeof(DateTime), RecordProperty = "FinishTime"),
+    FieldLayout(FieldIndex = 3, FieldType = typeof(uint), RecordProperty = "PartCount"),
+    FieldLayout(FieldIndex = 4, FieldType = typeof(uint), MissingValue = uint.MaxValue, RecordProperty = "RetestCount"),
+    FieldLayout(FieldIndex = 5, FieldType = typeof(uint), MissingValue = uint.MaxValue, RecordProperty = "AbortCount"),
+    FieldLayout(FieldIndex = 6, FieldType = typeof(uint), MissingValue = uint.MaxValue, RecordProperty = "GoodCount"),
+    FieldLayout(FieldIndex = 7, FieldType = typeof(uint), MissingValue = uint.MaxValue, RecordProperty = "FunctionalCount"),
+    StringFieldLayout(FieldIndex = 8, RecordProperty = "WaferId", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 9, RecordProperty = "FabWaferId", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 10, RecordProperty = "FrameId", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 11, RecordProperty = "MaskId", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 12, RecordProperty = "UserDescription", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 13, RecordProperty = "ExecDescription", MissingValue = "")]
     public class Wrr : StdfRecord, IHeadIndexable {
 
         public override RecordType RecordType {

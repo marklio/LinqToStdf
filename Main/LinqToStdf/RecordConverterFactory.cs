@@ -28,7 +28,7 @@ namespace LinqToStdf {
     /// can be hand-written and registered with the converter factory.
     /// </para>
     /// </summary>
-    /// <seealso cref="StdfFieldLayoutAttribute"/>
+    /// <seealso cref="FieldLayoutAttribute"/>
     public class RecordConverterFactory {
 
         /// <summary>

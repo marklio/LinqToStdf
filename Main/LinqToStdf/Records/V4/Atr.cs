@@ -9,8 +9,8 @@ using System.Text;
 namespace LinqToStdf.Records.V4 {
 	using Attributes;
 	
-	[StdfFieldLayout(FieldIndex = 0, FieldType  = typeof(DateTime), AssignTo = "ModifiedTime"),
-	StdfStringLayout(FieldIndex = 1, AssignTo = "CommandLine")]
+	[FieldLayout(FieldIndex = 0, FieldType  = typeof(DateTime), RecordProperty = "ModifiedTime"),
+	StringFieldLayout(FieldIndex = 1, RecordProperty = "CommandLine")]
 	public class Atr : StdfRecord {
 
 		public override RecordType RecordType {

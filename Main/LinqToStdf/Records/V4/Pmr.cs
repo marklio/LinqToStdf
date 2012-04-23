@@ -9,13 +9,13 @@ using System.Text;
 namespace LinqToStdf.Records.V4 {
 	using Attributes;
 
-    [StdfFieldLayout(FieldIndex = 0, FieldType = typeof(ushort), AssignTo = "Index"),
-    StdfFieldLayout(FieldIndex = 1, FieldType = typeof(ushort), MissingValue = ushort.MinValue, AssignTo = "ChannelType"),
-    StdfStringLayout(FieldIndex = 2, AssignTo = "ChannelName", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 3, AssignTo = "PhysicalName", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 4, AssignTo = "LogicalName", MissingValue = ""),
-    StdfFieldLayout(FieldIndex = 5, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, AssignTo = "HeadNumber"),
-    StdfFieldLayout(FieldIndex = 6, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, AssignTo = "SiteNumber")]
+    [FieldLayout(FieldIndex = 0, FieldType = typeof(ushort), RecordProperty = "Index"),
+    FieldLayout(FieldIndex = 1, FieldType = typeof(ushort), MissingValue = ushort.MinValue, RecordProperty = "ChannelType"),
+    StringFieldLayout(FieldIndex = 2, RecordProperty = "ChannelName", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 3, RecordProperty = "PhysicalName", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 4, RecordProperty = "LogicalName", MissingValue = ""),
+    FieldLayout(FieldIndex = 5, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "HeadNumber"),
+    FieldLayout(FieldIndex = 6, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "SiteNumber")]
     public class Pmr : StdfRecord {
 
         public override RecordType RecordType {

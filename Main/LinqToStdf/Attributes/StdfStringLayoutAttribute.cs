@@ -14,9 +14,9 @@ namespace LinqToStdf.Attributes {
     /// rather than the first byte of the field.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    public class StdfStringLayoutAttribute : StdfFieldLayoutAttribute {
+    public class StringFieldLayoutAttribute : FieldLayoutAttribute {
 
-        public StdfStringLayoutAttribute() {
+        public StringFieldLayoutAttribute() {
             base.FieldType = typeof(string);
             base.MissingValue = String.Empty;
         }

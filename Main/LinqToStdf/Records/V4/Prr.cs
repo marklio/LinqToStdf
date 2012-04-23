@@ -9,23 +9,23 @@ using System.Text;
 namespace LinqToStdf.Records.V4 {
 	using Attributes;
 
-    [StdfFieldLayout(FieldIndex = 0, FieldType = typeof(byte), AssignTo = "HeadNumber"),
-    StdfFieldLayout(FieldIndex = 1, FieldType = typeof(byte), AssignTo = "SiteNumber"),
-    StdfFieldLayout(FieldIndex = 2, FieldType = typeof(byte), AssignTo = "PartFlag"),
-    StdfFieldLayout(FieldIndex = 3, FieldType = typeof(ushort), AssignTo = "TestCount"),
-    StdfFieldLayout(FieldIndex = 4, FieldType = typeof(ushort), AssignTo = "HardBin"),
-    StdfFieldLayout(FieldIndex = 5, FieldType = typeof(ushort), MissingValue = ushort.MaxValue, AssignTo = "SoftBin"),
-    StdfFieldLayout(FieldIndex = 6, FieldType = typeof(short), MissingValue = short.MinValue, AssignTo = "XCoordinate"),
-    StdfFieldLayout(FieldIndex = 7, FieldType = typeof(short), MissingValue = short.MinValue, AssignTo = "YCoordinate"),
-    StdfFieldLayout(FieldIndex = 8, FieldType = typeof(uint), MissingValue = uint.MinValue, AssignTo = "TestTime"),
-    StdfStringLayout(FieldIndex = 9, AssignTo = "PartId", MissingValue = ""),
-    StdfStringLayout(FieldIndex = 10, AssignTo = "PartText", MissingValue = ""),
-    StdfFieldLayout(FieldIndex = 11, FieldType = typeof(byte)),
-    StdfArrayLayout(FieldIndex = 12, FieldType = typeof(byte), ArrayLengthFieldIndex = 11, AssignTo = "PartFix"),
-    StdfDependencyProperty(FieldIndex = 13, DependentOnIndex = 2, AssignTo = "SupersedesPartId"),
-    StdfDependencyProperty(FieldIndex = 14, DependentOnIndex = 2, AssignTo = "SupersedesCoords"),
-    StdfDependencyProperty(FieldIndex = 15, DependentOnIndex = 2, AssignTo = "AbnormalTest"),
-    StdfDependencyProperty(FieldIndex = 16, DependentOnIndex = 2, AssignTo = "Failed")]
+    [FieldLayout(FieldIndex = 0, FieldType = typeof(byte), RecordProperty = "HeadNumber"),
+    FieldLayout(FieldIndex = 1, FieldType = typeof(byte), RecordProperty = "SiteNumber"),
+    FieldLayout(FieldIndex = 2, FieldType = typeof(byte), RecordProperty = "PartFlag"),
+    FieldLayout(FieldIndex = 3, FieldType = typeof(ushort), RecordProperty = "TestCount"),
+    FieldLayout(FieldIndex = 4, FieldType = typeof(ushort), RecordProperty = "HardBin"),
+    FieldLayout(FieldIndex = 5, FieldType = typeof(ushort), MissingValue = ushort.MaxValue, RecordProperty = "SoftBin"),
+    FieldLayout(FieldIndex = 6, FieldType = typeof(short), MissingValue = short.MinValue, RecordProperty = "XCoordinate"),
+    FieldLayout(FieldIndex = 7, FieldType = typeof(short), MissingValue = short.MinValue, RecordProperty = "YCoordinate"),
+    FieldLayout(FieldIndex = 8, FieldType = typeof(uint), MissingValue = uint.MinValue, RecordProperty = "TestTime"),
+    StringFieldLayout(FieldIndex = 9, RecordProperty = "PartId", MissingValue = ""),
+    StringFieldLayout(FieldIndex = 10, RecordProperty = "PartText", MissingValue = ""),
+    FieldLayout(FieldIndex = 11, FieldType = typeof(byte)),
+    ArrayFieldLayout(FieldIndex = 12, FieldType = typeof(byte), ArrayLengthFieldIndex = 11, RecordProperty = "PartFix"),
+    DependencyProperty(FieldIndex = 13, DependentOnIndex = 2, RecordProperty = "SupersedesPartId"),
+    DependencyProperty(FieldIndex = 14, DependentOnIndex = 2, RecordProperty = "SupersedesCoords"),
+    DependencyProperty(FieldIndex = 15, DependentOnIndex = 2, RecordProperty = "AbnormalTest"),
+    DependencyProperty(FieldIndex = 16, DependentOnIndex = 2, RecordProperty = "Failed")]
     public class Prr : StdfRecord, IHeadSiteIndexable {
 
         public override RecordType RecordType {
