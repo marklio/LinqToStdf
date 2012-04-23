@@ -18,6 +18,7 @@ namespace LinqToStdf.Attributes {
 
         public StdfStringLayoutAttribute() {
             base.FieldType = typeof(string);
+            base.MissingValue = String.Empty;
         }
 
         private int _Length = int.MinValue;
@@ -28,6 +29,15 @@ namespace LinqToStdf.Attributes {
         public int Length {
             get { return _Length; }
             set { _Length = value; }
+        }
+
+        private char _PadCharacter = ' ';
+        /// <summary>
+        /// Indicates the padding character to be used for a fixed-length string.
+        /// </summary>
+        public char PadCharacter {
+            get { return _PadCharacter; }
+            private set { _PadCharacter = value; }
         }
 
         /// <summary>
@@ -41,6 +51,5 @@ namespace LinqToStdf.Attributes {
                 }
             }
         }
-    
     }
 }

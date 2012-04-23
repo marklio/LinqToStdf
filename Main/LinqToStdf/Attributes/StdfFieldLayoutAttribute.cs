@@ -83,8 +83,10 @@ namespace LinqToStdf.Attributes {
         public string AssignTo { get; set; }
 
         /// <summary>
-        /// This lets you identify a value that indicates the field has no value.
-        /// The AssignTo property will be assigned null (or a null nullable) if the parsed value is equal to it.
+        /// Defines the value used to inidicate that the field is mising.  If a parsed value
+        /// equals the MissingValue, the AssignTo property will be assigned null
+        /// (or a null nullable).  Similarly, if a null AssignTo property must be written, the
+        /// null will be written as the MissingValue.
         /// There must me a relevant relationship between the value used and the FieldType.
         /// </summary>
         public object MissingValue { get; set; }
@@ -96,6 +98,6 @@ namespace LinqToStdf.Attributes {
         /// a recognized missing value will be written when at the end of the record, instead of truncating
         /// the record.
         /// </summary>
-        public bool AllowMissingValue { get; set; }
+        public bool PersistMissingValue { get; set; }
     }
 }

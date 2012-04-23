@@ -167,7 +167,7 @@ namespace LinqToStdf.RecordConverting {
                 else if (pair.Key.MissingValue != null) {
                     if (!(fieldType.IsAssignableFrom(pair.Key.MissingValue.GetType())))
                         throw new InvalidOperationException(string.Format("Missing value {0} is not assignable to {1}.", pair.Key.MissingValue, fieldType));
-                    assignmentNodes.Add(new SkipAssignmentIfMissingValueNode(pair.Key.MissingValue, pair.Key.AllowMissingValue));
+                    assignmentNodes.Add(new SkipAssignmentIfMissingValueNode(pair.Key.MissingValue, pair.Key.PersistMissingValue));
                 }
                 //set us up to assign to the property
                 assignmentNodes.Add(new AssignFieldToPropertyNode(fieldType, pair.Value));

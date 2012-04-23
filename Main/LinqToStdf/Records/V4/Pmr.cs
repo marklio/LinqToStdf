@@ -14,8 +14,8 @@ namespace LinqToStdf.Records.V4 {
     StdfStringLayout(FieldIndex = 2, AssignTo = "ChannelName", MissingValue = ""),
     StdfStringLayout(FieldIndex = 3, AssignTo = "PhysicalName", MissingValue = ""),
     StdfStringLayout(FieldIndex = 4, AssignTo = "LogicalName", MissingValue = ""),
-    StdfFieldLayout(FieldIndex = 5, FieldType = typeof(byte), MissingValue = (byte)1, AllowMissingValue = true, AssignTo = "HeadNumber"),
-    StdfFieldLayout(FieldIndex = 6, FieldType = typeof(byte), MissingValue = (byte)1, AllowMissingValue = true, AssignTo = "SiteNumber")]
+    StdfFieldLayout(FieldIndex = 5, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, AssignTo = "HeadNumber"),
+    StdfFieldLayout(FieldIndex = 6, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, AssignTo = "SiteNumber")]
     public class Pmr : StdfRecord {
 
         public override RecordType RecordType {
