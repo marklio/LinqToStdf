@@ -10,7 +10,7 @@ namespace LinqToStdf.Records.V4 {
 	using Attributes;
 
 	[FieldLayout(FieldIndex = 0, FieldType = typeof(byte), RecordProperty = "CpuType"),
-	FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue=4, RecordProperty ="StdfVersion")]
+    FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = (byte)4, RecordProperty = "StdfVersion")]
 	public class Far : StdfRecord {
 
 		public override RecordType RecordType {

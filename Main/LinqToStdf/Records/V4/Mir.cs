@@ -55,11 +55,23 @@ namespace LinqToStdf.Records.V4 {
 
         public DateTime? SetupTime { get; set; }
         public DateTime? StartTime { get; set; }
-        public byte? StationNumber { get; set; }
+        public byte StationNumber { get; set; }
+        /// <summary>
+        /// Known values are: A, C, D, E, M, P, Q, 0-9
+        /// </summary>
         public string ModeCode { get; set; }
+        /// <summary>
+        /// Known values are: Y, N, 0-9
+        /// </summary>
         public string RetestCode { get; set; }
+        /// <summary>
+        /// Known values are A-Z, 0-9
+        /// </summary>
         public string ProtectionCode { get; set; }
         public ushort? BurnInTime { get; set; }
+        /// <summary>
+        /// Known values are A-Z, 0-9
+        /// </summary>
         public string CommandModeCode { get; set; }
         public string LotId { get; set; }
         public string PartType { get; set; }

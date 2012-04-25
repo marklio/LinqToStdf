@@ -9,17 +9,17 @@ using System.Text;
 namespace LinqToStdf.Records.V4 {
 	using Attributes;
 
-    [FieldLayout(FieldIndex = 0, FieldType = typeof(byte), RecordProperty = "HeadNumber"),
-    FieldLayout(FieldIndex = 1, FieldType = typeof(byte), RecordProperty = "SiteNumber"),
+    [FieldLayout(FieldIndex = 0, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "HeadNumber"),
+    FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "SiteNumber"),
     FieldLayout(FieldIndex = 2, FieldType = typeof(byte), RecordProperty = "PartFlag"),
     FieldLayout(FieldIndex = 3, FieldType = typeof(ushort), RecordProperty = "TestCount"),
     FieldLayout(FieldIndex = 4, FieldType = typeof(ushort), RecordProperty = "HardBin"),
-    FieldLayout(FieldIndex = 5, FieldType = typeof(ushort), MissingValue = ushort.MaxValue, RecordProperty = "SoftBin"),
-    FieldLayout(FieldIndex = 6, FieldType = typeof(short), MissingValue = short.MinValue, RecordProperty = "XCoordinate"),
-    FieldLayout(FieldIndex = 7, FieldType = typeof(short), MissingValue = short.MinValue, RecordProperty = "YCoordinate"),
-    FieldLayout(FieldIndex = 8, FieldType = typeof(uint), MissingValue = uint.MinValue, RecordProperty = "TestTime"),
-    StringFieldLayout(FieldIndex = 9, RecordProperty = "PartId", MissingValue = ""),
-    StringFieldLayout(FieldIndex = 10, RecordProperty = "PartText", MissingValue = ""),
+    FieldLayout(FieldIndex = 5, FieldType = typeof(ushort), IsOptional = true, MissingValue = ushort.MaxValue, RecordProperty = "SoftBin"),
+    FieldLayout(FieldIndex = 6, FieldType = typeof(short), IsOptional = true, MissingValue = short.MinValue, RecordProperty = "XCoordinate"),
+    FieldLayout(FieldIndex = 7, FieldType = typeof(short), IsOptional = true, MissingValue = short.MinValue, RecordProperty = "YCoordinate"),
+    FieldLayout(FieldIndex = 8, FieldType = typeof(uint), IsOptional = true, MissingValue = uint.MinValue, RecordProperty = "TestTime"),
+    StringFieldLayout(FieldIndex = 9, IsOptional = true, RecordProperty = "PartId"),
+    StringFieldLayout(FieldIndex = 10, IsOptional = true, RecordProperty = "PartText"),
     FieldLayout(FieldIndex = 11, FieldType = typeof(byte)),
     ArrayFieldLayout(FieldIndex = 12, FieldType = typeof(byte), ArrayLengthFieldIndex = 11, RecordProperty = "PartFix"),
     DependencyProperty(FieldIndex = 13, DependentOnIndex = 2, RecordProperty = "SupersedesPartId"),
@@ -32,11 +32,17 @@ namespace LinqToStdf.Records.V4 {
             get { return new RecordType(5, 20); }
         }
 
-        public byte HeadNumber { get; set; }
-        public byte SiteNumber { get; set; }
+        public byte? HeadNumber { get; set; }
+        public byte? SiteNumber { get; set; }
         public byte PartFlag { get; set; }
         public ushort? TestCount { get; set; }
-        public ushort? HardBin { get; set; }
+        /// <summary>
+        /// While ushort, valid bins must be 0 - 32,767
+        /// </summary>
+        public ushort HardBin { get; set; }
+        /// <summary>
+        /// While ushort, valid bins must be 0 - 32,767
+        /// </summary>
         public ushort? SoftBin { get; set; }
         public short? XCoordinate { get; set; }
         public short? YCoordinate { get; set; }

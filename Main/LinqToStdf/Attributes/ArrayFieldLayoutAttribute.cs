@@ -15,6 +15,10 @@ namespace LinqToStdf.Attributes {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
     public class ArrayFieldLayoutAttribute : FieldLayoutAttribute {
 
+        public ArrayFieldLayoutAttribute() {
+            base.IsOptional = true;
+        }
+
         /// <summary>
         /// Indicates the field that provides the length information for the array.
         /// </summary>
