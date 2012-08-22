@@ -66,7 +66,7 @@
     <Compile Include="Attributes\ArrayFieldLayoutAttribute.cs" />
     <Compile Include="Attributes\DependencyProperty.cs" />
     <Compile Include="Attributes\FieldLayoutAttribute.cs" />
-    <Compile Include="Attributes\FlaggedlFieldLayoutAttribute.cs" />
+    <Compile Include="Attributes\FlaggedFieldLayoutAttribute.cs" />
     <Compile Include="Attributes\NibbleArrayFieldLayoutAttribute.cs" />
     <Compile Include="Attributes\StringFieldLayoutAttribute.cs" />
     <Compile Include="Attributes\TimeFieldLayoutAttribute.cs" />

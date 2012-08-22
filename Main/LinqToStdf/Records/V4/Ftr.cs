@@ -11,10 +11,10 @@ namespace LinqToStdf.Records.V4 {
     using System.Collections;
 
 	[FieldLayout(FieldIndex = 0, FieldType = typeof(uint), RecordProperty = "TestNumber"),
-	FieldLayout(FieldIndex = 1, FieldType = typeof(byte), RecordProperty = "HeadNumber"),
-	FieldLayout(FieldIndex = 2, FieldType = typeof(byte), RecordProperty = "SiteNumber"),
+    FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "HeadNumber"),
+    FieldLayout(FieldIndex = 2, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "SiteNumber"),
 	FieldLayout(FieldIndex = 3, FieldType = typeof(byte), RecordProperty = "TestFlags"),
-	FieldLayout(FieldIndex = 4, FieldType = typeof(byte)),
+    FieldLayout(FieldIndex = 4, FieldType = typeof(byte), IsOptional = true, MissingValue = (byte)0),
 	FlaggedFieldLayout(FieldIndex = 5, FieldType = typeof(uint), FlagIndex = 4, FlagMask = (byte)0x01, RecordProperty = "CycleCount"),
 	FlaggedFieldLayout(FieldIndex = 6, FieldType = typeof(uint), FlagIndex = 4, FlagMask = (byte)0x02, RecordProperty = "RelativeVectorAddress"),
 	FlaggedFieldLayout(FieldIndex = 7, FieldType = typeof(uint), FlagIndex = 4, FlagMask = (byte)0x04, RecordProperty = "RepeatCount"),
@@ -22,30 +22,30 @@ namespace LinqToStdf.Records.V4 {
 	FlaggedFieldLayout(FieldIndex = 9, FieldType = typeof(int), FlagIndex = 4, FlagMask = (byte)0x10, RecordProperty = "XFailureAddress"),
 	FlaggedFieldLayout(FieldIndex = 10, FieldType = typeof(int), FlagIndex = 4, FlagMask = (byte)0x10, RecordProperty = "YFailureAddress"),
 	FlaggedFieldLayout(FieldIndex = 11, FieldType = typeof(short), FlagIndex = 4, FlagMask = (byte)0x20, RecordProperty = "VectorOffset"),
-	FieldLayout(FieldIndex = 12, FieldType = typeof(ushort)),
-	FieldLayout(FieldIndex = 13, FieldType = typeof(ushort)),
+    FieldLayout(FieldIndex = 12, FieldType = typeof(ushort), IsOptional = true, MissingValue = (ushort)0),
+    FieldLayout(FieldIndex = 13, FieldType = typeof(ushort), IsOptional = true, MissingValue = (ushort)0),
 	ArrayFieldLayout(FieldIndex = 14, FieldType = typeof(ushort), ArrayLengthFieldIndex = 12, RecordProperty = "ReturnIndexes"),
 	NibbleArrayFieldLayout(FieldIndex = 15, ArrayLengthFieldIndex = 12, RecordProperty = "ReturnStates"),
 	ArrayFieldLayout(FieldIndex = 16, FieldType = typeof(ushort), ArrayLengthFieldIndex = 13, RecordProperty = "ProgrammedIndexes"),
 	NibbleArrayFieldLayout(FieldIndex = 17, ArrayLengthFieldIndex = 13, RecordProperty = "ProgrammedStates"),
-	FieldLayout(FieldIndex = 18, FieldType = typeof(BitArray), RecordProperty = "FailingPinBitfield"),
-    StringFieldLayout(FieldIndex = 19, RecordProperty = "VectorName", MissingValue = ""),
-    StringFieldLayout(FieldIndex = 20, RecordProperty = "TimeSet", MissingValue = ""),
-    StringFieldLayout(FieldIndex = 21, RecordProperty = "OpCode", MissingValue = ""),
-    StringFieldLayout(FieldIndex = 22, RecordProperty = "TestText", MissingValue = ""),
-    StringFieldLayout(FieldIndex = 23, RecordProperty = "AlarmId", MissingValue = ""),
-    StringFieldLayout(FieldIndex = 24, RecordProperty = "ProgrammedText", MissingValue = ""),
-    StringFieldLayout(FieldIndex = 25, RecordProperty = "ResultText", MissingValue = ""),
-    FieldLayout(FieldIndex = 26, FieldType = typeof(byte), RecordProperty = "PatternGeneratorNumber"),
-    FieldLayout(FieldIndex = 27, FieldType = typeof(BitArray), RecordProperty = "SpinMap")]
+    FieldLayout(FieldIndex = 18, FieldType = typeof(BitArray), IsOptional = true, RecordProperty = "FailingPinBitfield"),
+    StringFieldLayout(FieldIndex = 19, IsOptional = true, RecordProperty = "VectorName"),
+    StringFieldLayout(FieldIndex = 20, IsOptional = true, RecordProperty = "TimeSet"),
+    StringFieldLayout(FieldIndex = 21, IsOptional = true, RecordProperty = "OpCode"),
+    StringFieldLayout(FieldIndex = 22, IsOptional = true, RecordProperty = "TestText"),
+    StringFieldLayout(FieldIndex = 23, IsOptional = true, RecordProperty = "AlarmId"),
+    StringFieldLayout(FieldIndex = 24, IsOptional = true, RecordProperty = "ProgrammedText"),
+    StringFieldLayout(FieldIndex = 25, IsOptional = true, RecordProperty = "ResultText"),
+    FieldLayout(FieldIndex = 26, FieldType = typeof(byte), IsOptional = true, MissingValue = Byte.MaxValue, RecordProperty = "PatternGeneratorNumber"),
+    FieldLayout(FieldIndex = 27, FieldType = typeof(BitArray), IsOptional = true, RecordProperty = "SpinMap")]
 	public class Ftr : StdfRecord, IHeadSiteIndexable  {
 
 		public override RecordType RecordType {
 			get { return new RecordType(15, 20); }
 		}
         public uint TestNumber { get; set; }
-        public byte HeadNumber { get; set; }
-        public byte SiteNumber { get; set; }
+        public byte? HeadNumber { get; set; }
+        public byte? SiteNumber { get; set; }
         public byte TestFlags { get; set; }
         public uint? CycleCount { get; set; }
         public uint? RelativeVectorAddress { get; set; }

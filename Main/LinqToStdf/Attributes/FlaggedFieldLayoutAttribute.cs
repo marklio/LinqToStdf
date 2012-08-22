@@ -14,6 +14,11 @@ namespace LinqToStdf.Attributes {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
     public class FlaggedFieldLayoutAttribute : FieldLayoutAttribute {
 
+        public FlaggedFieldLayoutAttribute() {
+            base.IsOptional = true;
+            base.PersistMissingValue = true;
+        }
+
         /// <summary>
         /// This indicates the bitfield byte used to determine if we have a value
         /// for this field

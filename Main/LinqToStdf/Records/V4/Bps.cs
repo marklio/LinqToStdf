@@ -9,7 +9,7 @@ using System.Text;
 namespace LinqToStdf.Records.V4 {
 	using Attributes;
 	
-	[StringFieldLayout(FieldIndex = 0, RecordProperty = "Name", MissingValue="")]
+	[StringFieldLayout(FieldIndex = 0, IsOptional = true, RecordProperty = "Name")]
 	public class Bps : StdfRecord {
 
 		public override RecordType RecordType {

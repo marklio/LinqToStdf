@@ -12,12 +12,12 @@ namespace LinqToStdf.Records.V4 {
 
     [FieldLayout(FieldIndex = 0, FieldType = typeof(ushort)),
     ArrayFieldLayout(FieldIndex = 1, FieldType = typeof(ushort), ArrayLengthFieldIndex = 0, RecordProperty = "GroupIndexes"),
-    ArrayFieldLayout(FieldIndex = 2, FieldType = typeof(ushort), MissingValue = ushort.MinValue, ArrayLengthFieldIndex = 0, AllowTruncation = true, RecordProperty = "GroupModes"),
-    ArrayFieldLayout(FieldIndex = 3, FieldType = typeof(byte), MissingValue = byte.MinValue, ArrayLengthFieldIndex = 0, AllowTruncation = true, RecordProperty = "GroupRadixes"),
-    ArrayFieldLayout(FieldIndex = 4, FieldType = typeof(string), MissingValue = "", ArrayLengthFieldIndex = 0, AllowTruncation = true, RecordProperty = "ProgramStatesRight"),
-    ArrayFieldLayout(FieldIndex = 5, FieldType = typeof(string), MissingValue = "", ArrayLengthFieldIndex = 0, AllowTruncation = true, RecordProperty = "ReturnStatesRight"),
-    ArrayFieldLayout(FieldIndex = 6, FieldType = typeof(string), MissingValue = "", ArrayLengthFieldIndex = 0, AllowTruncation = true, RecordProperty = "ProgramStatesLeft"),
-    ArrayFieldLayout(FieldIndex = 7, FieldType = typeof(string), MissingValue = "", ArrayLengthFieldIndex = 0, AllowTruncation = true, RecordProperty = "ReturnStatesLeft")]
+    ArrayFieldLayout(FieldIndex = 2, FieldType = typeof(ushort), IsOptional = true, MissingValue = ushort.MinValue, ArrayLengthFieldIndex = 0, AllowTruncation = true, RecordProperty = "GroupModes"),
+    ArrayFieldLayout(FieldIndex = 3, FieldType = typeof(byte), IsOptional = true, MissingValue = byte.MinValue, ArrayLengthFieldIndex = 0, AllowTruncation = true, RecordProperty = "GroupRadixes"),
+    ArrayFieldLayout(FieldIndex = 4, FieldType = typeof(string), IsOptional = true, MissingValue = "", ArrayLengthFieldIndex = 0, AllowTruncation = true, RecordProperty = "ProgramStatesRight"),
+    ArrayFieldLayout(FieldIndex = 5, FieldType = typeof(string), IsOptional = true, MissingValue = "", ArrayLengthFieldIndex = 0, AllowTruncation = true, RecordProperty = "ReturnStatesRight"),
+    ArrayFieldLayout(FieldIndex = 6, FieldType = typeof(string), IsOptional = true, MissingValue = "", ArrayLengthFieldIndex = 0, AllowTruncation = true, RecordProperty = "ProgramStatesLeft"),
+    ArrayFieldLayout(FieldIndex = 7, FieldType = typeof(string), IsOptional = true, MissingValue = "", ArrayLengthFieldIndex = 0, AllowTruncation = true, RecordProperty = "ReturnStatesLeft")]
     public class Plr : StdfRecord {
 
         public override RecordType RecordType {

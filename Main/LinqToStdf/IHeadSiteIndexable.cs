@@ -15,6 +15,6 @@ namespace LinqToStdf {
     /// site.
     /// </summary>
     public interface IHeadSiteIndexable : IHeadIndexable {
-        byte SiteNumber { get; }
+        byte? SiteNumber { get; }
     }
 }
