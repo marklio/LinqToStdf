@@ -20,7 +20,9 @@ A library for parsing/processing Standard Test Datalog Format (STDF) files, typi
 * Pluggable filters, allowing a wide range of behavior such as data transform
   * Built-in filters for things like synthesizing summary records and enforcing STDF V4 record ordering.
 * "Pre-compiled" queries, allowing you to leverage the richness of the API and the performance of a single-use parser.
+
 ##[We need corrupt STDFs]!
+
 #General Overview
 For a general overview, go see the [Basic Idea]
 
