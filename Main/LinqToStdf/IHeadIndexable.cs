@@ -15,6 +15,6 @@ namespace LinqToStdf {
     /// That is, it is associated with a particular Head.
     /// </summary>
     public interface IHeadIndexable : IRecordContext {
-        byte HeadNumber { get; }
+        byte? HeadNumber { get; }
     }
 }

@@ -12,7 +12,12 @@ namespace LinqToStdf.Attributes {
     /// Defines an STDF field whose "null" state is set by an external bitfield byte
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    public class StdfOptionalFieldLayoutAttribute : StdfFieldLayoutAttribute {
+    public class FlaggedFieldLayoutAttribute : FieldLayoutAttribute {
+
+        public FlaggedFieldLayoutAttribute() {
+            base.IsOptional = true;
+            base.PersistMissingValue = true;
+        }
 
         /// <summary>
         /// This indicates the bitfield byte used to determine if we have a value

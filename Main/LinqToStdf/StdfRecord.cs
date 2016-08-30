@@ -8,15 +8,15 @@ using System.Text;
 
 namespace LinqToStdf {
 
-	/// <summary>
-	/// Abstract stdf record type
-	/// </summary>
-	public abstract class StdfRecord : IRecordContext {
+    /// <summary>
+    /// Abstract stdf record type
+    /// </summary>
+    public abstract class StdfRecord : IRecordContext {
 
-		/// <summary>
-		/// The <see cref="RecordType"/> of the instance
-		/// </summary>
-		public abstract RecordType RecordType { get; }
+        /// <summary>
+        /// The <see cref="RecordType"/> of the instance
+        /// </summary>
+        public abstract RecordType RecordType { get; }
 
         /// <summary>
         /// Reference to the "owning" StdfFile.
@@ -63,5 +63,5 @@ namespace LinqToStdf {
             get { return (_SynthesizedMask & _OffsetData) != 0; }
             set { _OffsetData = value ? _OffsetData | _SynthesizedMask : _OffsetData & ~_SynthesizedMask; }
         }
-	}
+    }
 }

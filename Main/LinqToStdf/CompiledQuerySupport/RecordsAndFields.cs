@@ -38,12 +38,12 @@ namespace LinqToStdf.CompiledQuerySupport {
             return _Fields.ContainsKey(type);
         }
 
-        public IEnumerable<string> GetFieldsForType(Type type)
+        public HashSet<string> GetFieldsForType(Type type)
         {
             HashSet<string> fields = null;
             if (_Fields.TryGetValue(type, out fields))
             {
-                return fields.ToList();
+                return new HashSet<string>(fields);
             }
             return null;
         }

@@ -10,6 +10,7 @@ using System.Collections;
 using System.Diagnostics;
 
 namespace LinqToStdf {
+    using Attributes;
 
     /// <summary>
     /// Knows how to write STDF-relevant binary data to a stream.
@@ -30,18 +31,26 @@ namespace LinqToStdf {
     /// </remarks>
     public class BinaryWriter {
 
-        //TODO: consolidate between reader/writers
         /// <summary>
-        /// The epoch used for STDF dates
+        /// Encoder used to encoding strings and characters
         /// </summary>
-        static readonly DateTime _Epoch = new DateTime(1970, 1, 1);
+        static Encoding _Encoding = CreateEncoding();
+
+        /// <summary>
+        /// Creates an ASCII encoder that throws if we can't encode the string to ASCII
+        /// </summary>
+        static Encoding CreateEncoding() {
+            var encoding = (ASCIIEncoding)Encoding.ASCII.Clone();
+            encoding.EncoderFallback = EncoderFallback.ExceptionFallback;
+            return encoding;
+        }
 
         /// <summary>
         /// Constructs a <see cref="BinaryWriter"/> on the given stream.  The stream is
         /// assumed to contain little endian data
         /// </summary>
         /// <param name="stream">The <see cref="Stream"/> to Write from</param>
-        public BinaryWriter(Stream stream) : this(stream, Endian.Little, writeBackwards:false) { }
+        public BinaryWriter(Stream stream) : this(stream, Endian.Little, writeBackwards: false) { }
 
         /// <summary>
         /// Constructs a <see cref="BinaryWriter"/> on the given stream with
@@ -131,7 +140,7 @@ namespace LinqToStdf {
             if (value == null || value.Length == 0) return;
             var newArray = new byte[(value.Length + 1) / 2];
             for (var i = 0; i < newArray.Length; i++) {
-                var temp = value[(2*i)];
+                var temp = value[(2 * i)];
                 if (((2 * i) + 1) < newArray.Length) {
                     temp |= (byte)(value[(2 * i) + 1] << 4);
                 }
@@ -297,11 +306,27 @@ namespace LinqToStdf {
         }
 
         /// <summary>
-        /// Writes a string of the given length, truncating the rest.
+        /// Writes a single character
+        /// </summary>
+        public void WriteCharacter(char value) {
+            EnsureBufferLength(1);
+            _Encoding.GetBytes(value.ToString(), 0, 1, _Buffer, 0);
+            WriteToStream(1);
+        }
+
+        /// <summary>
+        /// Writes an array of single characters
+        /// </summary>
+        public void WriteCharacterArray(char[] value) {
+            WriteArray(value, WriteCharacter);
+        }
+
+        /// <summary>
+        /// Writes a string of the given length, truncating the rest
         /// </summary>
         public void WriteString(string value, int length) {
             EnsureBufferLength(length);
-            Encoding.UTF8.GetBytes(value, 0, length, _Buffer, 0);
+            _Encoding.GetBytes(value, 0, length, _Buffer, 0);
             WriteToStream(length);
         }
 
@@ -309,6 +334,7 @@ namespace LinqToStdf {
         /// Writes a string where the first byte indicates the length
         /// </summary>
         public void WriteString(string value) {
+            // TODO: This should be setting value to the fields MissingValue
             value = value ?? String.Empty;
             if (value.Length > 255) throw new InvalidOperationException(Resources.StringTooLong);
             if (!_WriteBackwards) {
@@ -316,7 +342,7 @@ namespace LinqToStdf {
             }
             if (value.Length > 0) {
                 EnsureBufferLength(value.Length);
-                Encoding.UTF8.GetBytes(value, 0, value.Length, _Buffer, 0);
+                _Encoding.GetBytes(value, 0, value.Length, _Buffer, 0);
                 WriteToStream(value.Length);
             }
             if (_WriteBackwards) {
@@ -325,10 +351,19 @@ namespace LinqToStdf {
         }
 
         /// <summary>
+        /// Writes a string where the first byte indicates the length
+        /// </summary>
+        public void WriteStringArray(string[] value) {
+            WriteArray(value, WriteString);
+        }
+
+        // TODO: The current STDF spec indicates no need for this, but do we want a WriteStringArray method for non-single-character fixed-length strings?
+
+        /// <summary>
         /// Writes an STDF datetime (4-byte integer seconds since the epoch)
         /// </summary>
         public void WriteDateTime(DateTime value) {
-            var seconds = (uint)(value - BinaryWriter._Epoch).TotalSeconds;
+            var seconds = (uint)(value - TimeFieldLayoutAttribute.Epoch).TotalSeconds;
             WriteUInt32(seconds);
         }
 

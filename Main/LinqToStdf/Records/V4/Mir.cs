@@ -7,46 +7,46 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace LinqToStdf.Records.V4 {
-	using Attributes;
+    using Attributes;
 
-    [StdfFieldLayout(FieldIndex = 0, FieldType = typeof(DateTime), AssignTo = "SetupTime"),
-    StdfFieldLayout(FieldIndex = 1, FieldType = typeof(DateTime), AssignTo = "StartTime"),
-    StdfFieldLayout(FieldIndex = 2, FieldType = typeof(byte), AssignTo = "StationNumber"),
-    StdfStringLayout(FieldIndex = 3, Length = 1, MissingValue = " ", AssignTo = "ModeCode"),
-    StdfStringLayout(FieldIndex = 4, Length = 1, MissingValue = " ", AssignTo = "RetestCode"),
-    StdfStringLayout(FieldIndex = 5, Length = 1, MissingValue = " ", AssignTo = "ProtectionCode"),
-    StdfFieldLayout(FieldIndex = 6, FieldType = typeof(ushort), MissingValue = ushort.MaxValue, AssignTo = "BurnInTime"),
-    StdfStringLayout(FieldIndex = 7, Length = 1, MissingValue = " ", AssignTo = "CommandModeCode"),
-    StdfStringLayout(FieldIndex = 8, AssignTo = "LotId"),
-    StdfStringLayout(FieldIndex = 9, AssignTo = "PartType"),
-    StdfStringLayout(FieldIndex = 10, AssignTo = "NodeName"),
-    StdfStringLayout(FieldIndex = 11, AssignTo = "TesterType"),
-    StdfStringLayout(FieldIndex = 12, AssignTo = "JobName"),
-    StdfStringLayout(FieldIndex = 13, AssignTo = "JobRevision"),
-    StdfStringLayout(FieldIndex = 14, AssignTo = "SublotId"),
-    StdfStringLayout(FieldIndex = 15, AssignTo = "OperatorName"),
-    StdfStringLayout(FieldIndex = 16, AssignTo = "ExecType"),
-    StdfStringLayout(FieldIndex = 17, AssignTo = "ExecVersion"),
-    StdfStringLayout(FieldIndex = 18, AssignTo = "TestCode"),
-    StdfStringLayout(FieldIndex = 19, AssignTo = "TestTemperature"),
-    StdfStringLayout(FieldIndex = 20, AssignTo = "UserText"),
-    StdfStringLayout(FieldIndex = 21, AssignTo = "AuxiliaryFile"),
-    StdfStringLayout(FieldIndex = 22, AssignTo = "PackageType"),
-    StdfStringLayout(FieldIndex = 23, AssignTo = "FamilyId"),
-    StdfStringLayout(FieldIndex = 24, AssignTo = "DateCode"),
-    StdfStringLayout(FieldIndex = 25, AssignTo = "FacilityId"),
-    StdfStringLayout(FieldIndex = 26, AssignTo = "FloorId"),
-    StdfStringLayout(FieldIndex = 27, AssignTo = "ProcessId"),
-    StdfStringLayout(FieldIndex = 28, AssignTo = "OperationFrequency"),
-    StdfStringLayout(FieldIndex = 29, AssignTo = "SpecificationName"),
-    StdfStringLayout(FieldIndex = 30, AssignTo = "SpecificationVersion"),
-    StdfStringLayout(FieldIndex = 31, AssignTo = "FlowId"),
-    StdfStringLayout(FieldIndex = 32, AssignTo = "SetupId"),
-    StdfStringLayout(FieldIndex = 33, AssignTo = "DesignRevision"),
-    StdfStringLayout(FieldIndex = 34, AssignTo = "EngineeringId"),
-    StdfStringLayout(FieldIndex = 35, AssignTo = "RomCode"),
-    StdfStringLayout(FieldIndex = 36, AssignTo = "SerialNumber"),
-    StdfStringLayout(FieldIndex = 37, AssignTo = "SupervisorName")]
+    [TimeFieldLayout(FieldIndex = 0, RecordProperty = "SetupTime"),
+    TimeFieldLayout(FieldIndex = 1, RecordProperty = "StartTime"),
+    FieldLayout(FieldIndex = 2, FieldType = typeof(byte), RecordProperty = "StationNumber"),
+    StringFieldLayout(FieldIndex = 3, IsOptional = true, Length = 1, RecordProperty = "ModeCode"),
+    StringFieldLayout(FieldIndex = 4, IsOptional = true, Length = 1, RecordProperty = "RetestCode"),
+    StringFieldLayout(FieldIndex = 5, IsOptional = true, Length = 1, RecordProperty = "ProtectionCode"),
+    FieldLayout(FieldIndex = 6, IsOptional = true, FieldType = typeof(ushort), MissingValue = ushort.MaxValue, RecordProperty = "BurnInTime"),
+    StringFieldLayout(FieldIndex = 7, IsOptional = true, Length = 1, RecordProperty = "CommandModeCode"),
+    StringFieldLayout(FieldIndex = 8, IsOptional = true, RecordProperty = "LotId"),
+    StringFieldLayout(FieldIndex = 9, IsOptional = true, RecordProperty = "PartType"),
+    StringFieldLayout(FieldIndex = 10, IsOptional = true, RecordProperty = "NodeName"),
+    StringFieldLayout(FieldIndex = 11, IsOptional = true, RecordProperty = "TesterType"),
+    StringFieldLayout(FieldIndex = 12, IsOptional = true, RecordProperty = "JobName"),
+    StringFieldLayout(FieldIndex = 13, IsOptional = true, RecordProperty = "JobRevision"),
+    StringFieldLayout(FieldIndex = 14, IsOptional = true, RecordProperty = "SublotId"),
+    StringFieldLayout(FieldIndex = 15, IsOptional = true, RecordProperty = "OperatorName"),
+    StringFieldLayout(FieldIndex = 16, IsOptional = true, RecordProperty = "ExecType"),
+    StringFieldLayout(FieldIndex = 17, IsOptional = true, RecordProperty = "ExecVersion"),
+    StringFieldLayout(FieldIndex = 18, IsOptional = true, RecordProperty = "TestCode"),
+    StringFieldLayout(FieldIndex = 19, IsOptional = true, RecordProperty = "TestTemperature"),
+    StringFieldLayout(FieldIndex = 20, IsOptional = true, RecordProperty = "UserText"),
+    StringFieldLayout(FieldIndex = 21, IsOptional = true, RecordProperty = "AuxiliaryFile"),
+    StringFieldLayout(FieldIndex = 22, IsOptional = true, RecordProperty = "PackageType"),
+    StringFieldLayout(FieldIndex = 23, IsOptional = true, RecordProperty = "FamilyId"),
+    StringFieldLayout(FieldIndex = 24, IsOptional = true, RecordProperty = "DateCode"),
+    StringFieldLayout(FieldIndex = 25, IsOptional = true, RecordProperty = "FacilityId"),
+    StringFieldLayout(FieldIndex = 26, IsOptional = true, RecordProperty = "FloorId"),
+    StringFieldLayout(FieldIndex = 27, IsOptional = true, RecordProperty = "ProcessId"),
+    StringFieldLayout(FieldIndex = 28, IsOptional = true, RecordProperty = "OperationFrequency"),
+    StringFieldLayout(FieldIndex = 29, IsOptional = true, RecordProperty = "SpecificationName"),
+    StringFieldLayout(FieldIndex = 30, IsOptional = true, RecordProperty = "SpecificationVersion"),
+    StringFieldLayout(FieldIndex = 31, IsOptional = true, RecordProperty = "FlowId"),
+    StringFieldLayout(FieldIndex = 32, IsOptional = true, RecordProperty = "SetupId"),
+    StringFieldLayout(FieldIndex = 33, IsOptional = true, RecordProperty = "DesignRevision"),
+    StringFieldLayout(FieldIndex = 34, IsOptional = true, RecordProperty = "EngineeringId"),
+    StringFieldLayout(FieldIndex = 35, IsOptional = true, RecordProperty = "RomCode"),
+    StringFieldLayout(FieldIndex = 36, IsOptional = true, RecordProperty = "SerialNumber"),
+    StringFieldLayout(FieldIndex = 37, IsOptional = true, RecordProperty = "SupervisorName")]
     public class Mir : StdfRecord {
 
         public override RecordType RecordType {
@@ -55,11 +55,23 @@ namespace LinqToStdf.Records.V4 {
 
         public DateTime? SetupTime { get; set; }
         public DateTime? StartTime { get; set; }
-        public byte? StationNumber { get; set; }
+        public byte StationNumber { get; set; }
+        /// <summary>
+        /// Known values are: A, C, D, E, M, P, Q, 0-9
+        /// </summary>
         public string ModeCode { get; set; }
+        /// <summary>
+        /// Known values are: Y, N, 0-9
+        /// </summary>
         public string RetestCode { get; set; }
+        /// <summary>
+        /// Known values are A-Z, 0-9
+        /// </summary>
         public string ProtectionCode { get; set; }
         public ushort? BurnInTime { get; set; }
+        /// <summary>
+        /// Known values are A-Z, 0-9
+        /// </summary>
         public string CommandModeCode { get; set; }
         public string LotId { get; set; }
         public string PartType { get; set; }

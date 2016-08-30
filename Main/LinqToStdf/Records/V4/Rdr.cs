@@ -9,8 +9,8 @@ using System.Text;
 namespace LinqToStdf.Records.V4 {
 	using Attributes;
 
-    [StdfFieldLayout(FieldIndex = 0, FieldType = typeof(ushort)),
-    StdfArrayLayout(FieldIndex = 1, FieldType = typeof(ushort), ArrayLengthFieldIndex = 0, AssignTo = "RetestBins")]
+    [FieldLayout(FieldIndex = 0, FieldType = typeof(ushort), MissingValue = ushort.MinValue),
+    ArrayFieldLayout(FieldIndex = 1, FieldType = typeof(ushort), MissingValue = ushort.MinValue, ArrayLengthFieldIndex = 0, RecordProperty = "RetestBins")]
     public class Rdr : StdfRecord {
 
         public override RecordType RecordType {

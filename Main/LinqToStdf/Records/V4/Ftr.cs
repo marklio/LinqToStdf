@@ -10,42 +10,42 @@ namespace LinqToStdf.Records.V4 {
 	using Attributes;
     using System.Collections;
 
-	[StdfFieldLayout(FieldIndex = 0, FieldType = typeof(uint), AssignTo = "TestNumber"),
-	StdfFieldLayout(FieldIndex = 1, FieldType = typeof(byte), AssignTo = "HeadNumber"),
-	StdfFieldLayout(FieldIndex = 2, FieldType = typeof(byte), AssignTo = "SiteNumber"),
-	StdfFieldLayout(FieldIndex = 3, FieldType = typeof(byte), AssignTo = "TestFlags"),
-	StdfFieldLayout(FieldIndex = 4, FieldType = typeof(byte)),
-	StdfOptionalFieldLayout(FieldIndex = 5, FieldType = typeof(uint), FlagIndex = 4, FlagMask = (byte)0x01, AssignTo = "CycleCount"),
-	StdfOptionalFieldLayout(FieldIndex = 6, FieldType = typeof(uint), FlagIndex = 4, FlagMask = (byte)0x02, AssignTo = "RelativeVectorAddress"),
-	StdfOptionalFieldLayout(FieldIndex = 7, FieldType = typeof(uint), FlagIndex = 4, FlagMask = (byte)0x04, AssignTo = "RepeatCount"),
-	StdfOptionalFieldLayout(FieldIndex = 8, FieldType = typeof(uint), FlagIndex = 4, FlagMask = (byte)0x08, AssignTo = "FailingPinCount"),
-	StdfOptionalFieldLayout(FieldIndex = 9, FieldType = typeof(int), FlagIndex = 4, FlagMask = (byte)0x10, AssignTo = "XFailureAddress"),
-	StdfOptionalFieldLayout(FieldIndex = 10, FieldType = typeof(int), FlagIndex = 4, FlagMask = (byte)0x10, AssignTo = "YFailureAddress"),
-	StdfOptionalFieldLayout(FieldIndex = 11, FieldType = typeof(short), FlagIndex = 4, FlagMask = (byte)0x20, AssignTo = "VectorOffset"),
-	StdfFieldLayout(FieldIndex = 12, FieldType = typeof(ushort)),
-	StdfFieldLayout(FieldIndex = 13, FieldType = typeof(ushort)),
-	StdfArrayLayout(FieldIndex = 14, FieldType = typeof(ushort), ArrayLengthFieldIndex = 12, AssignTo = "ReturnIndexes"),
-	StdfNibbleArrayLayout(FieldIndex = 15, ArrayLengthFieldIndex = 12, AssignTo = "ReturnStates"),
-	StdfArrayLayout(FieldIndex = 16, FieldType = typeof(ushort), ArrayLengthFieldIndex = 13, AssignTo = "ProgrammedIndexes"),
-	StdfNibbleArrayLayout(FieldIndex = 17, ArrayLengthFieldIndex = 13, AssignTo = "ProgrammedStates"),
-	StdfFieldLayout(FieldIndex = 18, FieldType = typeof(BitArray), AssignTo = "FailingPinBitfield"),
-	StdfStringLayout(FieldIndex = 19, AssignTo = "VectorName"),
-	StdfStringLayout(FieldIndex = 20, AssignTo = "TimeSet"),
-	StdfStringLayout(FieldIndex = 21, AssignTo = "OpCode"),
-	StdfStringLayout(FieldIndex = 22, AssignTo = "TestText"),
-	StdfStringLayout(FieldIndex = 23, AssignTo = "AlarmId"),
-	StdfStringLayout(FieldIndex = 24, AssignTo = "ProgrammedText"),
-	StdfStringLayout(FieldIndex = 25, AssignTo = "ResultText"),
-	StdfFieldLayout(FieldIndex = 26, FieldType = typeof(byte), AssignTo = "PatternGeneratorNumber"),
-    StdfFieldLayout(FieldIndex = 27, FieldType = typeof(BitArray), AssignTo = "SpinMap")]
+	[FieldLayout(FieldIndex = 0, FieldType = typeof(uint), RecordProperty = "TestNumber"),
+    FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "HeadNumber"),
+    FieldLayout(FieldIndex = 2, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "SiteNumber"),
+	FieldLayout(FieldIndex = 3, FieldType = typeof(byte), RecordProperty = "TestFlags"),
+    FieldLayout(FieldIndex = 4, FieldType = typeof(byte), IsOptional = true, MissingValue = (byte)0),
+	FlaggedFieldLayout(FieldIndex = 5, FieldType = typeof(uint), FlagIndex = 4, FlagMask = (byte)0x01, RecordProperty = "CycleCount"),
+	FlaggedFieldLayout(FieldIndex = 6, FieldType = typeof(uint), FlagIndex = 4, FlagMask = (byte)0x02, RecordProperty = "RelativeVectorAddress"),
+	FlaggedFieldLayout(FieldIndex = 7, FieldType = typeof(uint), FlagIndex = 4, FlagMask = (byte)0x04, RecordProperty = "RepeatCount"),
+	FlaggedFieldLayout(FieldIndex = 8, FieldType = typeof(uint), FlagIndex = 4, FlagMask = (byte)0x08, RecordProperty = "FailingPinCount"),
+	FlaggedFieldLayout(FieldIndex = 9, FieldType = typeof(int), FlagIndex = 4, FlagMask = (byte)0x10, RecordProperty = "XFailureAddress"),
+	FlaggedFieldLayout(FieldIndex = 10, FieldType = typeof(int), FlagIndex = 4, FlagMask = (byte)0x10, RecordProperty = "YFailureAddress"),
+	FlaggedFieldLayout(FieldIndex = 11, FieldType = typeof(short), FlagIndex = 4, FlagMask = (byte)0x20, RecordProperty = "VectorOffset"),
+    FieldLayout(FieldIndex = 12, FieldType = typeof(ushort), IsOptional = true, MissingValue = (ushort)0),
+    FieldLayout(FieldIndex = 13, FieldType = typeof(ushort), IsOptional = true, MissingValue = (ushort)0),
+	ArrayFieldLayout(FieldIndex = 14, FieldType = typeof(ushort), ArrayLengthFieldIndex = 12, RecordProperty = "ReturnIndexes"),
+	NibbleArrayFieldLayout(FieldIndex = 15, ArrayLengthFieldIndex = 12, RecordProperty = "ReturnStates"),
+	ArrayFieldLayout(FieldIndex = 16, FieldType = typeof(ushort), ArrayLengthFieldIndex = 13, RecordProperty = "ProgrammedIndexes"),
+	NibbleArrayFieldLayout(FieldIndex = 17, ArrayLengthFieldIndex = 13, RecordProperty = "ProgrammedStates"),
+    FieldLayout(FieldIndex = 18, FieldType = typeof(BitArray), IsOptional = true, RecordProperty = "FailingPinBitfield"),
+    StringFieldLayout(FieldIndex = 19, IsOptional = true, RecordProperty = "VectorName"),
+    StringFieldLayout(FieldIndex = 20, IsOptional = true, RecordProperty = "TimeSet"),
+    StringFieldLayout(FieldIndex = 21, IsOptional = true, RecordProperty = "OpCode"),
+    StringFieldLayout(FieldIndex = 22, IsOptional = true, RecordProperty = "TestText"),
+    StringFieldLayout(FieldIndex = 23, IsOptional = true, RecordProperty = "AlarmId"),
+    StringFieldLayout(FieldIndex = 24, IsOptional = true, RecordProperty = "ProgrammedText"),
+    StringFieldLayout(FieldIndex = 25, IsOptional = true, RecordProperty = "ResultText"),
+    FieldLayout(FieldIndex = 26, FieldType = typeof(byte), IsOptional = true, MissingValue = Byte.MaxValue, RecordProperty = "PatternGeneratorNumber"),
+    FieldLayout(FieldIndex = 27, FieldType = typeof(BitArray), IsOptional = true, RecordProperty = "SpinMap")]
 	public class Ftr : StdfRecord, IHeadSiteIndexable  {
 
 		public override RecordType RecordType {
 			get { return new RecordType(15, 20); }
 		}
         public uint TestNumber { get; set; }
-        public byte HeadNumber { get; set; }
-        public byte SiteNumber { get; set; }
+        public byte? HeadNumber { get; set; }
+        public byte? SiteNumber { get; set; }
         public byte TestFlags { get; set; }
         public uint? CycleCount { get; set; }
         public uint? RelativeVectorAddress { get; set; }

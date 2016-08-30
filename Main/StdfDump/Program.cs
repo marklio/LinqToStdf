@@ -10,10 +10,14 @@ using System.Text;
 using LinqToStdf;
 using System.Reflection.Emit;
 using System.Reflection;
+using System.Collections;
 
-namespace StdfDump {
-    class Program {
-        static void Main(string[] args) {
+namespace StdfDump
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
             var file = new StdfFile(args[0]);
             StdfFileWriter outFile = null;
             if (args.Length > 1)
@@ -22,11 +26,19 @@ namespace StdfDump {
             }
             try
             {
+                int bytesWritten = 0;
+                long bytesRead = 0;
                 foreach (var r in file.GetRecords())
                 {
-                    if (outFile != null) outFile.WriteRecord(r);
-                    Console.WriteLine("{0} at offset {1}", r.GetType(), r.Offset);
+                    Console.WriteLine("Read Length: {0}", r.Offset - bytesRead);
+                    bytesRead = r.Offset;
+                    Console.WriteLine("{0}", r.GetType());
                     DumpRecord(r);
+                    if (outFile != null)
+                    {
+                        bytesWritten = outFile.WriteRecord(r);
+                        Console.WriteLine("Written Length: {0}", bytesWritten);
+                    }
                 }
             }
             finally
@@ -36,19 +48,43 @@ namespace StdfDump {
         }
 
         static Dictionary<Type, Action<StdfRecord>> _Dumpers = new Dictionary<Type, Action<StdfRecord>>();
-        private static void DumpRecord(StdfRecord r) {
+        private static void DumpRecord(StdfRecord r)
+        {
             var type = r.GetType();
             Action<StdfRecord> dumper;
-            if (!_Dumpers.TryGetValue(type, out dumper)) {
+            if (!_Dumpers.TryGetValue(type, out dumper))
+            {
                 dumper = CreateDumperForType(type);
                 _Dumpers[type] = dumper;
             }
             dumper(r);
         }
 
+        /// <summary>
+        /// Creates a string representation of an array
+        /// </summary>
+        private static string DumpArrayRepresentation<T>(T[] array)
+        {
+            if (array == null) return null;
+            var builder = new StringBuilder();
+            foreach (var t in array)
+            {
+                if (builder.Length > 0) builder.Append(",");
+                builder.Append(t.ToString());
+            }
+            return builder.ToString();
+        }
+
+        private static string DumpBitArrayRepresentation(BitArray bitArray)
+        {
+            if (bitArray == null) return null;
+            return DumpArrayRepresentation(bitArray.Cast<bool>().ToArray());
+        }
+
         //crazy codegen for building record dumpers
-        private static Action<StdfRecord> CreateDumperForType(Type type) {
-            var dynDumper = new DynamicMethod(String.Format("Dump{0}", type.Name), null, new[] { typeof(StdfRecord) });
+        private static Action<StdfRecord> CreateDumperForType(Type type)
+        {
+            var dynDumper = new DynamicMethod(String.Format("Dump{0}", type.Name), null, new[] { typeof(StdfRecord) }, typeof(Program));
             var ilgen = dynDumper.GetILGenerator();
             var record = ilgen.DeclareLocal(type);
             var array = ilgen.DeclareLocal(typeof(object[]));
@@ -63,13 +99,40 @@ namespace StdfDump {
             ilgen.Emit(OpCodes.Stloc, record);
             var toString = typeof(object).GetMethod("ToString");
             var writeLine = typeof(Console).GetMethod("WriteLine", new[] { typeof(string), typeof(object[]) });
-            foreach (var prop in type.GetProperties()) {
+            var dumpArray = typeof(Program).GetMethod("DumpArrayRepresentation", BindingFlags.Static | BindingFlags.NonPublic);
+            var dumpBitArray = typeof(Program).GetMethod("DumpBitArrayRepresentation", BindingFlags.Static | BindingFlags.NonPublic);
+
+            foreach (var prop in type.GetProperties())
+            {
                 if (prop.Name == "RecordType") continue;
-                var propLocal = ilgen.DeclareLocal(prop.PropertyType);
+                if (prop.Name == "StdfFile") continue;
+                if (prop.Name == "Offset") continue;
+                LocalBuilder propLocal;
+                if (prop.PropertyType.IsArray || prop.PropertyType == typeof(BitArray))
+                {
+                    //if it is an array, we'll store its string representation
+                    propLocal = ilgen.DeclareLocal(typeof(string));
+                }
+                else
+                {
+                    propLocal = ilgen.DeclareLocal(prop.PropertyType);
+                }
                 var getter = prop.GetGetMethod();
+
                 //store the value in the local
                 ilgen.Emit(OpCodes.Ldloc, record);
                 ilgen.Emit(OpCodes.Callvirt, getter);
+                //if it's an array, get its structural representation
+                if (prop.PropertyType.IsArray)
+                {
+                    //call the dump array method to get a string (or null)
+                    ilgen.EmitCall(OpCodes.Call, dumpArray.MakeGenericMethod(prop.PropertyType.GetElementType()), null);
+                }
+                else if (prop.PropertyType == typeof(BitArray))
+                {
+                    //call the dump array method to get a string (or null)
+                    ilgen.EmitCall(OpCodes.Call, dumpBitArray, null);
+                }
                 ilgen.Emit(OpCodes.Stloc, propLocal);
 
                 //store the property name in the array
@@ -85,7 +148,8 @@ namespace StdfDump {
                 var notNullLabel = ilgen.DefineLabel();
                 var storeLabel = ilgen.DefineLabel();
                 //check the value for null
-                if (!prop.PropertyType.IsValueType) {
+                if (!prop.PropertyType.IsValueType)
+                {
                     ilgen.Emit(OpCodes.Ldloc, propLocal);
                     ilgen.Emit(OpCodes.Brtrue, notNullLabel);
                     ilgen.Emit(OpCodes.Ldstr, "[NULL]");

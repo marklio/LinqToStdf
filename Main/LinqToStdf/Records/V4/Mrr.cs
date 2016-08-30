@@ -9,10 +9,10 @@ using System.Text;
 namespace LinqToStdf.Records.V4 {
 	using Attributes;
 
-    [StdfFieldLayout(FieldIndex = 0, FieldType = typeof(DateTime), AssignTo = "FinishTime"),
-    StdfStringLayout(FieldIndex = 1, Length = 1, MissingValue = " ", AssignTo = "DispositionCode"),
-    StdfStringLayout(FieldIndex = 2, AssignTo = "UserDescription"),
-    StdfStringLayout(FieldIndex = 3, AssignTo = "ExecDescription")]
+    [TimeFieldLayout(FieldIndex = 0, RecordProperty = "FinishTime"),
+    StringFieldLayout(FieldIndex = 1, IsOptional = true, Length = 1, RecordProperty = "DispositionCode"),
+    StringFieldLayout(FieldIndex = 2, IsOptional = true, RecordProperty = "UserDescription"),
+    StringFieldLayout(FieldIndex = 3, IsOptional = true, RecordProperty = "ExecDescription")]
     public class Mrr : StdfRecord {
 
         public override RecordType RecordType {

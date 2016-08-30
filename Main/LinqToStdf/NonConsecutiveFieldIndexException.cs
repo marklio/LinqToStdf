@@ -9,7 +9,7 @@ using System.Text;
 namespace LinqToStdf {
 
 	/// <summary>
-	/// Indicates a record has non-consecutive <see cref="Attributes.StdfFieldLayoutAttribute.FieldIndex"/>'s declared in its metadata.
+	/// Indicates a record has non-consecutive <see cref="Attributes.FieldLayoutAttribute.FieldIndex"/>'s declared in its metadata.
 	/// </summary>
 	public class NonconsecutiveFieldIndexException : Exception {
 		//

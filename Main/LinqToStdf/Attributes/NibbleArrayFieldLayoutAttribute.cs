@@ -14,7 +14,7 @@ namespace LinqToStdf.Attributes {
     /// is represented by a separate byte.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    public class StdfNibbleArrayLayoutAttribute : StdfArrayLayoutAttribute {
+    public class NibbleArrayFieldLayoutAttribute : ArrayFieldLayoutAttribute {
 
         /// <summary>
         /// Overridden to be hard-coded to byte.  Setting will throw.

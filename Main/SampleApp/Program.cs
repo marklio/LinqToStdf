@@ -13,7 +13,7 @@ using LinqToStdf.Records.V4;
 namespace SampleApp {
     class Program {
         static void Main(string[] args) {
-            if (args.Length != 1) {
+            if ((args.Length < 1) || (args.Length > 2)) {
                 Usage();
                 return;
             }
@@ -48,10 +48,17 @@ namespace SampleApp {
                     Console.WriteLine("\t{0}", result);
                 }
             }
+
+            // Output STDF to a new file
+            if (args.Length == 2) {
+                Console.WriteLine("Writing to {0}...", args[1]);
+                StdfFileWriter writer = new StdfFileWriter(args[1]);
+                writer.WriteRecords(stdf.GetRecords());
+            }
         }
 
         private static void Usage() {
-            Console.WriteLine(@"SampleApp <path to STDF>");
+            Console.WriteLine(@"SampleApp <path to STDF> <optional path to STDF output>");
         }
     }
 }

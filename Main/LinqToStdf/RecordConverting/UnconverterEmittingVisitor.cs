@@ -268,6 +268,7 @@ namespace LinqToStdf.RecordConverting
                 else if (node.Type == typeof(double)) writeMethodName = "WriteDouble";
                 else if (node.Type == typeof(double[])) writeMethodName = "WriteDoubleArray";
                 else if (node.Type == typeof(string)) writeMethodName = "WriteString";
+                else if (node.Type == typeof(string[])) writeMethodName = "WriteStringArray";
                 else if (node.Type == typeof(DateTime)) writeMethodName = "WriteDateTime";
                 else if (node.Type == typeof(BitArray)) writeMethodName = "WriteBitArray";
                 else

@@ -7,21 +7,27 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace LinqToStdf.Records.V4 {
-	using Attributes;
+    using Attributes;
 
-	[StdfFieldLayout(FieldIndex = 0, FieldType  = typeof(byte), AssignTo = "HeadNumber"),
-	StdfFieldLayout(FieldIndex = 1, FieldType  = typeof(byte), AssignTo = "SiteNumber"),
-	StdfFieldLayout(FieldIndex = 2, FieldType  = typeof(ushort), AssignTo = "BinNumber"),
-	StdfFieldLayout(FieldIndex = 3, FieldType  = typeof(uint), AssignTo = "BinCount"),
-	StdfStringLayout(FieldIndex = 4, Length = 1, MissingValue=" ", AssignTo = "BinPassFail"),
-	StdfStringLayout(FieldIndex = 5, AssignTo = "BinName")]
-	public abstract class BinSummaryRecord : StdfRecord, IHeadSiteIndexable {
-		public abstract BinType BinType { get;}
-        public byte HeadNumber { get; set; }
-        public byte SiteNumber { get; set; }
+    [FieldLayout(FieldIndex = 0, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "HeadNumber"),
+    FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "SiteNumber"),
+    FieldLayout(FieldIndex = 2, FieldType = typeof(ushort), RecordProperty = "BinNumber"),
+    FieldLayout(FieldIndex = 3, FieldType = typeof(uint), RecordProperty = "BinCount"),
+    StringFieldLayout(FieldIndex = 4, IsOptional = true, Length = 1, RecordProperty = "BinPassFail"),
+    StringFieldLayout(FieldIndex = 5, IsOptional = true, RecordProperty = "BinName")]
+    public abstract class BinSummaryRecord : StdfRecord, IHeadSiteIndexable {
+        public abstract BinType BinType { get; }
+        public byte? HeadNumber { get; set; }
+        public byte? SiteNumber { get; set; }
+        /// <summary>
+        /// While ushort, valid bins must be 0 - 32,767
+        /// </summary>
         public ushort BinNumber { get; set; }
         public uint BinCount { get; set; }
+        /// <summary>
+        /// Known values are P, F
+        /// </summary>
         public string BinPassFail { get; set; }
         public string BinName { get; set; }
-	}
+    }
 }

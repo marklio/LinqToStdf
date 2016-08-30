@@ -101,43 +101,44 @@ namespace LinqToStdf.RecordConverting
             return node;
         }
         Dictionary<Type, MethodInfo> _SkipTypeMethods = new Dictionary<Type, MethodInfo>();
-        public override CodeNode VisitSkipType<T>(SkipTypeNode<T> node)
+        public override CodeNode VisitSkipType(SkipTypeNode node)
         {
             MethodInfo skipTypeMethod;
-            var argsArray = typeof(T).IsArray ? new[] { typeof(int) } : new Type[0];
+            var argsArray = node.Type.IsArray ? new[] { typeof(int) } : new Type[0];
             if (node.IsNibble) skipTypeMethod = typeof(BinaryReader).GetMethod("SkipNibbleArray", argsArray);
-            else if (!_SkipTypeMethods.TryGetValue(typeof(T), out skipTypeMethod))
+            else if (!_SkipTypeMethods.TryGetValue(node.Type, out skipTypeMethod))
             {
                 string skipTypeMethodName;
-                if (typeof(T) == typeof(byte)) skipTypeMethodName = "Skip1";
-                else if (typeof(T) == typeof(byte[])) skipTypeMethodName = "Skip1Array";
-                else if (typeof(T) == typeof(sbyte)) skipTypeMethodName = "Skip1";
-                else if (typeof(T) == typeof(sbyte[])) skipTypeMethodName = "Skip1Array";
-                else if (typeof(T) == typeof(ushort)) skipTypeMethodName = "Skip2";
-                else if (typeof(T) == typeof(ushort[])) skipTypeMethodName = "Skip2Array";
-                else if (typeof(T) == typeof(short)) skipTypeMethodName = "Skip2";
-                else if (typeof(T) == typeof(short[])) skipTypeMethodName = "Skip2Array";
-                else if (typeof(T) == typeof(uint)) skipTypeMethodName = "Skip4";
-                else if (typeof(T) == typeof(uint[])) skipTypeMethodName = "Skip4Array";
-                else if (typeof(T) == typeof(int)) skipTypeMethodName = "Skip4";
-                else if (typeof(T) == typeof(int[])) skipTypeMethodName = "Skip4Array";
-                else if (typeof(T) == typeof(ulong)) skipTypeMethodName = "Skip8";
-                else if (typeof(T) == typeof(ulong[])) skipTypeMethodName = "Skip8Array";
-                else if (typeof(T) == typeof(long)) skipTypeMethodName = "Skip8";
-                else if (typeof(T) == typeof(long[])) skipTypeMethodName = "Skip8Array";
-                else if (typeof(T) == typeof(float)) skipTypeMethodName = "Skip4";
-                else if (typeof(T) == typeof(float[])) skipTypeMethodName = "Skip4Array";
-                else if (typeof(T) == typeof(double)) skipTypeMethodName = "Skip8";
-                else if (typeof(T) == typeof(double[])) skipTypeMethodName = "Skip8Array";
-                else if (typeof(T) == typeof(string)) skipTypeMethodName = "SkipString";
-                else if (typeof(T) == typeof(DateTime)) skipTypeMethodName = "Skip4";
-                else if (typeof(T) == typeof(BitArray)) skipTypeMethodName = "SkipBitArray";
+                if (node.Type == typeof(byte)) skipTypeMethodName = "Skip1";
+                else if (node.Type == typeof(byte[])) skipTypeMethodName = "Skip1Array";
+                else if (node.Type == typeof(sbyte)) skipTypeMethodName = "Skip1";
+                else if (node.Type == typeof(sbyte[])) skipTypeMethodName = "Skip1Array";
+                else if (node.Type == typeof(ushort)) skipTypeMethodName = "Skip2";
+                else if (node.Type == typeof(ushort[])) skipTypeMethodName = "Skip2Array";
+                else if (node.Type == typeof(short)) skipTypeMethodName = "Skip2";
+                else if (node.Type == typeof(short[])) skipTypeMethodName = "Skip2Array";
+                else if (node.Type == typeof(uint)) skipTypeMethodName = "Skip4";
+                else if (node.Type == typeof(uint[])) skipTypeMethodName = "Skip4Array";
+                else if (node.Type == typeof(int)) skipTypeMethodName = "Skip4";
+                else if (node.Type == typeof(int[])) skipTypeMethodName = "Skip4Array";
+                else if (node.Type == typeof(ulong)) skipTypeMethodName = "Skip8";
+                else if (node.Type == typeof(ulong[])) skipTypeMethodName = "Skip8Array";
+                else if (node.Type == typeof(long)) skipTypeMethodName = "Skip8";
+                else if (node.Type == typeof(long[])) skipTypeMethodName = "Skip8Array";
+                else if (node.Type == typeof(float)) skipTypeMethodName = "Skip4";
+                else if (node.Type == typeof(float[])) skipTypeMethodName = "Skip4Array";
+                else if (node.Type == typeof(double)) skipTypeMethodName = "Skip8";
+                else if (node.Type == typeof(double[])) skipTypeMethodName = "Skip8Array";
+                else if (node.Type == typeof(string)) skipTypeMethodName = "SkipString";
+                else if (node.Type == typeof(string[])) skipTypeMethodName = "SkipStringArray";
+                else if (node.Type == typeof(DateTime)) skipTypeMethodName = "Skip4";
+                else if (node.Type == typeof(BitArray)) skipTypeMethodName = "SkipBitArray";
                 else
                 {
-                    throw new NotSupportedException(string.Format(Resources.UnsupportedReaderType, typeof(T)));
+                    throw new NotSupportedException(string.Format(Resources.UnsupportedReaderType, node.Type));
                 }
                 skipTypeMethod = typeof(BinaryReader).GetMethod(skipTypeMethodName, argsArray);
-                _SkipTypeMethods[typeof(T)] = skipTypeMethod;
+                _SkipTypeMethods[node.Type] = skipTypeMethod;
             }
             ILGen.Ldloc(_Reader);
             //if we have a length index, load its local (we enforce its presence for arrays in the node)
@@ -159,44 +160,45 @@ namespace LinqToStdf.RecordConverting
             return node;
         }
         Dictionary<Type, MethodInfo> _ReadTypeMethods = new Dictionary<Type, MethodInfo>();
-        public override CodeNode VisitReadType<T>(ReadTypeNode<T> node)
+        public override CodeNode VisitReadType(ReadTypeNode node)
         {
             if (_FieldLocal == null) throw new InvalidOperationException("Cannot read string outside a FieldAssignmentNode");
             MethodInfo readTypeMethod;
-            var argsArray = typeof(T).IsArray ? new[] { typeof(int) } : new Type[0];
+            var argsArray = node.Type.IsArray ? new[] { typeof(int) } : new Type[0];
             if (node.IsNibble) readTypeMethod = typeof(BinaryReader).GetMethod("ReadNibbleArray", argsArray);
-            else if (!_ReadTypeMethods.TryGetValue(typeof(T), out readTypeMethod))
+            else if (!_ReadTypeMethods.TryGetValue(node.Type, out readTypeMethod))
             {
                 string readTypeMethodName;
-                if (typeof(T) == typeof(byte)) readTypeMethodName = "ReadByte";
-                else if (typeof(T) == typeof(byte[])) readTypeMethodName = "ReadByteArray";
-                else if (typeof(T) == typeof(sbyte)) readTypeMethodName = "ReadSByte";
-                else if (typeof(T) == typeof(sbyte[])) readTypeMethodName = "ReadSByteArray";
-                else if (typeof(T) == typeof(ushort)) readTypeMethodName = "ReadUInt16";
-                else if (typeof(T) == typeof(ushort[])) readTypeMethodName = "ReadUInt16Array";
-                else if (typeof(T) == typeof(short)) readTypeMethodName = "ReadInt16";
-                else if (typeof(T) == typeof(short[])) readTypeMethodName = "ReadInt16Array";
-                else if (typeof(T) == typeof(uint)) readTypeMethodName = "ReadUInt32";
-                else if (typeof(T) == typeof(uint[])) readTypeMethodName = "ReadUInt32Array";
-                else if (typeof(T) == typeof(int)) readTypeMethodName = "ReadInt32";
-                else if (typeof(T) == typeof(int[])) readTypeMethodName = "ReadInt32Array";
-                else if (typeof(T) == typeof(ulong)) readTypeMethodName = "ReadUInt64";
-                else if (typeof(T) == typeof(ulong[])) readTypeMethodName = "ReadUInt64Array";
-                else if (typeof(T) == typeof(long)) readTypeMethodName = "ReadInt64";
-                else if (typeof(T) == typeof(long[])) readTypeMethodName = "ReadInt64Array";
-                else if (typeof(T) == typeof(float)) readTypeMethodName = "ReadSingle";
-                else if (typeof(T) == typeof(float[])) readTypeMethodName = "ReadSingleArray";
-                else if (typeof(T) == typeof(double)) readTypeMethodName = "ReadDouble";
-                else if (typeof(T) == typeof(double[])) readTypeMethodName = "ReadDoubleArray";
-                else if (typeof(T) == typeof(string)) readTypeMethodName = "ReadString";
-                else if (typeof(T) == typeof(DateTime)) readTypeMethodName = "ReadDateTime";
-                else if (typeof(T) == typeof(BitArray)) readTypeMethodName = "ReadBitArray";
+                if (node.Type == typeof(byte)) readTypeMethodName = "ReadByte";
+                else if (node.Type == typeof(byte[])) readTypeMethodName = "ReadByteArray";
+                else if (node.Type == typeof(sbyte)) readTypeMethodName = "ReadSByte";
+                else if (node.Type == typeof(sbyte[])) readTypeMethodName = "ReadSByteArray";
+                else if (node.Type == typeof(ushort)) readTypeMethodName = "ReadUInt16";
+                else if (node.Type == typeof(ushort[])) readTypeMethodName = "ReadUInt16Array";
+                else if (node.Type == typeof(short)) readTypeMethodName = "ReadInt16";
+                else if (node.Type == typeof(short[])) readTypeMethodName = "ReadInt16Array";
+                else if (node.Type == typeof(uint)) readTypeMethodName = "ReadUInt32";
+                else if (node.Type == typeof(uint[])) readTypeMethodName = "ReadUInt32Array";
+                else if (node.Type == typeof(int)) readTypeMethodName = "ReadInt32";
+                else if (node.Type == typeof(int[])) readTypeMethodName = "ReadInt32Array";
+                else if (node.Type == typeof(ulong)) readTypeMethodName = "ReadUInt64";
+                else if (node.Type == typeof(ulong[])) readTypeMethodName = "ReadUInt64Array";
+                else if (node.Type == typeof(long)) readTypeMethodName = "ReadInt64";
+                else if (node.Type == typeof(long[])) readTypeMethodName = "ReadInt64Array";
+                else if (node.Type == typeof(float)) readTypeMethodName = "ReadSingle";
+                else if (node.Type == typeof(float[])) readTypeMethodName = "ReadSingleArray";
+                else if (node.Type == typeof(double)) readTypeMethodName = "ReadDouble";
+                else if (node.Type == typeof(double[])) readTypeMethodName = "ReadDoubleArray";
+                else if (node.Type == typeof(string)) readTypeMethodName = "ReadString";
+                else if (node.Type == typeof(string[])) readTypeMethodName = "ReadStringArray";
+                else if (node.Type == typeof(DateTime)) readTypeMethodName = "ReadDateTime";
+                else if (node.Type == typeof(BitArray)) readTypeMethodName = "ReadBitArray";
                 else
                 {
-                    throw new NotSupportedException(string.Format(Resources.UnsupportedReaderType, typeof(T)));
+                    throw new NotSupportedException(string.Format(Resources.UnsupportedReaderType, node.Type));
                 }
                 readTypeMethod = typeof(BinaryReader).GetMethod(readTypeMethodName, argsArray);
-                _ReadTypeMethods[typeof(T)] = readTypeMethod;
+                _ReadTypeMethods[node.Type] = readTypeMethod;
             }
             ILGen.Ldloc(_Reader);
             //if we have a length index, load its local (we enforce its presence for arrays in the node)
@@ -209,7 +211,7 @@ namespace LinqToStdf.RecordConverting
             return node;
         }
         static MethodInfo _AtEndOfStreamMethod = typeof(BinaryReader).GetProperty("AtEndOfStream").GetGetMethod();
-        public override CodeNode VisitFieldAssignment<TField>(FieldAssignmentNode<TField> node)
+        public override CodeNode VisitFieldAssignment(FieldAssignmentNode node)
         {
             //ensure we're in a FieldAssignmentBlock
             if (!_InFieldAssignmentBlock)
@@ -225,7 +227,7 @@ namespace LinqToStdf.RecordConverting
                 ILGen.Brtrue(_EndLabel);
 
                 //declare the local and enable it in the scope of child visiting
-                _FieldLocal = ILGen.DeclareLocal<TField>();
+                _FieldLocal = ILGen.DeclareLocal(node.Type);
                 _FieldLocals[node.FieldIndex] = _FieldLocal;
 
                 _SkipAssignmentLabel = ILGen.DefineLabel();
@@ -264,32 +266,34 @@ namespace LinqToStdf.RecordConverting
             ILGen.Brtrue(_SkipAssignmentLabel);
             return node;
         }
-        public override CodeNode VisitSkipAssignmentIfMissingValue<T>(SkipAssignmentIfMissingValueNode<T> node)
+        public override CodeNode VisitSkipAssignmentIfMissingValue(SkipAssignmentIfMissingValueNode node)
         {
             if (!_InFieldAssignment) throw new InvalidOperationException("SkipAssignmentIfMissingValueNode must be in a FieldAssignmentNode");
             ILGen.Ldloca(_FieldLocal);
-            ILGen.Ldc<T>(node.MissingValue);
+            ILGen.Ldc(node.MissingValue, node.MissingValue.GetType());
+            //BUG: Revisit this.  The purpose of constrained is so you don't have to do different codegen for valuetype vs. reference type
             if (_FieldLocal.LocalType.IsValueType)
             {
-                ILGen.Box<T>();
+                ILGen.Box(_FieldLocal.LocalType);
             }
-            ILGen.Constrained<T>();
+            ILGen.Constrained(_FieldLocal.LocalType);
+            // TODO: if (!node.AllowMissingValue) { do the next two lines... }
             ILGen.Callvirt(typeof(object).GetMethod("Equals", typeof(object)));
             ILGen.Brtrue(_SkipAssignmentLabel);
             return node;
         }
-        public override CodeNode VisitAssignFieldToProperty<T>(AssignFieldToPropertyNode<T> node)
+        public override CodeNode VisitAssignFieldToProperty(AssignFieldToPropertyNode node)
         {
             if (!_InFieldAssignment) throw new InvalidOperationException("AssignFieldToPropertyNode must be in a FieldAssignmentNode");
             ILGen.Ldloc(_ConcreteRecordLocal);
             ILGen.Ldloc(_FieldLocal);
             //handle the case where the property is a nullable version of the field type
-            if (typeof(T).IsValueType)
+            if (node.FieldType.IsValueType)
             {
-                Type genericType = typeof(Nullable<>).MakeGenericType(typeof(T));
+                Type genericType = typeof(Nullable<>).MakeGenericType(node.FieldType);
                 if (node.Property.PropertyType == genericType)
                 {
-                    ILGen.Newobj(genericType, typeof(T));
+                    ILGen.Newobj(genericType, node.FieldType);
                 }
             }
             //assign the value to the property

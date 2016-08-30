@@ -9,35 +9,35 @@ using System.Text;
 namespace LinqToStdf.Records.V4 {
 	using Attributes;
 
-    [StdfFieldLayout(FieldIndex = 0, FieldType = typeof(byte), AssignTo = "HeadNumber"),
-    StdfFieldLayout(FieldIndex = 1, FieldType = typeof(byte), AssignTo = "SiteGroup"),
-    StdfFieldLayout(FieldIndex = 2, FieldType = typeof(byte)),
-    StdfArrayLayout(FieldIndex = 3, FieldType = typeof(byte), ArrayLengthFieldIndex = 2, AssignTo = "Sites"),
-    StdfStringLayout(FieldIndex = 4, AssignTo = "HandlerType"),
-    StdfStringLayout(FieldIndex = 5, AssignTo = "HandlerId"),
-    StdfStringLayout(FieldIndex = 6, AssignTo = "CardType"),
-    StdfStringLayout(FieldIndex = 7, AssignTo = "CardId"),
-    StdfStringLayout(FieldIndex = 8, AssignTo = "LoadboardType"),
-    StdfStringLayout(FieldIndex = 9, AssignTo = "LoadboardId"),
-    StdfStringLayout(FieldIndex = 10, AssignTo = "DibType"),
-    StdfStringLayout(FieldIndex = 11, AssignTo = "DibId"),
-    StdfStringLayout(FieldIndex = 12, AssignTo = "CableType"),
-    StdfStringLayout(FieldIndex = 13, AssignTo = "CableId"),
-    StdfStringLayout(FieldIndex = 14, AssignTo = "ContactorType"),
-    StdfStringLayout(FieldIndex = 15, AssignTo = "ContactorId"),
-    StdfStringLayout(FieldIndex = 16, AssignTo = "LaserType"),
-    StdfStringLayout(FieldIndex = 17, AssignTo = "LaserId"),
-    StdfStringLayout(FieldIndex = 18, AssignTo = "ExtraType"),
-    StdfStringLayout(FieldIndex = 19, AssignTo = "ExtraId")]
+    [FieldLayout(FieldIndex = 0, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "HeadNumber"),
+    FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = byte.MaxValue, PersistMissingValue = true, RecordProperty = "SiteGroup"),
+    FieldLayout(FieldIndex = 2, FieldType = typeof(byte)),
+    ArrayFieldLayout(FieldIndex = 3, FieldType = typeof(byte), ArrayLengthFieldIndex = 2, RecordProperty = "SiteNumbers"),
+    StringFieldLayout(FieldIndex = 4, IsOptional = true, RecordProperty = "HandlerType"),
+    StringFieldLayout(FieldIndex = 5, IsOptional = true, RecordProperty = "HandlerId"),
+    StringFieldLayout(FieldIndex = 6, IsOptional = true, RecordProperty = "CardType"),
+    StringFieldLayout(FieldIndex = 7, IsOptional = true, RecordProperty = "CardId"),
+    StringFieldLayout(FieldIndex = 8, IsOptional = true, RecordProperty = "LoadboardType"),
+    StringFieldLayout(FieldIndex = 9, IsOptional = true, RecordProperty = "LoadboardId"),
+    StringFieldLayout(FieldIndex = 10, IsOptional = true, RecordProperty = "DibType"),
+    StringFieldLayout(FieldIndex = 11, IsOptional = true, RecordProperty = "DibId"),
+    StringFieldLayout(FieldIndex = 12, IsOptional = true, RecordProperty = "CableType"),
+    StringFieldLayout(FieldIndex = 13, IsOptional = true, RecordProperty = "CableId"),
+    StringFieldLayout(FieldIndex = 14, IsOptional = true, RecordProperty = "ContactorType"),
+    StringFieldLayout(FieldIndex = 15, IsOptional = true, RecordProperty = "ContactorId"),
+    StringFieldLayout(FieldIndex = 16, IsOptional = true, RecordProperty = "LaserType"),
+    StringFieldLayout(FieldIndex = 17, IsOptional = true, RecordProperty = "LaserId"),
+    StringFieldLayout(FieldIndex = 18, IsOptional = true, RecordProperty = "ExtraType"),
+    StringFieldLayout(FieldIndex = 19, IsOptional = true, RecordProperty = "ExtraId")]
     public class Sdr : StdfRecord, IHeadIndexable {
 
         public override RecordType RecordType {
             get { return new RecordType(1, 80); }
         }
 
-        public byte HeadNumber { get; set; }
-        public byte SiteGroup { get; set; }
-        public byte[] Sites { get; set; }
+        public byte? HeadNumber { get; set; }
+        public byte? SiteGroup { get; set; }
+        public byte[] SiteNumbers { get; set; }
         public string HandlerType { get; set; }
         public string HandlerId { get; set; }
         public string CardType { get; set; }
@@ -54,5 +54,11 @@ namespace LinqToStdf.Records.V4 {
         public string LaserId { get; set; }
         public string ExtraType { get; set; }
         public string ExtraId { get; set; }
+
+        [Obsolete("Sdr.Sites has been renamed Sdr.SiteNumbers to be consistent other records")]
+        public byte[] Sites {
+            get { return SiteNumbers; }
+            set { SiteNumbers = value; }
+        }
     }
 }

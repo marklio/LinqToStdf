@@ -19,10 +19,10 @@ namespace LinqToStdf.RecordConverting
             };
             Visit(node);
         }
-        public override CodeNode VisitAssignFieldToProperty<T>(AssignFieldToPropertyNode<T> node)
+        public override CodeNode VisitAssignFieldToProperty(AssignFieldToPropertyNode node)
         {
             _Writer.WriteStartElement("AssignFieldToProperty");
-            _Writer.WriteAttributeString("Type", typeof(T).ToString());
+            _Writer.WriteAttributeString("Type", node.FieldType.ToString());
             _Writer.WriteAttributeString("Property", node.Property.Name);
             _Writer.WriteEndElement();
             return node;
@@ -65,10 +65,10 @@ namespace LinqToStdf.RecordConverting
                 _Writer.WriteEndElement();
             }
         }
-        public override CodeNode VisitFieldAssignment<T>(FieldAssignmentNode<T> node)
+        public override CodeNode VisitFieldAssignment(FieldAssignmentNode node)
         {
             _Writer.WriteStartElement("FieldAssignment");
-            _Writer.WriteAttributeString("Type", typeof(T).ToString());
+            _Writer.WriteAttributeString("Type", node.Type.ToString());
             _Writer.WriteAttributeString("FieldIndex", node.FieldIndex.ToString());
             _Writer.WriteStartElement("ReadNode");
             Visit(node.ReadNode);
@@ -126,12 +126,12 @@ namespace LinqToStdf.RecordConverting
             _Writer.WriteEndElement();
             return node;
         }
-        public override CodeNode VisitReadType<T>(ReadTypeNode<T> node)
+        public override CodeNode VisitReadType(ReadTypeNode node)
         {
             _Writer.WriteStartElement("ReadType");
             _Writer.WriteAttributeString("IsNibble", node.IsNibble.ToString());
             _Writer.WriteAttributeString("LengthIndex", node.LengthIndex.ToString());
-            _Writer.WriteAttributeString("Type", typeof(T).ToString());
+            _Writer.WriteAttributeString("Type", node.Type.ToString());
             _Writer.WriteEndElement();
             return node;
         }
@@ -164,11 +164,11 @@ namespace LinqToStdf.RecordConverting
             _Writer.WriteEndElement();
             return node;
         }
-        public override CodeNode VisitSkipAssignmentIfMissingValue<T>(SkipAssignmentIfMissingValueNode<T> node)
+        public override CodeNode VisitSkipAssignmentIfMissingValue(SkipAssignmentIfMissingValueNode node)
         {
             _Writer.WriteStartElement("SkipAssignmentIfMissingValue");
             _Writer.WriteAttributeString("MissingValue", node.MissingValue.ToString());
-            _Writer.WriteAttributeString("Type", typeof(T).ToString());
+            _Writer.WriteAttributeString("Type", node.MissingValue.GetType().ToString());
             _Writer.WriteEndElement();
             return node;
         }
@@ -179,12 +179,12 @@ namespace LinqToStdf.RecordConverting
             _Writer.WriteEndElement();
             return node;
         }
-        public override CodeNode VisitSkipType<T>(SkipTypeNode<T> node)
+        public override CodeNode VisitSkipType(SkipTypeNode node)
         {
             _Writer.WriteStartElement("SkipType");
             _Writer.WriteAttributeString("LengthIndex", node.LengthIndex.ToString());
             _Writer.WriteAttributeString("IsNibble", node.IsNibble.ToString());
-            _Writer.WriteAttributeString("Type", typeof(T).ToString());
+            _Writer.WriteAttributeString("Type", node.Type.ToString());
             _Writer.WriteEndElement();
             return node;
         }

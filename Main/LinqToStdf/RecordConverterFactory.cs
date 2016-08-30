@@ -28,7 +28,7 @@ namespace LinqToStdf {
     /// can be hand-written and registered with the converter factory.
     /// </para>
     /// </summary>
-    /// <seealso cref="StdfFieldLayoutAttribute"/>
+    /// <seealso cref="FieldLayoutAttribute"/>
     public class RecordConverterFactory {
 
         /// <summary>
@@ -248,7 +248,7 @@ namespace LinqToStdf {
             else {
                 ilGenerator = CreateNewLCGMethod<Converter<UnknownRecord, StdfRecord>>(string.Format("ConvertTo{0}", type.Name), ref finalizeConverter);
             }
-            var generator = new ConverterGenerator(ilGenerator, type, _RecordsAndFields == null ? null : _RecordsAndFields.GetFieldsForType(type));
+            var generator = new ConverterGenerator(ilGenerator, type, _RecordsAndFields?.GetFieldsForType(type));
             generator.GenerateConverter();
             return finalizeConverter();
         }

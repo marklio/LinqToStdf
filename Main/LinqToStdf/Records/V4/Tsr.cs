@@ -9,30 +9,33 @@ using System.Text;
 namespace LinqToStdf.Records.V4 {
 	using Attributes;
 
-    [StdfFieldLayout(FieldIndex = 0, FieldType = typeof(byte), AssignTo = "HeadNumber"),
-    StdfFieldLayout(FieldIndex = 1, FieldType = typeof(byte), AssignTo = "SiteNumber"),
-    StdfStringLayout(FieldIndex = 2, Length = 1, MissingValue = " ", AssignTo = "TestType"),
-    StdfFieldLayout(FieldIndex = 3, FieldType = typeof(uint), AssignTo = "TestNumber"),
-    StdfFieldLayout(FieldIndex = 4, FieldType = typeof(uint), MissingValue = uint.MaxValue, AssignTo = "ExecutedCount"),
-    StdfFieldLayout(FieldIndex = 5, FieldType = typeof(uint), MissingValue = uint.MaxValue, AssignTo = "FailedCount"),
-    StdfFieldLayout(FieldIndex = 6, FieldType = typeof(uint), MissingValue = uint.MaxValue, AssignTo = "AlarmCount"),
-    StdfStringLayout(FieldIndex = 7, AssignTo = "TestName"),
-    StdfStringLayout(FieldIndex = 8, AssignTo = "SequencerName"),
-    StdfStringLayout(FieldIndex = 9, AssignTo = "TestLabel"),
-    StdfFieldLayout(FieldIndex = 10, FieldType = typeof(byte)),
-    StdfOptionalFieldLayout(FieldIndex = 11, FieldType = typeof(float), FlagIndex = 10, FlagMask = (byte)0x04, AssignTo = "TestTime"),
-    StdfOptionalFieldLayout(FieldIndex = 12, FieldType = typeof(float), FlagIndex = 10, FlagMask = (byte)0x01, AssignTo = "TestMin"),
-    StdfOptionalFieldLayout(FieldIndex = 13, FieldType = typeof(float), FlagIndex = 10, FlagMask = (byte)0x02, AssignTo = "TestMax"),
-    StdfOptionalFieldLayout(FieldIndex = 14, FieldType = typeof(float), FlagIndex = 10, FlagMask = (byte)0x10, AssignTo = "TestSum"),
-    StdfOptionalFieldLayout(FieldIndex = 15, FieldType = typeof(float), FlagIndex = 10, FlagMask = (byte)0x20, AssignTo = "TestSumOfSquares")]
+    [FieldLayout(FieldIndex = 0, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "HeadNumber"),
+    FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "SiteNumber"),
+    StringFieldLayout(FieldIndex = 2, Length = 1, RecordProperty = "TestType"),
+    FieldLayout(FieldIndex = 3, FieldType = typeof(uint), RecordProperty = "TestNumber"),
+    FieldLayout(FieldIndex = 4, FieldType = typeof(uint), IsOptional = true, MissingValue = uint.MaxValue, RecordProperty = "ExecutedCount"),
+    FieldLayout(FieldIndex = 5, FieldType = typeof(uint), IsOptional = true, MissingValue = uint.MaxValue, RecordProperty = "FailedCount"),
+    FieldLayout(FieldIndex = 6, FieldType = typeof(uint), IsOptional = true, MissingValue = uint.MaxValue, RecordProperty = "AlarmCount"),
+    StringFieldLayout(FieldIndex = 7, IsOptional = true, RecordProperty = "TestName"),
+    StringFieldLayout(FieldIndex = 8, IsOptional = true, RecordProperty = "SequencerName"),
+    StringFieldLayout(FieldIndex = 9, IsOptional = true, RecordProperty = "TestLabel"),
+    FieldLayout(FieldIndex = 10, IsOptional = true, FieldType = typeof(byte)),
+    FlaggedFieldLayout(FieldIndex = 11, FieldType = typeof(float), IsOptional = true, FlagIndex = 10, FlagMask = (byte)0x04, RecordProperty = "TestTime"),
+    FlaggedFieldLayout(FieldIndex = 12, FieldType = typeof(float), IsOptional = true, FlagIndex = 10, FlagMask = (byte)0x01, RecordProperty = "TestMin"),
+    FlaggedFieldLayout(FieldIndex = 13, FieldType = typeof(float), IsOptional = true, FlagIndex = 10, FlagMask = (byte)0x02, RecordProperty = "TestMax"),
+    FlaggedFieldLayout(FieldIndex = 14, FieldType = typeof(float), IsOptional = true, FlagIndex = 10, FlagMask = (byte)0x10, RecordProperty = "TestSum"),
+    FlaggedFieldLayout(FieldIndex = 15, FieldType = typeof(float), IsOptional = true, FlagIndex = 10, FlagMask = (byte)0x20, RecordProperty = "TestSumOfSquares")]
     public class Tsr : StdfRecord, IHeadSiteIndexable {
 
         public override RecordType RecordType {
             get { return new RecordType(10, 30); }
         }
 
-        public byte HeadNumber { get; set; }
-        public byte SiteNumber { get; set; }
+        public byte? HeadNumber { get; set; }
+        public byte? SiteNumber { get; set; }
+        /// <summary>
+        /// Known values are: P, F, M
+        /// </summary>
         public string TestType { get; set; }
         public uint TestNumber { get; set; }
         public uint? ExecutedCount { get; set; }

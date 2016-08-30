@@ -64,12 +64,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Attributes\StdfArrayLayoutAttribute.cs" />
-    <Compile Include="Attributes\StdfDependencyProperty.cs" />
-    <Compile Include="Attributes\StdfFieldLayoutAttribute.cs" />
-    <Compile Include="Attributes\StdfNibbleArrayLayoutAttribute.cs" />
-    <Compile Include="Attributes\StdfOptionalFieldLayoutAttribute.cs" />
-    <Compile Include="Attributes\StdfStringLayoutAttribute.cs" />
+    <Compile Include="Attributes\ArrayFieldLayoutAttribute.cs" />
+    <Compile Include="Attributes\DependencyProperty.cs" />
+    <Compile Include="Attributes\FieldLayoutAttribute.cs" />
+    <Compile Include="Attributes\FlaggedFieldLayoutAttribute.cs" />
+    <Compile Include="Attributes\NibbleArrayFieldLayoutAttribute.cs" />
+    <Compile Include="Attributes\StringFieldLayoutAttribute.cs" />
+    <Compile Include="Attributes\TimeFieldLayoutAttribute.cs" />
     <Compile Include="BinaryReader.cs" />
     <Compile Include="BinaryWriter.cs" />
     <Compile Include="BuiltInFilters.cs" />
@@ -95,9 +96,9 @@
     <Compile Include="RecordConverting\ConverterGenerator.cs" />
     <Compile Include="RecordConverting\ConverterNodes.cs" />
     <Compile Include="RecordConverting\PrettyPrintVisitor.cs" />
+    <Compile Include="RecordConverting\UnconverterEmittingVisitor.cs" />
     <Compile Include="RecordConverting\UnconverterGenerator.cs" />
     <Compile Include="RecordConverting\UnconverterNodes.cs" />
-    <Compile Include="RecordConverting\UnconvertingEmittingVisitor.cs" />
     <Compile Include="RecordHeader.cs" />
     <Compile Include="Records\CorruptDataRecord.cs" />
     <Compile Include="Records\EndOfStreamRecord.cs" />

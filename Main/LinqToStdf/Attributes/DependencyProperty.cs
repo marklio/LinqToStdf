@@ -13,7 +13,7 @@ namespace LinqToStdf.Attributes {
     /// This is used in the compiled query support to allow the correct fields to be parsed in order to provide the data for a given property.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    public class StdfDependencyProperty : StdfFieldLayoutAttribute {
+    public class DependencyProperty : FieldLayoutAttribute {
         /// <summary>
         /// The index of the field whose data is projected into this property.
         /// </summary>

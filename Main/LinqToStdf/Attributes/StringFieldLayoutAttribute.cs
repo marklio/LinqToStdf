@@ -14,11 +14,11 @@ namespace LinqToStdf.Attributes {
     /// rather than the first byte of the field.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    public class StdfStringLayoutAttribute : StdfFieldLayoutAttribute {
+    public class StringFieldLayoutAttribute : FieldLayoutAttribute {
 
-        public StdfStringLayoutAttribute() {
+        public StringFieldLayoutAttribute() {
             base.FieldType = typeof(string);
-            base.MissingValue = string.Empty;
+            base.MissingValue = String.Empty;
         }
 
         private int _Length = int.MinValue;
@@ -31,6 +31,15 @@ namespace LinqToStdf.Attributes {
             set { _Length = value; }
         }
 
+        private char _PadCharacter = ' ';
+        /// <summary>
+        /// Indicates the padding character to be used for a fixed-length string.
+        /// </summary>
+        public char PadCharacter {
+            get { return _PadCharacter; }
+            private set { _PadCharacter = value; }
+        }
+
         /// <summary>
         /// Overriden to be locked to string. setting is an invalid operation.
         /// </summary>
@@ -38,10 +47,9 @@ namespace LinqToStdf.Attributes {
             get { return base.FieldType; }
             set {
                 if (value != typeof(string)) {
-                    throw new InvalidOperationException(Resources.StdfStringLayoutNonString);
+                    throw new InvalidOperationException(Resources.StringFieldLayoutNonString);
                 }
             }
         }
-    
     }
 }
