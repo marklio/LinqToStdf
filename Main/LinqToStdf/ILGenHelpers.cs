@@ -129,10 +129,25 @@ namespace LinqToStdf {
             {
                 ilgen.Ldstr((string)value);
             }
+            else if (type == typeof(DateTime))
+            {
+                //we only support loading the Epoch
+                if ((DateTime)value != Attributes.TimeFieldLayoutAttribute.Epoch)
+                {
+                    //TODO:resource
+                    throw new NotSupportedException("we can only load the Epoch as a \"constant\"");
+                }
+                ilgen.Ldsfld(typeof(Attributes.TimeFieldLayoutAttribute).GetField(nameof(Attributes.TimeFieldLayoutAttribute.Epoch), BindingFlags.Public | BindingFlags.Static));
+            }
             else
             {
                 throw new NotSupportedException(string.Format(Resources.CodeGen_UnsupportedGenericLdc, type));
             }
+        }
+
+        public static void Ldsfld(this ILGenerator ilgen, FieldInfo field)
+        {
+            ilgen.Emit(OpCodes.Ldsfld, field);
         }
 
         /// <seealso cref="OpCodes.Ldc_I4"/>

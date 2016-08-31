@@ -14,6 +14,11 @@ namespace LinqToStdf {
     using LinqToStdf.RecordConverting;
     using LinqToStdf.Records;
 
+    public enum ConverterType
+    {
+        Converter,
+        Unconverter,
+    }
     /// <summary>
     /// <para>
     /// Manages appropriate converter and unconverter delegates for various registered <see cref="RecordType">RecordTypes</see>.
@@ -30,6 +35,8 @@ namespace LinqToStdf {
     /// </summary>
     /// <seealso cref="FieldLayoutAttribute"/>
     public class RecordConverterFactory {
+
+        public event Action<ConverterType, Type> ConverterGenerated;
 
         /// <summary>
         /// Creates a new factory
@@ -196,7 +203,8 @@ namespace LinqToStdf {
         /// If <see cref="Debug"/> is set, saves a dynamic assembly
         /// with all the converters and unconverters created so far.
         /// </summary>
-        public void SaveDynamicAssembly() {
+        public void SaveDynamicAssembly()
+        {
             if (!Debug || _DynamicAssembly == null) throw new InvalidOperationException(Resources.InvalidSaveAssembly);
             _DynamicAssembly.Save("DynamicConverters.dll");
         }
@@ -250,7 +258,9 @@ namespace LinqToStdf {
             }
             var generator = new ConverterGenerator(ilGenerator, type, _RecordsAndFields?.GetFieldsForType(type));
             generator.GenerateConverter();
-            return finalizeConverter();
+            var converter = finalizeConverter();
+            ConverterGenerated?.Invoke(ConverterType.Converter, type);
+            return converter;
         }
 
         #endregion
@@ -292,7 +302,9 @@ namespace LinqToStdf {
             }
             var generator = new UnconverterGenerator(ilGenerator, type);
             generator.GenerateUnconverter();
-            return finalizeUnconverter();
+            var unconverter = finalizeUnconverter();
+            ConverterGenerated?.Invoke(ConverterType.Unconverter, type);
+            return unconverter;
         }
 
         #endregion

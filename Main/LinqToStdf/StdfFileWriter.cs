@@ -48,6 +48,8 @@ namespace LinqToStdf
             }
         }
 
+        public RecordConverterFactory ConverterFactory => _Factory;
+
         public StdfFileWriter(Stream stream, bool debug = false, bool ownsStream = false) : this(stream, Endian.Unknown, debug, ownsStream) { }
 
         /// <summary>
