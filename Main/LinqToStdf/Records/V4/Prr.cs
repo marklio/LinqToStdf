@@ -35,7 +35,7 @@ namespace LinqToStdf.Records.V4 {
         public byte? HeadNumber { get; set; }
         public byte? SiteNumber { get; set; }
         public byte PartFlag { get; set; }
-        public ushort? TestCount { get; set; }
+        public ushort TestCount { get; set; }
         /// <summary>
         /// While ushort, valid bins must be 0 - 32,767
         /// </summary>

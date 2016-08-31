@@ -12,12 +12,14 @@ namespace LinqToStdf.Records.V4 {
 
 	public class Gdr : StdfRecord {
 
+        static readonly object[] _Empty = new object[0];
+
 		public override RecordType RecordType {
 			get { return new RecordType(50, 10); }
 		}
 
-		private object[] _GenericData;
-		public object[] GenericData {
+        private object[] _GenericData = _Empty;
+        public object[] GenericData {
 			get { return _GenericData; }
 			set { _GenericData = value; }
 		}

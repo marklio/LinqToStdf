@@ -51,6 +51,8 @@ namespace StdfFileTests
     [TestClass]
     public class RoundTrip
     {
+        private object eps;
+
         [TestMethod]
         public void TestFar()
         {
@@ -150,6 +152,109 @@ namespace StdfFileTests
         {
             var rdr = new Rdr();
             TestRoundTripEquality(rdr);
+        }
+
+        [TestMethod]
+        public void TestSdr()
+        {
+            var sdr = new Sdr();
+            TestRoundTripEquality(sdr);
+        }
+
+        [TestMethod]
+        public void TestWir()
+        {
+            var wir = new Wir();
+            TestRoundTripEquality(wir);
+        }
+
+        [TestMethod]
+        public void TestWrr()
+        {
+            var wrr = new Wrr();
+            TestRoundTripEquality(wrr);
+        }
+
+        [TestMethod]
+        public void TestWcr()
+        {
+            var wcr = new Wcr();
+            TestRoundTripEquality(wcr);
+        }
+
+        [TestMethod]
+        public void TestPir()
+        {
+            var pir = new Pir();
+            TestRoundTripEquality(pir);
+        }
+
+        [TestMethod]
+        public void TestPrr()
+        {
+            var prr = new Prr();
+            TestRoundTripEquality(prr);
+        }
+
+        [TestMethod]
+        public void TestTsr()
+        {
+            var tsr = new Tsr();
+            TestRoundTripEquality(tsr);
+        }
+
+        [TestMethod]
+        public void TestPtr()
+        {
+            var ptr = new Ptr();
+            TestRoundTripEquality(ptr);
+        }
+
+        [TestMethod]
+        public void TestMpr()
+        {
+            var mpr = new Mpr();
+            TestRoundTripEquality(mpr);
+        }
+
+        [TestMethod]
+        public void TestFtr()
+        {
+            var ftr = new Ftr();
+            TestRoundTripEquality(ftr);
+        }
+
+        [TestMethod]
+        public void TestBps()
+        {
+            var bps = new Bps();
+            TestRoundTripEquality(bps);
+        }
+
+        [TestMethod]
+        public void TestEps()
+        {
+            var eps = new Eps();
+            TestRoundTripEquality(eps);
+        }
+
+        [TestMethod]
+        public void TestGdr()
+        {
+            var gdr = new Gdr();
+            TestRoundTripEquality(gdr);
+        }
+
+        [TestMethod]
+        public void TestDtr()
+        {
+            var dtr = new Dtr();
+            TestRoundTripEquality(dtr);
+        }
+
+        private void TestRoundTripEquality(object eps)
+        {
+            throw new NotImplementedException();
         }
 
         public void TestRoundTripEquality<TRecord>(TRecord record, Endian endian = Endian.Big) where TRecord : StdfRecord
