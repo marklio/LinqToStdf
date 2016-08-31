@@ -215,6 +215,10 @@ namespace StdfFileTests
         {
             var mpr = new Mpr();
             TestRoundTripEquality(mpr);
+            mpr.PinIndexes = new ushort[] { 0, 1 };
+            mpr.PinStates = new byte[] { 0, 1 };
+            mpr.Results = new float[] { 0.0f, 1.1f };
+            TestRoundTripEquality(mpr);
         }
 
         [TestMethod]

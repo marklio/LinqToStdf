@@ -244,7 +244,8 @@ namespace LinqToStdf.RecordConverting
         public override CodeNode VisitWriteType(WriteTypeNode node)
         {
             MethodInfo writeMethod;
-            if (!_WriteMethods.TryGetValue(node.Type, out writeMethod))
+            if (node.IsNibble) writeMethod = typeof(BinaryWriter).GetMethod(nameof(BinaryWriter.WriteNibbleArray), node.Type);
+            else if (!_WriteMethods.TryGetValue(node.Type, out writeMethod))
             {
                 string writeMethodName;
                 if (node.Type == typeof(byte)) writeMethodName = "WriteByte";

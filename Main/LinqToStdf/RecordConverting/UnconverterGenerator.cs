@@ -175,6 +175,7 @@ namespace LinqToStdf.RecordConverting
         {
             var fieldType = pair.Key.FieldType;
             ArrayFieldLayoutAttribute arrayLayout = (ArrayFieldLayoutAttribute)pair.Key;
+            var isNibbleArray = arrayLayout is NibbleArrayFieldLayoutAttribute;
 
             var initNodes = new List<CodeNode>();
 
@@ -208,7 +209,7 @@ namespace LinqToStdf.RecordConverting
 
             writeNode = new BlockNode(
                 writeNode,
-                new WriteTypeNode(fieldType.MakeArrayType(), new LoadFieldLocalNode(arrayLayout.FieldIndex)));
+                new WriteTypeNode(fieldType.MakeArrayType(), new LoadFieldLocalNode(arrayLayout.FieldIndex), isNibble: isNibbleArray));
 
             return new WriteFieldNode(arrayLayout.FieldIndex, fieldType.MakeArrayType(),
                 initialization: new BlockNode(initNodes),
