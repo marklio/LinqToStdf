@@ -141,10 +141,14 @@ namespace LinqToStdf {
             var newArray = new byte[(value.Length + 1) / 2];
             for (var i = 0; i < newArray.Length; i++) {
                 var temp = value[(2 * i)];
-                if (((2 * i) + 1) < newArray.Length) {
+                if (((2 * i) + 1) < value.Length) {
                     temp |= (byte)(value[(2 * i) + 1] << 4);
                 }
                 newArray[i] = temp;
+            }
+            if (_WriteBackwards)
+            {
+                Array.Reverse(newArray);
             }
             newArray.CopyTo(_Buffer, 0);
             WriteToStream(newArray.Length);

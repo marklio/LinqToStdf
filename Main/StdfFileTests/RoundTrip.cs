@@ -274,7 +274,17 @@ namespace StdfFileTests
                         let test = (Action)(() =>
                         {
                             //TODO: test arrays
-                            if (!prop.PropertyType.IsArray)
+                            if (prop.PropertyType.IsArray)
+                            {
+                                var listOne = (System.Collections.IList)del(one);
+                                var listTwo = (System.Collections.IList)del(two);
+                                Assert.AreEqual(listOne?.Count, listTwo?.Count, $"Arrays for {prop.Name} have different length");
+                                for (int i = 0; i < (listOne?.Count ?? 0); i++)
+                                {
+                                    Assert.AreEqual(listOne[i], listTwo[i], $"{prop.Name} index {i} is different");
+                                }
+                            }
+                            else
                             {
                                 Assert.AreEqual(del(one), del(two), $"{prop.Name} not equal");
                             }
