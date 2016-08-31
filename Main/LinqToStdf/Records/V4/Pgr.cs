@@ -11,7 +11,7 @@ namespace LinqToStdf.Records.V4 {
 
     [FieldLayout(FieldIndex = 0, FieldType = typeof(ushort), RecordProperty = "GroupIndex"),
     StringFieldLayout(FieldIndex = 1, IsOptional = true, RecordProperty = "GroupName"),
-    FieldLayout(FieldIndex = 2, FieldType = typeof(ushort), IsOptional = true, MissingValue = ushort.MinValue),
+    FieldLayout(FieldIndex = 2, FieldType = typeof(ushort), IsOptional = true),
     ArrayFieldLayout(FieldIndex = 3, FieldType = typeof(ushort), IsOptional = true, ArrayLengthFieldIndex = 2, RecordProperty = "PinIndexes")]
     public class Pgr : StdfRecord {
 
@@ -26,10 +26,5 @@ namespace LinqToStdf.Records.V4 {
         public string GroupName { get; set; }
         public ushort[] PinIndexes { get; set; }
 
-        [Obsolete("Pgr.Index has been renamed Pgr.GroupIndex to be consistent with Plr.GroupIndexes")]
-        public ushort Index {
-            get { return GroupIndex; }
-            set { GroupIndex = value; }
-        }
     }
 }

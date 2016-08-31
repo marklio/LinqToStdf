@@ -10,7 +10,7 @@ namespace LinqToStdf.Records.V4 {
 	using Attributes;
 
     [TimeFieldLayout(FieldIndex = 0, RecordProperty = "FinishTime"),
-    StringFieldLayout(FieldIndex = 1, IsOptional = true, Length = 1, RecordProperty = "DispositionCode"),
+    StringFieldLayout(FieldIndex = 1, IsOptional = true, Length = 1, MissingValue = " ", RecordProperty = "DispositionCode"),
     StringFieldLayout(FieldIndex = 2, IsOptional = true, RecordProperty = "UserDescription"),
     StringFieldLayout(FieldIndex = 3, IsOptional = true, RecordProperty = "ExecDescription")]
     public class Mrr : StdfRecord {

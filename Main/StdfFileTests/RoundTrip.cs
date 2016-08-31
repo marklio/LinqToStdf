@@ -7,6 +7,7 @@ using System.Linq;
 using LinqToStdf.Records.V4;
 using LinqToStdf.Records;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace StdfFileTests
 {
@@ -51,17 +52,10 @@ namespace StdfFileTests
     [TestClass]
     public class RoundTrip
     {
-        private object eps;
-
         [TestMethod]
         public void TestFar()
         {
-            var far = new Far
-            {
-                Offset = 1234,
-                CpuType = 0,
-                StdfVersion = 4,
-            };
+            var far = new Far();
             TestRoundTripEquality(far);
 
             far.CpuType = 1;
@@ -80,9 +74,10 @@ namespace StdfFileTests
         {
             var atr = new Atr();
             TestRoundTripEquality(atr);
-            atr.ModifiedTime = DateTime.Now.TruncateToSeconds();
-            TestRoundTripEquality(atr);
             atr.CommandLine = "This is a test";
+            TestRoundTripEquality(atr);
+            atr.ModifiedTime = DateTime.Now.TruncateToSeconds();
+            atr.CommandLine = null;
             TestRoundTripEquality(atr);
             atr.ModifiedTime = null;
             TestRoundTripEquality(atr);
@@ -93,6 +88,8 @@ namespace StdfFileTests
         {
             var mir = new Mir();
             TestRoundTripEquality(mir);
+            mir.SupervisorName = "Mark";
+            TestRoundTripEquality(mir);
         }
 
         [TestMethod]
@@ -100,33 +97,59 @@ namespace StdfFileTests
         {
             var mrr = new Mrr();
             TestRoundTripEquality(mrr);
+            mrr.ExecDescription = "Super Cool";
+            TestRoundTripEquality(mrr);
         }
 
         [TestMethod]
         public void TestPcr()
         {
-            var pcr = new Pcr();
+            var pcr = new Pcr
+            {
+                HeadNumber = 1,
+                SiteNumber = 1,
+            };
+            TestRoundTripEquality(pcr);
+            pcr.FunctionalCount = 1;
             TestRoundTripEquality(pcr);
         }
 
         [TestMethod]
         public void TestHbr()
         {
-            var hbr = new Hbr();
+            var hbr = new Hbr
+            {
+                HeadNumber = 1,
+                SiteNumber = 1,
+            };
+            TestRoundTripEquality(hbr);
+            hbr.BinName = "Fred";
             TestRoundTripEquality(hbr);
         }
 
         [TestMethod]
         public void TestSbr()
         {
-            var sbr = new Sbr();
+            var sbr = new Sbr
+            {
+                HeadNumber = 1,
+                SiteNumber = 1,
+            };
+            TestRoundTripEquality(sbr);
+            sbr.BinName = "Bob";
             TestRoundTripEquality(sbr);
         }
 
         [TestMethod]
         public void TestPmr()
         {
-            var pmr = new Pmr();
+            var pmr = new Pmr
+            {
+                HeadNumber = 1,
+                SiteNumber = 1,
+            };
+            TestRoundTripEquality(pmr);
+            pmr.SiteNumber = 0;
             TestRoundTripEquality(pmr);
         }
 
@@ -134,6 +157,8 @@ namespace StdfFileTests
         public void TestPgr()
         {
             var pgr = new Pgr();
+            TestRoundTripEquality(pgr);
+            pgr.PinIndexes = new ushort[] { 0, 1 };
             TestRoundTripEquality(pgr);
         }
 
@@ -152,26 +177,43 @@ namespace StdfFileTests
         {
             var rdr = new Rdr();
             TestRoundTripEquality(rdr);
+            rdr.RetestBins = new ushort[] { 1, 2, 3, 4 };
+            TestRoundTripEquality(rdr);
         }
 
         [TestMethod]
         public void TestSdr()
         {
-            var sdr = new Sdr();
+            var sdr = new Sdr
+            {
+                HeadNumber = 1,
+            };
+            TestRoundTripEquality(sdr);
+            sdr.ExtraId = "Professor Snape";
             TestRoundTripEquality(sdr);
         }
 
         [TestMethod]
         public void TestWir()
         {
-            var wir = new Wir();
+            var wir = new Wir
+            {
+                HeadNumber = 1,
+            };
+            TestRoundTripEquality(wir);
+            wir.WaferId = "Wolverine";
             TestRoundTripEquality(wir);
         }
 
         [TestMethod]
         public void TestWrr()
         {
-            var wrr = new Wrr();
+            var wrr = new Wrr
+            {
+                HeadNumber = 1,
+            };
+            TestRoundTripEquality(wrr);
+            wrr.ExecDescription = "It looks good";
             TestRoundTripEquality(wrr);
         }
 
@@ -180,40 +222,69 @@ namespace StdfFileTests
         {
             var wcr = new Wcr();
             TestRoundTripEquality(wcr);
+            wcr.PositiveY = "U";
+            TestRoundTripEquality(wcr);
         }
 
         [TestMethod]
         public void TestPir()
         {
             var pir = new Pir();
+            //we must skip head number since we persist the missing value 1
+            TestRoundTripEquality(pir, skipProps: new[] { "HeadNumber" });
+            pir.SiteNumber = 1;
+            TestRoundTripEquality(pir, skipProps: new[] { "HeadNumber" });
+            pir.HeadNumber = 1;
             TestRoundTripEquality(pir);
         }
 
         [TestMethod]
         public void TestPrr()
         {
-            var prr = new Prr();
+            var prr = new Prr
+            {
+                HeadNumber = 1,
+                SiteNumber = 1,
+            };
+            TestRoundTripEquality(prr);
+            prr.PartFix = new byte[] { 1, 2, 3 };
             TestRoundTripEquality(prr);
         }
 
         [TestMethod]
         public void TestTsr()
         {
-            var tsr = new Tsr();
+            var tsr = new Tsr
+            {
+                HeadNumber = 1,
+                SiteNumber = 1,
+            };
+            TestRoundTripEquality(tsr);
+            tsr.TestSumOfSquares = 47.001f;
             TestRoundTripEquality(tsr);
         }
 
         [TestMethod]
         public void TestPtr()
         {
-            var ptr = new Ptr();
+            var ptr = new Ptr
+            {
+                HeadNumber = 1,
+                SiteNumber = 1,
+            };
+            TestRoundTripEquality(ptr);
+            ptr.HighSpecLimit = 40.01f;
             TestRoundTripEquality(ptr);
         }
 
         [TestMethod]
         public void TestMpr()
         {
-            var mpr = new Mpr();
+            var mpr = new Mpr
+            {
+                HeadNumber = 1,
+                SiteNumber = 1,
+            };
             TestRoundTripEquality(mpr);
             mpr.PinIndexes = new ushort[] { 0, 1 };
             mpr.PinStates = new byte[] { 0, 1 };
@@ -224,7 +295,11 @@ namespace StdfFileTests
         [TestMethod]
         public void TestFtr()
         {
-            var ftr = new Ftr();
+            var ftr = new Ftr
+            {
+                HeadNumber = 1,
+                SiteNumber = 1,
+            };
             TestRoundTripEquality(ftr);
         }
 
@@ -261,15 +336,16 @@ namespace StdfFileTests
             throw new NotImplementedException();
         }
 
-        public void TestRoundTripEquality<TRecord>(TRecord record, Endian endian = Endian.Big) where TRecord : StdfRecord
+        public void TestRoundTripEquality<TRecord>(TRecord record, Endian endian = Endian.Big, IEnumerable<string> skipProps = null) where TRecord : StdfRecord
         {
-            TestRecordEquality(record, RoundTripRecord(record, endian, debug: true));
+            TestRecordEquality(record, RoundTripRecord(record, endian, debug: true), skipProps);
         }
-        public void TestRecordEquality<TRecord>(TRecord one, TRecord two) where TRecord : StdfRecord
+        public void TestRecordEquality<TRecord>(TRecord one, TRecord two, IEnumerable<string> skipProps = null) where TRecord : StdfRecord
         {
             var props = from prop in typeof(TRecord).GetProperties(BindingFlags.Public | BindingFlags.Instance)
                         where prop.Name != nameof(StdfRecord.StdfFile)
                             && prop.Name != nameof(StdfRecord.Offset)
+                            && !(skipProps?.Contains(prop.Name) ?? false)
                         let del = (Func<TRecord, object>)((r) => prop.GetGetMethod().Invoke(r, new object[0]))
                         let test = (Action)(() =>
                         {

@@ -204,13 +204,11 @@ namespace LinqToStdf.RecordConverting
     class SkipAssignmentIfMissingValueNode : CodeNode
     {
         //TODO: find out if we need to be more explicit about type, or if we can infer it from the missing value.
-        public SkipAssignmentIfMissingValueNode(object missingValue, bool allowMissingValue)
+        public SkipAssignmentIfMissingValueNode(object missingValue)
         {
             MissingValue = missingValue;
-            AllowMissingValue = allowMissingValue;
         }
         public object MissingValue { get; private set; }
-        public bool AllowMissingValue { get; private set; }
         public override CodeNode Accept(CodeNodeVisitor visitor)
         {
             return visitor.VisitSkipAssignmentIfMissingValue(this);
