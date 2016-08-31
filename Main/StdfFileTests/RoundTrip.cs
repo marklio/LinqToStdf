@@ -6,6 +6,7 @@ using LinqToStdf.Indexing;
 using System.Linq;
 using LinqToStdf.Records.V4;
 using LinqToStdf.Records;
+using System.Reflection;
 
 namespace StdfFileTests
 {
@@ -41,7 +42,12 @@ namespace StdfFileTests
             //TODO: assert things about sos/eos?
             return recordOfInterest;
         }
+        public static DateTime TruncateToSeconds(this DateTime dateTime)
+        {
+            return dateTime.AddTicks(-(dateTime.Ticks % TimeSpan.TicksPerSecond));
+        }
     }
+
     [TestClass]
     public class RoundTrip
     {
@@ -54,43 +60,120 @@ namespace StdfFileTests
                 CpuType = 0,
                 StdfVersion = 4,
             };
-            var readFar = RoundTripRecord(far, Endian.Big, debug: true);
-            Assert.AreEqual(far.CpuType, readFar.CpuType, "CpuTypes differ");
-            Assert.AreEqual(far.StdfVersion, readFar.StdfVersion, "StdfVersions differ");
-            Assert.AreEqual(readFar.Offset, 0, "Offset not 0");
-            Assert.IsNotNull(readFar.StdfFile, "StdfFile null");
+            TestRoundTripEquality(far);
 
             far.CpuType = 1;
-            readFar = RoundTripRecord(far, Endian.Big, debug: true);
-            Assert.AreEqual(far.CpuType, readFar.CpuType, "CpuTypes differ");
-            Assert.AreEqual(far.StdfVersion, readFar.StdfVersion, "StdfVersions differ");
-            Assert.AreEqual(readFar.Offset, 0, "Offset not 0");
-            Assert.IsNotNull(readFar.StdfFile, "StdfFile null");
+            TestRoundTripEquality(far);
 
             far.CpuType = 2;
-            readFar = RoundTripRecord(far, Endian.Little, debug: true);
-            Assert.AreEqual(far.CpuType, readFar.CpuType, "CpuTypes differ");
-            Assert.AreEqual(far.StdfVersion, readFar.StdfVersion, "StdfVersions differ");
-            Assert.AreEqual(readFar.Offset, 0, "Offset not 0");
-            Assert.IsNotNull(readFar.StdfFile, "StdfFile null");
+            TestRoundTripEquality(far, endian: Endian.Little);
 
             far.CpuType = 1;
             far.StdfVersion = 5;
-            readFar = RoundTripRecord(far, Endian.Big, debug: true);
-            Assert.AreEqual(far.CpuType, readFar.CpuType, "CpuTypes differ");
-            Assert.AreEqual(far.StdfVersion, readFar.StdfVersion, "StdfVersions differ");
-            Assert.AreEqual(readFar.Offset, 0, "Offset not 0");
-            Assert.IsNotNull(readFar.StdfFile, "StdfFile null");
+            TestRoundTripEquality(far);
+        }
+
+        [TestMethod]
+        public void TestAtr()
+        {
+            var atr = new Atr();
+            TestRoundTripEquality(atr);
+            atr.ModifiedTime = DateTime.Now.TruncateToSeconds();
+            TestRoundTripEquality(atr);
+            atr.CommandLine = "This is a test";
+            TestRoundTripEquality(atr);
+            atr.ModifiedTime = null;
+            TestRoundTripEquality(atr);
         }
 
         [TestMethod]
         public void TestMir()
         {
-            var mir = new Mir
-            {
-            };
-            var readMir = RoundTripRecord(mir, Endian.Big, debug: true);
+            var mir = new Mir();
+            TestRoundTripEquality(mir);
         }
+
+        [TestMethod]
+        public void TestMrr()
+        {
+            var mrr = new Mrr();
+            TestRoundTripEquality(mrr);
+        }
+
+        [TestMethod]
+        public void TestPcr()
+        {
+            var pcr = new Pcr();
+            TestRoundTripEquality(pcr);
+        }
+
+        [TestMethod]
+        public void TestHbr()
+        {
+            var hbr = new Hbr();
+            TestRoundTripEquality(hbr);
+        }
+
+        [TestMethod]
+        public void TestSbr()
+        {
+            var sbr = new Sbr();
+            TestRoundTripEquality(sbr);
+        }
+
+        [TestMethod]
+        public void TestPmr()
+        {
+            var pmr = new Pmr();
+            TestRoundTripEquality(pmr);
+        }
+
+        [TestMethod]
+        public void TestPgr()
+        {
+            var pgr = new Pgr();
+            TestRoundTripEquality(pgr);
+        }
+
+        [TestMethod]
+        public void TestPlr()
+        {
+            var plr = new Plr
+            {
+                GroupIndexes = new ushort[] { 0 }
+            };
+            TestRoundTripEquality(plr);
+        }
+
+        [TestMethod]
+        public void TestRdr()
+        {
+            var rdr = new Rdr();
+            TestRoundTripEquality(rdr);
+        }
+
+        public void TestRoundTripEquality<TRecord>(TRecord record, Endian endian = Endian.Big) where TRecord : StdfRecord
+        {
+            TestRecordEquality(record, RoundTripRecord(record, endian, debug: true));
+        }
+        public void TestRecordEquality<TRecord>(TRecord one, TRecord two) where TRecord : StdfRecord
+        {
+            var props = from prop in typeof(TRecord).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                        where prop.Name != nameof(StdfRecord.StdfFile)
+                            && prop.Name != nameof(StdfRecord.Offset)
+                        let del = (Func<TRecord, object>)((r) => prop.GetGetMethod().Invoke(r, new object[0]))
+                        let test = (Action)(() =>
+                        {
+                            //TODO: test arrays
+                            if (!prop.PropertyType.IsArray)
+                            {
+                                Assert.AreEqual(del(one), del(two), $"{prop.Name} not equal");
+                            }
+                        })
+                        select test;
+            foreach (var t in props) t();
+        }
+
 
         public TRecord RoundTripRecord<TRecord>(TRecord record, Endian endian, bool debug) where TRecord : StdfRecord
         {
