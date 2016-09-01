@@ -253,6 +253,7 @@ namespace LinqToStdf.RecordConverting
                 _FieldLocals[node.FieldIndex] = _FieldLocal;
 
                 _SkipAssignmentLabel = ILGen.DefineLabel();
+                var assignmentCompleted = ILGen.DefineLabel();
 
                 //visit any read node there is
                 Visit(node.ReadNode);
@@ -265,11 +266,11 @@ namespace LinqToStdf.RecordConverting
                 else
                 {
                     Log($"No assignment for {node.FieldIndex}.");
-
                 }
-                //set the skip assignment label with a nop for fun.
-                ILGen.Nop();
+                ILGen.Br(assignmentCompleted);
                 ILGen.MarkLabel(_SkipAssignmentLabel);
+                Log($"Assignment skipped.");
+                ILGen.MarkLabel(assignmentCompleted);
                 Log($"Done with {node.FieldIndex}.");
 
                 _FieldLocal = null;

@@ -37,7 +37,6 @@ namespace LinqToStdf {
     public class RecordConverterFactory {
 
         public event Action<ConverterType, Type> ConverterGenerated;
-        public event Action<string> LogMessage;
 
         /// <summary>
         /// Creates a new factory
@@ -260,7 +259,7 @@ namespace LinqToStdf {
             {
                 ilGenerator = CreateNewLCGMethod<Converter<UnknownRecord, StdfRecord>>(string.Format("ConvertTo{0}", type.Name), ref finalizeConverter);
             }
-            var generator = new ConverterGenerator(ilGenerator, type, _RecordsAndFields?.GetFieldsForType(type), enableLog: LogMessage != null);
+            var generator = new ConverterGenerator(ilGenerator, type, _RecordsAndFields?.GetFieldsForType(type));
             {
                 generator.GenerateConverter();
             }
@@ -306,11 +305,8 @@ namespace LinqToStdf {
             {
                 ilGenerator = CreateNewLCGMethod<Func<StdfRecord, Endian, UnknownRecord>>(string.Format("UnconvertFrom{0}", type.Name), ref finalizeUnconverter);
             }
-            var generator = new UnconverterGenerator(ilGenerator, type, enableLog: LogMessage != null);
-            using (ConverterLog.CreateLogContext(LogMessage))
-            {
-                generator.GenerateUnconverter();
-            }
+            var generator = new UnconverterGenerator(ilGenerator, type);
+            generator.GenerateUnconverter();
             var unconverter = finalizeUnconverter();
             ConverterGenerated?.Invoke(ConverterType.Unconverter, type);
             return unconverter;

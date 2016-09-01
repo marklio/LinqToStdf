@@ -184,6 +184,9 @@ namespace LinqToStdf.RecordConverting
                         ILGen.Ldloca(nullableLocal);
                         ILGen.Callvirt(nullable.GetProperty("Value").GetGetMethod());
                     }
+                    //BUG: if we have a field that we persist AND represents the state of another field,
+                    // then there should be a merge operation here (or a consistency check should fail earlier).
+                    //for now, we assume consistency.
                     //store the value and branch to the write
                     ILGen.Stloc(fieldLocal);
                     ILGen.Br(doWriteLabel);
@@ -245,19 +248,21 @@ namespace LinqToStdf.RecordConverting
             //if we have an optional field index, we need to emit code to set it
             if (node.OptionalFieldIndex.HasValue)
             {
-                Log($"Setting optional field bits.");
+                Log($"Setting optional field bits if necessary.");
                 var optionalLocal = _FieldLocals[node.OptionalFieldIndex.Value];
                 var skipOptField = ILGen.DefineLabel();
                 //if we have a value, skip setting the optional field
                 ILGen.Ldloc(hasValueLocal);
                 ILGen.Brtrue(skipOptField);
                 //load the optional local and the field mask, and "or" them together
+                Log($"Setting optional field bits 0x{node.OptionaFieldMask:x}");
                 ILGen.Ldloc(optionalLocal);
                 ILGen.Ldc_I4_S(node.OptionaFieldMask);
                 ILGen.Or();
                 //store the value back in the local 
                 ILGen.Stloc(optionalLocal);
                 ILGen.MarkLabel(skipOptField);
+                Log($"Done setting optional field bits");
             }
 
             return node;
@@ -310,10 +315,10 @@ namespace LinqToStdf.RecordConverting
                 writeMethod = typeof(BinaryWriter).GetMethod(writeMethodName, node.Type);
                 _WriteMethods[node.Type] = writeMethod;
             }
-            Log($"Writing with {writeMethod.Name}.");
 
             ILGen.Ldloc(_Writer);
             Visit(node.ValueSource);
+            Log($"Writing with {writeMethod.Name}.");
             ILGen.Callvirt(writeMethod);
             return node;
         }

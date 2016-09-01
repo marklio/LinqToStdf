@@ -7,37 +7,13 @@ namespace LinqToStdf.RecordConverting
 {
     public class ConverterLog
     {
-        public static IDisposable CreateLogContext(Action<string> logger)
-        {
-            if (_Context != null) throw new InvalidOperationException("A log context already exists");
-            _Context = new ConverterLog(logger);
-            return new Disposer();
-        }
+        public static event Action<string> MessageLogged;
 
-        class Disposer : IDisposable
-        {
-            public void Dispose()
-            {
-                if (_Context == null) throw new InvalidOperationException("The context has already been disposed");
-                _Context = null;
-            }
-        }
-
-        static ConverterLog _Context;
         public static void Log(string msg)
         {
-            _Context?.LogInternal(msg);
+            MessageLogged?.Invoke(msg);
         }
 
-        Action<string> _Logger;
-        ConverterLog(Action<string> logger)
-        {
-            _Logger = logger ?? (Action<string>)(s => { });
-        }
-
-        void LogInternal(string msg)
-        {
-            _Logger(msg);
-        }
+        public static bool IsLogging => MessageLogged != null;
     }
 }
