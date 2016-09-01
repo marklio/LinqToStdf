@@ -17,6 +17,13 @@ namespace LinqToStdf {
     /// IL OpCodes, which makes things much more readable.
     /// </summary>
     static class ILGenHelpers {
+        static readonly MethodInfo _LogMethod = typeof(RecordConverting.ConverterLog).GetMethod(nameof(RecordConverting.ConverterLog.Log), BindingFlags.Static | BindingFlags.Public);
+
+        public static void Log(this ILGenerator ilgen, string msg)
+        {
+            ilgen.Ldstr(msg);
+            ilgen.Callvirt(_LogMethod);
+        }
 
         /// <seealso cref="OpCodes.Ret"/>
         public static void Ret(this ILGenerator ilgen) {

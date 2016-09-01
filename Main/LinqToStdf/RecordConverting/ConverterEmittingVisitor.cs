@@ -14,6 +14,7 @@ namespace LinqToStdf.RecordConverting
     {
         public ILGenerator ILGen;
         public Type ConcreteType;
+        public bool EnableLog = false;
 
         LocalBuilder _ConcreteRecordLocal;
         LocalBuilder _Reader;
@@ -25,8 +26,16 @@ namespace LinqToStdf.RecordConverting
 
         LocalBuilder _FieldLocal = null;
 
+        void Log(string msg)
+        {
+            if (EnableLog)
+            {
+                ILGen.Log(msg);
+            }
+        }
         public override CodeNode VisitInitializeRecord(InitializeRecordNode node)
         {
+            Log($"Initializing {ConcreteType}");
             _ConcreteRecordLocal = ILGen.DeclareLocal(ConcreteType);
             ILGen.Newobj(ConcreteType);
             ILGen.Stloc(_ConcreteRecordLocal);
@@ -35,6 +44,7 @@ namespace LinqToStdf.RecordConverting
         static MethodInfo _EnsureConvertibleToMethod = typeof(UnknownRecord).GetMethod("EnsureConvertibleTo", typeof(StdfRecord));
         public override CodeNode VisitEnsureCompat(EnsureCompatNode node)
         {
+            Log($"Ensuring compatibility of record");
             ILGen.Ldarg_0();
             ILGen.Ldloc(_ConcreteRecordLocal);
             ILGen.Callvirt(_EnsureConvertibleToMethod);
@@ -47,6 +57,7 @@ namespace LinqToStdf.RecordConverting
 #endif
         public override CodeNode VisitInitReaderNode(InitReaderNode node)
         {
+            Log($"Initializing reader");
             _Reader = ILGen.DeclareLocal<BinaryReader>();
             ILGen.Ldarg_0();
             ILGen.Callvirt(_GetBinaryReaderForContentMethod);
@@ -66,6 +77,7 @@ namespace LinqToStdf.RecordConverting
         static MethodInfo _DisposeMethod = typeof(IDisposable).GetMethod("Dispose", new Type[0]);
         public override CodeNode VisitDisposeReader(DisposeReaderNode node)
         {
+            Log($"Disposing reader");
             ILGen.Ldloc(_Reader);
             ILGen.Callvirt(_DisposeMethod);
             return node;
@@ -76,6 +88,8 @@ namespace LinqToStdf.RecordConverting
             _EndLabel = ILGen.DefineLabel();
             try
             {
+                Log($"Handling field assignments.");
+
                 var visitedBlock = VisitBlock(node.Block);
                 ILGen.MarkLabel(_EndLabel);
                 if (visitedBlock == node.Block) return node;
@@ -88,6 +102,7 @@ namespace LinqToStdf.RecordConverting
         }
         public override CodeNode VisitReturnRecord(ReturnRecordNode node)
         {
+            Log($"returning record.");
             ILGen.Ldloc(_ConcreteRecordLocal);
             ILGen.Ret();
             return node;
@@ -95,6 +110,7 @@ namespace LinqToStdf.RecordConverting
         static MethodInfo _SkipRawMethod = typeof(BinaryReader).GetMethod("Skip", typeof(int));
         public override CodeNode VisitSkipRawBytes(SkipRawBytesNode node)
         {
+            Log($"Skipping {node.Bytes} bytes.");
             ILGen.Ldloc(_Reader);
             ILGen.Ldc_I4(node.Bytes);
             ILGen.Callvirt(_SkipRawMethod);
@@ -140,6 +156,8 @@ namespace LinqToStdf.RecordConverting
                 skipTypeMethod = typeof(BinaryReader).GetMethod(skipTypeMethodName, argsArray);
                 _SkipTypeMethods[node.Type] = skipTypeMethod;
             }
+            Log($"Skipping with {skipTypeMethod}.");
+
             ILGen.Ldloc(_Reader);
             //if we have a length index, load its local (we enforce its presence for arrays in the node)
             if (node.LengthIndex.HasValue)
@@ -153,6 +171,7 @@ namespace LinqToStdf.RecordConverting
         public override CodeNode VisitReadFixedString(ReadFixedStringNode node)
         {
             if (_FieldLocal == null) throw new InvalidOperationException("Cannot read string outside a FieldAssignmentNode");
+            Log($"Reading string of fixed length {node.Length}.");
             ILGen.Ldloc(_Reader);
             ILGen.Ldc_I4(node.Length);
             ILGen.Callvirt(_ReadFixedStringMethod);
@@ -200,6 +219,8 @@ namespace LinqToStdf.RecordConverting
                 readTypeMethod = typeof(BinaryReader).GetMethod(readTypeMethodName, argsArray);
                 _ReadTypeMethods[node.Type] = readTypeMethod;
             }
+            Log($"Reading with {readTypeMethod.Name}.");
+
             ILGen.Ldloc(_Reader);
             //if we have a length index, load its local (we enforce its presence for arrays in the node)
             if (node.LengthIndex.HasValue)
@@ -221,6 +242,7 @@ namespace LinqToStdf.RecordConverting
             _InFieldAssignment = true;
             try
             {
+                Log($"Handling field {node.FieldIndex}.");
                 //generate the end of stream check
                 ILGen.Ldloc(_Reader);
                 ILGen.Callvirt(_AtEndOfStreamMethod);
@@ -240,9 +262,15 @@ namespace LinqToStdf.RecordConverting
                 {
                     Visit(node.AssignmentBlock);
                 }
+                else
+                {
+                    Log($"No assignment for {node.FieldIndex}.");
+
+                }
                 //set the skip assignment label with a nop for fun.
                 ILGen.Nop();
                 ILGen.MarkLabel(_SkipAssignmentLabel);
+                Log($"Done with {node.FieldIndex}.");
 
                 _FieldLocal = null;
 
@@ -256,6 +284,7 @@ namespace LinqToStdf.RecordConverting
         public override CodeNode VisitSkipAssignmentIfFlagSet(SkipAssignmentIfFlagSetNode node)
         {
             if (!_InFieldAssignment) throw new InvalidOperationException("SkipAssignmentIfFlagSetNode must be in a FieldAssignmentNode");
+            Log($"Handling conditional assignment based on field {node.FlagFieldIndex}, mask 0x{node.FlagMask:x}.");
             //get the flag field
             LocalBuilder flag = _FieldLocals[node.FlagFieldIndex];
             //TODO: assert that it's a byte?
@@ -269,6 +298,7 @@ namespace LinqToStdf.RecordConverting
         public override CodeNode VisitSkipAssignmentIfMissingValue(SkipAssignmentIfMissingValueNode node)
         {
             if (!_InFieldAssignment) throw new InvalidOperationException("SkipAssignmentIfMissingValueNode must be in a FieldAssignmentNode");
+            Log($"Handling conditional assignment based on missing value {node.MissingValue}.");
             ILGen.Ldloca(_FieldLocal);
             ILGen.Ldc(node.MissingValue, node.MissingValue.GetType());
             //BUG: Revisit this.  The purpose of constrained is so you don't have to do different codegen for valuetype vs. reference type
@@ -285,6 +315,7 @@ namespace LinqToStdf.RecordConverting
         public override CodeNode VisitAssignFieldToProperty(AssignFieldToPropertyNode node)
         {
             if (!_InFieldAssignment) throw new InvalidOperationException("AssignFieldToPropertyNode must be in a FieldAssignmentNode");
+            Log($"Assigning value to {node.Property.Name}.");
             ILGen.Ldloc(_ConcreteRecordLocal);
             ILGen.Ldloc(_FieldLocal);
             //handle the case where the property is a nullable version of the field type
@@ -303,6 +334,7 @@ namespace LinqToStdf.RecordConverting
         public override CodeNode VisitSkipArrayAssignmentIfLengthIsZero(SkipArrayAssignmentIfLengthIsZeroNode node)
         {
             if (!_InFieldAssignment) throw new InvalidOperationException("SkipArrayAssignmentIfLengthIsZeroNode must be in a FieldAssignmentNode");
+            Log($"Handling conditional assignment based zero length array.");
             //If the length field is zero, skip past assignment
             var lengthLocal = _FieldLocals[node.LengthIndex];
             ILGen.Ldloc(lengthLocal);

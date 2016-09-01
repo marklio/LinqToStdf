@@ -94,6 +94,7 @@
     <Compile Include="RecordConverting\CodeNodeVisitor.cs" />
     <Compile Include="RecordConverting\ConverterEmittingVisitor.cs" />
     <Compile Include="RecordConverting\ConverterGenerator.cs" />
+    <Compile Include="RecordConverting\ConverterLog.cs" />
     <Compile Include="RecordConverting\ConverterNodes.cs" />
     <Compile Include="RecordConverting\PrettyPrintVisitor.cs" />
     <Compile Include="RecordConverting\UnconverterEmittingVisitor.cs" />
