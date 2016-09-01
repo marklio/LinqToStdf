@@ -18,13 +18,15 @@ namespace LinqToStdf.RecordConverting
         Type _Type;
         HashSet<int> _FieldLocalsTouched = new HashSet<int>();
         List<KeyValuePair<FieldLayoutAttribute, PropertyInfo>> _Fields;
+        bool _EnableLog;
 
-        public UnconverterGenerator(ILGenerator ilgen, Type type)
+        public UnconverterGenerator(ILGenerator ilgen, Type type, bool enableLog = false)
         {
             if (ilgen == null) throw new ArgumentNullException("ilgen");
             if (type == null) throw new ArgumentNullException("type");
             _ILGen = ilgen;
             _Type = type;
+            _EnableLog = enableLog;
         }
 
         public void GenerateUnconverter()
@@ -44,6 +46,7 @@ namespace LinqToStdf.RecordConverting
             {
                 ConcreteType = _Type,
                 ILGen = _ILGen,
+                EnableLog = _EnableLog,
             }.Visit(node);
         }
 

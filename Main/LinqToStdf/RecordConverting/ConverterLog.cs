@@ -32,8 +32,7 @@ namespace LinqToStdf.RecordConverting
         Action<string> _Logger;
         ConverterLog(Action<string> logger)
         {
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
-            _Logger = logger;
+            _Logger = logger ?? (Action<string>)(s => { });
         }
 
         void LogInternal(string msg)

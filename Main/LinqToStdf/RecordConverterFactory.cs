@@ -37,6 +37,7 @@ namespace LinqToStdf {
     public class RecordConverterFactory {
 
         public event Action<ConverterType, Type> ConverterGenerated;
+        public event Action<string> LogMessage;
 
         /// <summary>
         /// Creates a new factory
@@ -243,21 +244,26 @@ namespace LinqToStdf {
         /// Does the actual work of creating the converter.  Note that this does not operate lazily,
         /// it is merely called lazily.
         /// </summary>
-        Converter<UnknownRecord, StdfRecord> LazyCreateConverterForType(Type type) {
+        Converter<UnknownRecord, StdfRecord> LazyCreateConverterForType(Type type)
+        {
             ILGenerator ilGenerator = null;
             Func<Converter<UnknownRecord, StdfRecord>> finalizeConverter = null;
-            if (Debug) {
+            if (Debug)
+            {
 #if SILVERLIGHT
                 throw new NotSupportedException(Resources.NoDebugInSilverlight);
 #else
                 ilGenerator = CreateNewRefEmitMethod<Converter<UnknownRecord, StdfRecord>>(string.Format("{0}Converter", type.Name), string.Format("ConvertTo{0}", type.Name), ref finalizeConverter);
 #endif
             }
-            else {
+            else
+            {
                 ilGenerator = CreateNewLCGMethod<Converter<UnknownRecord, StdfRecord>>(string.Format("ConvertTo{0}", type.Name), ref finalizeConverter);
             }
-            var generator = new ConverterGenerator(ilGenerator, type, _RecordsAndFields?.GetFieldsForType(type));
-            generator.GenerateConverter();
+            var generator = new ConverterGenerator(ilGenerator, type, _RecordsAndFields?.GetFieldsForType(type), enableLog: LogMessage != null);
+            {
+                generator.GenerateConverter();
+            }
             var converter = finalizeConverter();
             ConverterGenerated?.Invoke(ConverterType.Converter, type);
             return converter;
@@ -300,8 +306,11 @@ namespace LinqToStdf {
             {
                 ilGenerator = CreateNewLCGMethod<Func<StdfRecord, Endian, UnknownRecord>>(string.Format("UnconvertFrom{0}", type.Name), ref finalizeUnconverter);
             }
-            var generator = new UnconverterGenerator(ilGenerator, type);
-            generator.GenerateUnconverter();
+            var generator = new UnconverterGenerator(ilGenerator, type, enableLog: LogMessage != null);
+            using (ConverterLog.CreateLogContext(LogMessage))
+            {
+                generator.GenerateUnconverter();
+            }
             var unconverter = finalizeUnconverter();
             ConverterGenerated?.Invoke(ConverterType.Unconverter, type);
             return unconverter;

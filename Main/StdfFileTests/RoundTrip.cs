@@ -376,6 +376,7 @@ namespace StdfFileTests
             {
                 using (var writer = new StdfFileWriter(testStream, endian, debug: true))
                 {
+                    writer.ConverterFactory.LogMessage += s => System.Diagnostics.Debug.WriteLine(s);
                     if (typeof(TRecord) != typeof(Far))
                     {
                         writer.WriteRecord(new Far
@@ -390,6 +391,7 @@ namespace StdfFileTests
 
                 var streamManager = new TestStreamManager(testStream);
                 var file = new StdfFile(streamManager, debug) { ThrowOnFormatError = true };
+                file.ConverterFactory.LogMessage += s => System.Diagnostics.Debug.WriteLine(s);
                 return file.GetSingleRecord<TRecord>();
             }
         }
