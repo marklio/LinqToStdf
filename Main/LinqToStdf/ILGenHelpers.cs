@@ -22,7 +22,7 @@ namespace LinqToStdf {
         public static void Log(this ILGenerator ilgen, string msg)
         {
             ilgen.Ldstr(msg);
-            ilgen.Callvirt(_LogMethod);
+            ilgen.Call(_LogMethod);
         }
 
         /// <seealso cref="OpCodes.Ret"/>

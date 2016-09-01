@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LinqToStdf.RecordConverting
 {
-    class ConverterLog
+    public class ConverterLog
     {
         public static IDisposable CreateLogContext(Action<string> logger)
         {
