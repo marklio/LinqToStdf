@@ -7,13 +7,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LinqToStdf.CompiledQuerySupport {
+namespace LinqToStdf.CompiledQuerySupport
+{
 
     /// <summary>
     /// This class holds a list of records and fields to indicate which
     /// ones should be parsed for a compiled query.
     /// </summary>
-    class RecordsAndFields {
+    class RecordsAndFields
+    {
         /// <summary>
         /// The internal datastructure Type is a record type, and the hashset is a set of property names
         /// </summary>
@@ -22,14 +24,16 @@ namespace LinqToStdf.CompiledQuerySupport {
         /// <summary>
         /// adds a field for a type
         /// </summary>
-        public void AddField(Type type, string field) {
+        public void AddField(Type type, string field)
+        {
             GetFieldsForAdding(type).Add(field);
         }
 
         /// <summary>
         /// Adds a set of fields for a type
         /// </summary>
-        public void AddFields(Type type, IEnumerable<string> fields) {
+        public void AddFields(Type type, IEnumerable<string> fields)
+        {
             GetFieldsForAdding(type).UnionWith(fields);
         }
 
@@ -50,8 +54,10 @@ namespace LinqToStdf.CompiledQuerySupport {
         /// <summary>
         /// Gets the fields for a type
         /// </summary>
-        HashSet<string> GetFieldsForAdding(Type type) {
-            if (!_Fields.TryGetValue(type, out var fields)) {
+        HashSet<string> GetFieldsForAdding(Type type)
+        {
+            if (!_Fields.TryGetValue(type, out var fields))
+            {
                 fields = new HashSet<string>();
                 _Fields[type] = fields;
             }
@@ -61,7 +67,8 @@ namespace LinqToStdf.CompiledQuerySupport {
         /// <summary>
         /// Gets all the types
         /// </summary>
-        public IEnumerable<Type> Types {
+        public IEnumerable<Type> Types
+        {
             get { return _Fields.Keys; }
         }
     }

@@ -6,7 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Records.V4 {
+namespace LinqToStdf.Records.V4
+{
     using Attributes;
 
     [FieldLayout(FieldIndex = 0, FieldType = typeof(float), IsOptional = true, MissingValue = (float)0, RecordProperty = "WaferSize"),
@@ -17,10 +18,12 @@ namespace LinqToStdf.Records.V4 {
     FieldLayout(FieldIndex = 5, FieldType = typeof(short), IsOptional = true, MissingValue = short.MinValue, RecordProperty = "CenterX"),
     FieldLayout(FieldIndex = 6, FieldType = typeof(short), IsOptional = true, MissingValue = short.MinValue, RecordProperty = "CenterY"),
     StringFieldLayout(FieldIndex = 7, IsOptional = true, Length = 1, MissingValue = " ", RecordProperty = "PositiveX"),
-    StringFieldLayout(FieldIndex = 8, IsOptional = true, Length = 1, MissingValue= " ", RecordProperty = "PositiveY")]
-    public class Wcr : StdfRecord {
+    StringFieldLayout(FieldIndex = 8, IsOptional = true, Length = 1, MissingValue = " ", RecordProperty = "PositiveY")]
+    public class Wcr : StdfRecord
+    {
 
-        public override RecordType RecordType {
+        public override RecordType RecordType
+        {
             get { return new RecordType(2, 30); }
         }
 

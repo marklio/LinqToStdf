@@ -9,14 +9,16 @@ using System.Text;
 using System.Reflection.Emit;
 using System.Reflection;
 
-namespace LinqToStdf {
+namespace LinqToStdf
+{
 
     /// <summary>
     /// Contains extension methods useful for IL Generation.
     /// It provides strongly-typed methods corresponding to the 
     /// IL OpCodes, which makes things much more readable.
     /// </summary>
-    static class ILGenHelpers {
+    static class ILGenHelpers
+    {
         static readonly MethodInfo _LogMethod = typeof(RecordConverting.ConverterLog).GetMethod(nameof(RecordConverting.ConverterLog.Log), BindingFlags.Static | BindingFlags.Public);
 
         public static void Log(this ILGenerator ilgen, string msg)
@@ -26,7 +28,8 @@ namespace LinqToStdf {
         }
 
         /// <seealso cref="OpCodes.Ret"/>
-        public static void Ret(this ILGenerator ilgen) {
+        public static void Ret(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Ret);
         }
 
@@ -37,32 +40,38 @@ namespace LinqToStdf {
         }
 
         /// <seealso cref="OpCodes.Stloc"/>
-        public static void Stloc(this ILGenerator ilgen, LocalBuilder local) {
+        public static void Stloc(this ILGenerator ilgen, LocalBuilder local)
+        {
             ilgen.Emit(OpCodes.Stloc, local);
         }
 
         /// <seealso cref="OpCodes.Ldloc"/>
-        public static void Ldloc(this ILGenerator ilgen, LocalBuilder local) {
+        public static void Ldloc(this ILGenerator ilgen, LocalBuilder local)
+        {
             ilgen.Emit(OpCodes.Ldloc, local);
         }
 
         /// <seealso cref="OpCodes.Ldloca"/>
-        public static void Ldloca(this ILGenerator ilgen, LocalBuilder local) {
+        public static void Ldloca(this ILGenerator ilgen, LocalBuilder local)
+        {
             ilgen.Emit(OpCodes.Ldloca, local);
         }
 
         /// <seealso cref="OpCodes.Ldarga"/>
-        public static void Ldarga(this ILGenerator ilgen, int argIndex) {
+        public static void Ldarga(this ILGenerator ilgen, int argIndex)
+        {
             ilgen.Emit(OpCodes.Ldarga, argIndex);
         }
 
         /// <seealso cref="OpCodes.Ldarg_0"/>
-        public static void Ldarg_0(this ILGenerator ilgen) {
+        public static void Ldarg_0(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Ldarg_0);
         }
 
         /// <seealso cref="OpCodes.Ldarg_1"/>
-        public static void Ldarg_1(this ILGenerator ilgen) {
+        public static void Ldarg_1(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Ldarg_1);
         }
 
@@ -158,242 +167,291 @@ namespace LinqToStdf {
         }
 
         /// <seealso cref="OpCodes.Ldc_I4"/>
-        public static void Ldc_I4(this ILGenerator ilgen, int value) {
+        public static void Ldc_I4(this ILGenerator ilgen, int value)
+        {
             ilgen.Emit(OpCodes.Ldc_I4, value);
         }
 
         /// <seealso cref="OpCodes.Ldc_I4"/>
-        public static void Ldc_I4(this ILGenerator ilgen, uint value) {
+        public static void Ldc_I4(this ILGenerator ilgen, uint value)
+        {
             ilgen.Emit(OpCodes.Ldc_I4, value);
         }
 
         /// <seealso cref="OpCodes.Ldc_I8"/>
-        public static void Ldc_I8(this ILGenerator ilgen, long value) {
+        public static void Ldc_I8(this ILGenerator ilgen, long value)
+        {
             ilgen.Emit(OpCodes.Ldc_I8, value);
         }
 
         /// <seealso cref="OpCodes.Ldc_I8"/>
-        public static void Ldc_I8(this ILGenerator ilgen, ulong value) {
+        public static void Ldc_I8(this ILGenerator ilgen, ulong value)
+        {
             ilgen.Emit(OpCodes.Ldc_I8, value);
         }
 
         /// <seealso cref="OpCodes.Ldc_I4_0"/>
-        public static void Ldc_I4_0(this ILGenerator ilgen) {
+        public static void Ldc_I4_0(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Ldc_I4_0);
         }
 
         /// <seealso cref="OpCodes.Ldc_I4_1"/>
-        public static void Ldc_I4_1(this ILGenerator ilgen) {
+        public static void Ldc_I4_1(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Ldc_I4_1);
         }
 
         /// <seealso cref="OpCodes.Ldc_I4_2"/>
-        public static void Ldc_I4_2(this ILGenerator ilgen) {
+        public static void Ldc_I4_2(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Ldc_I4_2);
         }
 
         /// <seealso cref="OpCodes.Ldc_I4_3"/>
-        public static void Ldc_I4_3(this ILGenerator ilgen) {
+        public static void Ldc_I4_3(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Ldc_I4_3);
         }
 
         /// <seealso cref="OpCodes.Ldc_I4_4"/>
-        public static void Ldc_I4_4(this ILGenerator ilgen) {
+        public static void Ldc_I4_4(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Ldc_I4_4);
         }
 
         /// <seealso cref="OpCodes.Ldc_I4_S"/>
-        public static void Ldc_I4_S(this ILGenerator ilgen, byte value) {
+        public static void Ldc_I4_S(this ILGenerator ilgen, byte value)
+        {
             ilgen.Emit(OpCodes.Ldc_I4_S, value);
         }
 
         /// <seealso cref="OpCodes.Ldc_I4_S"/>
-        public static void Ldc_I4_S(this ILGenerator ilgen, sbyte value) {
+        public static void Ldc_I4_S(this ILGenerator ilgen, sbyte value)
+        {
             ilgen.Emit(OpCodes.Ldc_I4_S, value);
         }
 
         /// <seealso cref="OpCodes.Ldc_R4"/>
-        public static void Ldc_R4(this ILGenerator ilgen, float value) {
+        public static void Ldc_R4(this ILGenerator ilgen, float value)
+        {
             ilgen.Emit(OpCodes.Ldc_R4, value);
         }
 
         /// <seealso cref="OpCodes.Ldc_R8"/>
-        public static void Ldc_R8(this ILGenerator ilgen, double value) {
+        public static void Ldc_R8(this ILGenerator ilgen, double value)
+        {
             ilgen.Emit(OpCodes.Ldc_R8, value);
         }
 
         /// <seealso cref="OpCodes.Ldstr"/>
-        public static void Ldstr(this ILGenerator ilgen, string value) {
+        public static void Ldstr(this ILGenerator ilgen, string value)
+        {
             ilgen.Emit(OpCodes.Ldstr, value);
         }
 
         /// <seealso cref="OpCodes.Ldnull"/>
-        public static void Ldnull(this ILGenerator ilgen) {
+        public static void Ldnull(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Ldnull);
         }
 
-        public static void Ldtoken(this ILGenerator ilgen, Type type) {
+        public static void Ldtoken(this ILGenerator ilgen, Type type)
+        {
             ilgen.Emit(OpCodes.Ldtoken, type);
         }
 
         /// <seealso cref="OpCodes.Ceq"/>
-        public static void Ceq(this ILGenerator ilgen) {
+        public static void Ceq(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Ceq);
         }
 
         /// <seealso cref="OpCodes.Stelem_I1"/>
-        public static void Stelem_I1(this ILGenerator ilgen) {
+        public static void Stelem_I1(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Stelem_I1);
         }
 
         /// <seealso cref="OpCodes.Stelem_I2"/>
-        public static void Stelem_I2(this ILGenerator ilgen) {
+        public static void Stelem_I2(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Stelem_I2);
         }
 
         /// <seealso cref="OpCodes.Stelem_I4"/>
-        public static void Stelem_I4(this ILGenerator ilgen) {
+        public static void Stelem_I4(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Stelem_I4);
         }
 
         /// <seealso cref="OpCodes.Stelem_I8"/>
-        public static void Stelem_I8(this ILGenerator ilgen) {
+        public static void Stelem_I8(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Stelem_I8);
         }
 
         /// <seealso cref="OpCodes.Stelem_R4"/>
-        public static void Stelem_R4(this ILGenerator ilgen) {
+        public static void Stelem_R4(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Stelem_R4);
         }
 
         /// <seealso cref="OpCodes.Stelem_R8"/>
-        public static void Stelem_R8(this ILGenerator ilgen) {
+        public static void Stelem_R8(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Stelem_R8);
         }
 
         /// <seealso cref="OpCodes.Br"/>
-        public static void Br(this ILGenerator ilgen, Label label) {
+        public static void Br(this ILGenerator ilgen, Label label)
+        {
             ilgen.Emit(OpCodes.Br, label);
         }
 
         /// <seealso cref="OpCodes.Brtrue"/>
-        public static void Brtrue(this ILGenerator ilgen, Label label) {
+        public static void Brtrue(this ILGenerator ilgen, Label label)
+        {
             ilgen.Emit(OpCodes.Brtrue, label);
         }
 
         /// <seealso cref="OpCodes.Brfalse"/>
-        public static void Brfalse(this ILGenerator ilgen, Label label) {
+        public static void Brfalse(this ILGenerator ilgen, Label label)
+        {
             ilgen.Emit(OpCodes.Brfalse, label);
         }
 
         /// <seealso cref="OpCodes.Bge"/>
-        public static void Bge(this ILGenerator ilgen, Label label) {
+        public static void Bge(this ILGenerator ilgen, Label label)
+        {
             ilgen.Emit(OpCodes.Bge, label);
         }
 
         /// <seealso cref="OpCodes.Throw"/>
-        public static void Throw(this ILGenerator ilgen) {
+        public static void Throw(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Throw);
         }
 
         /// <seealso cref="OpCodes.Castclass"/>
-        public static void Castclass(this ILGenerator ilgen, Type type) {
+        public static void Castclass(this ILGenerator ilgen, Type type)
+        {
             ilgen.Emit(OpCodes.Castclass, type);
         }
 
         /// <seealso cref="OpCodes.Conv_I"/>
-        public static void Conv_I(this ILGenerator ilgen) {
+        public static void Conv_I(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Conv_I);
         }
 
         /// <seealso cref="OpCodes.Conv_I2"/>
-        public static void Conv_I2(this ILGenerator ilgen) {
+        public static void Conv_I2(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Conv_I2);
         }
 
         /// <seealso cref="OpCodes.Conv_I4"/>
-        public static void Conv_I4(this ILGenerator ilgen) {
+        public static void Conv_I4(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Conv_I4);
         }
 
         /// <seealso cref="OpCodes.Conv_U2"/>
-        public static void Conv_U2(this ILGenerator ilgen) {
+        public static void Conv_U2(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Conv_U2);
         }
 
         /// <seealso cref="OpCodes.And"/>
-        public static void And(this ILGenerator ilgen) {
+        public static void And(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.And);
         }
 
         /// <seealso cref="OpCodes.Add"/>
-        public static void Add(this ILGenerator ilgen) {
+        public static void Add(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Add);
         }
 
         /// <seealso cref="OpCodes.Or"/>
-        public static void Or(this ILGenerator ilgen) {
+        public static void Or(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Or);
         }
 
         /// <seealso cref="OpCodes.Dup"/>
-        public static void Dup(this ILGenerator ilgen) {
+        public static void Dup(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Dup);
         }
 
         /// <seealso cref="OpCodes.Shr"/>
-        public static void Shr(this ILGenerator ilgen) {
+        public static void Shr(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Shr);
         }
 
         /// <seealso cref="OpCodes.Ldlen"/>
-        public static void Ldlen(this ILGenerator ilgen) {
+        public static void Ldlen(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Ldlen);
         }
 
         /// <seealso cref="OpCodes.Nop"/>
-        public static void Nop(this ILGenerator ilgen) {
+        public static void Nop(this ILGenerator ilgen)
+        {
             ilgen.Emit(OpCodes.Nop);
         }
 
         /// <seealso cref="OpCodes.Newobj"/>
-        public static void Newobj<T>(this ILGenerator ilgen, params Type[] parameters) {
+        public static void Newobj<T>(this ILGenerator ilgen, params Type[] parameters)
+        {
             Newobj(ilgen, typeof(T), parameters);
         }
 
         /// <seealso cref="OpCodes.Newobj"/>
-        public static void Newobj(this ILGenerator ilgen, Type type, params Type[] parameters) {
+        public static void Newobj(this ILGenerator ilgen, Type type, params Type[] parameters)
+        {
             ilgen.Emit(OpCodes.Newobj, type.GetConstructor(parameters));
         }
 
         /// <seealso cref="OpCodes.Newarr"/>
-        public static void Newarr<T>(this ILGenerator ilgen) {
+        public static void Newarr<T>(this ILGenerator ilgen)
+        {
             Newarr(ilgen, typeof(T));
         }
 
-        public static void Constrained<T>(this ILGenerator ilgen) {
+        public static void Constrained<T>(this ILGenerator ilgen)
+        {
             ilgen.Constrained(typeof(T));
         }
 
-        public static void Constrained(this ILGenerator ilgen, Type type) {
+        public static void Constrained(this ILGenerator ilgen, Type type)
+        {
             ilgen.Emit(OpCodes.Constrained, type);
         }
 
-        public static void Box<T>(this ILGenerator ilgen) {
+        public static void Box<T>(this ILGenerator ilgen)
+        {
             ilgen.Box(typeof(T));
         }
 
-        public static void Box(this ILGenerator ilgen, Type type) {
+        public static void Box(this ILGenerator ilgen, Type type)
+        {
             ilgen.Emit(OpCodes.Box, type);
         }
 
         /// <seealso cref="OpCodes.Initobj"/>
-        public static void Initobj(this ILGenerator ilgen, Type type) {
+        public static void Initobj(this ILGenerator ilgen, Type type)
+        {
             ilgen.Emit(OpCodes.Initobj, type);
         }
 
         /// <seealso cref="OpCodes.Newarr"/>
-        public static void Newarr(this ILGenerator ilgen, Type type) {
+        public static void Newarr(this ILGenerator ilgen, Type type)
+        {
             ilgen.Emit(OpCodes.Newarr, type);
         }
 
@@ -401,12 +459,14 @@ namespace LinqToStdf {
         /// Generic version of DeclareLobal
         /// </summary>
         /// <typeparam name="T">The type of the local</typeparam>
-        public static LocalBuilder DeclareLocal<T>(this ILGenerator ilgen) {
+        public static LocalBuilder DeclareLocal<T>(this ILGenerator ilgen)
+        {
             return ilgen.DeclareLocal(typeof(T));
         }
 
         /// <seealso cref="OpCodes.Callvirt"/>
-        public static void Callvirt(this ILGenerator ilgen, MethodInfo methodInfo) {
+        public static void Callvirt(this ILGenerator ilgen, MethodInfo methodInfo)
+        {
             ilgen.Emit(OpCodes.Callvirt, methodInfo);
         }
 
@@ -420,7 +480,8 @@ namespace LinqToStdf {
         /// Overload for <see cref="Type.GetMethod(string, Type[])">Type.GetMethod</see> that allows a params array
         /// for the parameters, so you don't have to construct an array in the code
         /// </summary>
-        public static MethodInfo GetMethod(this Type type, string methodName, params Type[] parameters) {
+        public static MethodInfo GetMethod(this Type type, string methodName, params Type[] parameters)
+        {
             return type.GetMethod(methodName, parameters);
         }
     }

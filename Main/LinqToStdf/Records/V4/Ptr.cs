@@ -6,7 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Records.V4 {
+namespace LinqToStdf.Records.V4
+{
     using Attributes;
 
     [FieldLayout(FieldIndex = 0, FieldType = typeof(uint), RecordProperty = "TestNumber"),
@@ -29,9 +30,11 @@ namespace LinqToStdf.Records.V4 {
     StringFieldLayout(FieldIndex = 17, IsOptional = true, RecordProperty = "HighLimitFormatString"),
     FlaggedFieldLayout(FieldIndex = 18, FieldType = typeof(float), FlagIndex = 8, FlagMask = (byte)0x04, MissingValue = (float)0, RecordProperty = "LowSpecLimit"),
     FlaggedFieldLayout(FieldIndex = 19, FieldType = typeof(float), FlagIndex = 8, FlagMask = (byte)0x08, MissingValue = (float)0, RecordProperty = "HighSpecLimit")]
-    public class Ptr : StdfRecord, IHeadSiteIndexable {
+    public class Ptr : StdfRecord, IHeadSiteIndexable
+    {
 
-        public override RecordType RecordType {
+        public override RecordType RecordType
+        {
             get { return new RecordType(15, 10); }
         }
 

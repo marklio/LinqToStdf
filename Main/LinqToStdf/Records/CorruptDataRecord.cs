@@ -7,15 +7,19 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Records {
+namespace LinqToStdf.Records
+{
 
     /// <summary>
     /// Identifies a chunk of "corrupted" data.
     /// </summary>
-    public class CorruptDataRecord : FormatErrorRecord {
+    public class CorruptDataRecord : FormatErrorRecord
+    {
 
-        public override string Message {
-            get {
+        public override string Message
+        {
+            get
+            {
                 return base.Message ?? string.Format(Resources.CorruptDataMessage, (CorruptData ?? new byte[0]).Length, Offset);
             }
         }

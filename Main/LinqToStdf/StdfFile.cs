@@ -15,7 +15,8 @@ using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace LinqToStdf {
+namespace LinqToStdf
+{
 
     /// <summary>
     /// The delegate type for methods that add filtering capability to an StdfRecord stream.
@@ -40,7 +41,8 @@ namespace LinqToStdf {
     /// suitable for parsing STDF V4 files.
     /// </para>
     /// </remarks>
-    public sealed partial class StdfFile : IRecordContext {
+    public sealed partial class StdfFile : IRecordContext
+    {
         readonly IStdfStreamManager _StreamManager;
         RewindableByteStream _Stream;
         readonly static internal RecordConverterFactory _V4ConverterFactory = new RecordConverterFactory();
@@ -49,7 +51,8 @@ namespace LinqToStdf {
         /// Exposes the ConverterFactory in use for parsing.
         /// This allows record un/converters to be registered.
         /// </summary>
-        public RecordConverterFactory ConverterFactory {
+        public RecordConverterFactory ConverterFactory
+        {
             get { return _ConverterFactory; }
         }
 
@@ -116,12 +119,14 @@ namespace LinqToStdf {
         /// handles issues.
         /// </para>
         /// </remarks>
-        public bool ThrowOnFormatError {
+        public bool ThrowOnFormatError
+        {
             get { return _ThrowOnFormatError; }
             set { EnsureFiltersUnlocked(); _ThrowOnFormatError = value; }
         }
 
-        private void EnsureFiltersUnlocked() {
+        private void EnsureFiltersUnlocked()
+        {
             if (_FiltersLocked) throw new InvalidOperationException(Resources.ErrorFiltersLocked);
         }
 
@@ -129,7 +134,8 @@ namespace LinqToStdf {
         /// Static constructor that will prepare a converter factory
         /// suitable for parsing STDF V4 records.
         /// </summary>
-        static StdfFile() {
+        static StdfFile()
+        {
             StdfV4Specification.RegisterRecords(_V4ConverterFactory);
         }
 
@@ -166,22 +172,27 @@ namespace LinqToStdf {
         public StdfFile(IStdfStreamManager streamManager, bool debug) : this(streamManager, debug, null) { }
 
         internal StdfFile(IStdfStreamManager streamManager, bool debug, RecordsAndFields recordsAndFields)
-            : this(streamManager, PrivateImpl.None) {
-            if (debug || recordsAndFields != null) {
+            : this(streamManager, PrivateImpl.None)
+        {
+            if (debug || recordsAndFields != null)
+            {
                 _ConverterFactory = new RecordConverterFactory(recordsAndFields) { Debug = debug };
                 StdfV4Specification.RegisterRecords(_ConverterFactory);
             }
-            else {
+            else
+            {
                 _ConverterFactory = new RecordConverterFactory(_V4ConverterFactory);
             }
         }
 
         internal StdfFile(IStdfStreamManager streamManager, RecordConverterFactory rcf)
-            : this(streamManager, PrivateImpl.None) {
+            : this(streamManager, PrivateImpl.None)
+        {
             _ConverterFactory = rcf;
         }
 
-        private StdfFile(IStdfStreamManager streamManager, PrivateImpl _) {
+        private StdfFile(IStdfStreamManager streamManager, PrivateImpl _)
+        {
             _StreamManager = streamManager;
             _RecordFilter = BuiltInFilters.IdentityFilter;
         }
@@ -195,24 +206,29 @@ namespace LinqToStdf {
         /// all the time, turn off caching, or apply the filter to the results
         /// of the call to <see cref="GetRecords"/>.
         /// </summary>
-        public void AddFilter(RecordFilter filter) {
+        public void AddFilter(RecordFilter filter)
+        {
             EnsureFiltersUnlocked();
             _RecordFilter = _RecordFilter.Chain(filter);
         }
 
-        IEnumerable<StdfRecord> SetStdfFile(IEnumerable<StdfRecord> records) {
-            foreach (var r in records) {
+        IEnumerable<StdfRecord> SetStdfFile(IEnumerable<StdfRecord> records)
+        {
+            foreach (var r in records)
+            {
                 r.StdfFile = this;
                 yield return r;
             }
         }
 
-        private RecordFilter GetBaseRecordFilter() {
+        private RecordFilter GetBaseRecordFilter()
+        {
             RecordFilter filter = SetStdfFile;
             return _ThrowOnFormatError ? filter.Chain(BuiltInFilters.ThrowOnFormatError) : filter;
         }
 
-        private RecordFilter GetTopRecordFilter() {
+        private RecordFilter GetTopRecordFilter()
+        {
             return IndexingStrategy.CacheRecords;
         }
 
@@ -373,13 +389,17 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets all the records in the file as a "stream" of StdfRecord object
         /// </summary>
-        public IEnumerable<StdfRecord> GetRecordsEnumerable() {
+        public IEnumerable<StdfRecord> GetRecordsEnumerable()
+        {
             _FiltersLocked = true;
-            foreach (var record in GetTopRecordFilter()(_RecordFilter(GetBaseRecordFilter()(InternalGetAllRecords())))) {
-                if (record.GetType() == typeof(StartOfStreamRecord)) {
+            foreach (var record in GetTopRecordFilter()(_RecordFilter(GetBaseRecordFilter()(InternalGetAllRecords()))))
+            {
+                if (record.GetType() == typeof(StartOfStreamRecord))
+                {
                     var sosRecord = (StartOfStreamRecord)record;
                     sosRecord.FileName = _StreamManager.Name;
-                    if (_Endian == Endian.Unknown) {
+                    if (_Endian == Endian.Unknown)
+                    {
                         _Endian = sosRecord.Endian;
                     }
                     _ExpectedLength = sosRecord.ExpectedLength;
@@ -396,13 +416,15 @@ namespace LinqToStdf {
         /// through the records themselves at the end of the chain.
         /// </remarks>
         /// <returns>The count of records consumed at the end of the chain.</returns>
-        public int Consume() {
+        public int Consume()
+        {
             return this.GetRecords().Count();
         }
 
         #region Rewind and Seek APIs
 
-        void EnterSeekMode() {
+        void EnterSeekMode()
+        {
             _InSeekMode = true;
         }
 
@@ -415,7 +437,8 @@ namespace LinqToStdf {
         /// the newly-aquired record stream.
         /// Must be called within the context of live record reading.
         /// </summary>
-        public void RewindAndSeek() {
+        public void RewindAndSeek()
+        {
             EnterSeekMode();
         }
 
@@ -425,7 +448,8 @@ namespace LinqToStdf {
         /// Adds a <see cref="SeekAlgorithm"/> to be used if <see cref="RewindAndSeek()"/> is called.
         /// </summary>
         /// <param name="algorithm"></param>
-        public void AddSeekAlgorithm(SeekAlgorithm algorithm) {
+        public void AddSeekAlgorithm(SeekAlgorithm algorithm)
+        {
             _SeekAlgorithm = _SeekAlgorithm.Chain(algorithm);
         }
 
@@ -434,7 +458,8 @@ namespace LinqToStdf {
         //indicates we are in seek mode
         bool _InSeekMode;
 
-        IEnumerable<StdfRecord> InternalGetAllRecords() {
+        IEnumerable<StdfRecord> InternalGetAllRecords()
+        {
             //set this in case the last time we ended in seek mode
             _InSeekMode = false;
             using IStdfStreamScope streamScope = _StreamManager.GetScope();
@@ -629,7 +654,8 @@ namespace LinqToStdf {
         /// Implementation of <see cref="IRecordContext.StdfFile"/> to enable
         /// the extension methods. (returns this)
         /// </summary>
-        StdfFile IRecordContext.StdfFile {
+        StdfFile IRecordContext.StdfFile
+        {
             get { return this; }
         }
 

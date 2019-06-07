@@ -6,8 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Records.V4 {
-	using Attributes;
+namespace LinqToStdf.Records.V4
+{
+    using Attributes;
 
     [FieldLayout(FieldIndex = 0, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "HeadNumber"),
     FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = byte.MaxValue, RecordProperty = "SiteGroup"),
@@ -29,9 +30,11 @@ namespace LinqToStdf.Records.V4 {
     StringFieldLayout(FieldIndex = 17, IsOptional = true, RecordProperty = "LaserId"),
     StringFieldLayout(FieldIndex = 18, IsOptional = true, RecordProperty = "ExtraType"),
     StringFieldLayout(FieldIndex = 19, IsOptional = true, RecordProperty = "ExtraId")]
-    public class Sdr : StdfRecord, IHeadIndexable {
+    public class Sdr : StdfRecord, IHeadIndexable
+    {
 
-        public override RecordType RecordType {
+        public override RecordType RecordType
+        {
             get { return new RecordType(1, 80); }
         }
 

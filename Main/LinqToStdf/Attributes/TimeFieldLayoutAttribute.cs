@@ -6,16 +6,19 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Attributes {
+namespace LinqToStdf.Attributes
+{
 
     /// <summary>
     /// Indicates that the field is a timestamp.  The result will be a
     /// <see cref="DateTime"/>.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    public class TimeFieldLayoutAttribute : FieldLayoutAttribute {
+    public class TimeFieldLayoutAttribute : FieldLayoutAttribute
+    {
 
-        public TimeFieldLayoutAttribute() {
+        public TimeFieldLayoutAttribute()
+        {
             base.FieldType = typeof(DateTime);
             base.MissingValue = TimeFieldLayoutAttribute.Epoch;
         }
@@ -28,10 +31,13 @@ namespace LinqToStdf.Attributes {
         /// <summary>
         /// Overriden to be locked to string. setting is an invalid operation.
         /// </summary>
-        public override Type FieldType {
+        public override Type FieldType
+        {
             get { return base.FieldType; }
-            set {
-                if (value != typeof(DateTime)) {
+            set
+            {
+                if (value != typeof(DateTime))
+                {
                     throw new InvalidOperationException(Resources.TimeFieldLayoutNonDateTime);
                 }
             }

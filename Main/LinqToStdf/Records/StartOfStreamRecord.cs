@@ -7,7 +7,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Records {
+namespace LinqToStdf.Records
+{
 
     /// <summary>
     /// Indicates the beginning of a stream of records.
@@ -26,9 +27,11 @@ namespace LinqToStdf.Records {
     /// which files a record came from.
     /// </para>
     /// </remarks>
-    public class StartOfStreamRecord : StdfRecord {
+    public class StartOfStreamRecord : StdfRecord
+    {
 
-        public override RecordType RecordType {
+        public override RecordType RecordType
+        {
             get { throw new NotSupportedException(); }
         }
 

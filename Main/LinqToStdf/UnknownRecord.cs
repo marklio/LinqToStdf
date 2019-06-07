@@ -7,7 +7,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-namespace LinqToStdf {
+namespace LinqToStdf
+{
 
     /// <summary>
     /// <para>
@@ -27,7 +28,8 @@ namespace LinqToStdf {
     /// Under the covers, a record reader reads the STDF file and produces <see cref="UnknownRecord">UnknownRecords</see>.
     /// These records are then converted to concrete record types via a <see cref="RecordConverterFactory"/>.
     /// </remarks>
-    public class UnknownRecord : StdfRecord {
+    public class UnknownRecord : StdfRecord
+    {
 
         /// <summary>
         /// Constructs an unknown record
@@ -35,7 +37,8 @@ namespace LinqToStdf {
         /// <param name="recordType">The <see cref="RecordType"/> for the record</param>
         /// <param name="content">The original byte content of the record</param>
         /// <param name="endian">The endian-ness of <paramref name="content"/></param>
-        public UnknownRecord(RecordType recordType, byte[] content, Endian endian) {
+        public UnknownRecord(RecordType recordType, byte[] content, Endian endian)
+        {
             this._RecordType = recordType;
             this._Content = content;
             this._Endian = endian;
@@ -45,7 +48,8 @@ namespace LinqToStdf {
         /// <summary>
         /// The records <see cref="RecordType"/>
         /// </summary>
-        public override RecordType RecordType {
+        public override RecordType RecordType
+        {
             get { return this._RecordType; }
         }
 
@@ -53,15 +57,17 @@ namespace LinqToStdf {
         /// <summary>
         /// The endian-ness of <see cref="Content"/>
         /// </summary>
-        public Endian Endian {
+        public Endian Endian
+        {
             get { return _Endian; }
         }
-        
+
         private readonly byte[] _Content;
         /// <summary>
         /// The original byte content of the record
         /// </summary>
-        public byte[] Content {
+        public byte[] Content
+        {
             get { return _Content; }
         }
 
@@ -77,8 +83,10 @@ namespace LinqToStdf {
         /// </summary>
         /// <param name="record">The record that is the target for conversion</param>
         /// <exception cref="InvalidRecordConversionException"/>
-        public void EnsureConvertibleTo(StdfRecord record) {
-            if (!RecordType.Equals(record.RecordType)) {
+        public void EnsureConvertibleTo(StdfRecord record)
+        {
+            if (!RecordType.Equals(record.RecordType))
+            {
                 throw new InvalidRecordConversionException();
             }
         }
@@ -88,7 +96,8 @@ namespace LinqToStdf {
         /// over the contents of the record. (be sure and dispose it).
         /// </summary>
         /// <returns></returns>
-        public BinaryReader GetBinaryReaderForContent() {
+        public BinaryReader GetBinaryReaderForContent()
+        {
             return new BinaryReader(new MemoryStream(_Content, writable: false), _Endian, ownsStream: true);
         }
     }

@@ -6,7 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Records.V4 {
+namespace LinqToStdf.Records.V4
+{
     using Attributes;
 
     [FieldLayout(FieldIndex = 0, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "HeadNumber"),
@@ -23,9 +24,11 @@ namespace LinqToStdf.Records.V4 {
     StringFieldLayout(FieldIndex = 11, IsOptional = true, RecordProperty = "MaskId"),
     StringFieldLayout(FieldIndex = 12, IsOptional = true, RecordProperty = "UserDescription"),
     StringFieldLayout(FieldIndex = 13, IsOptional = true, RecordProperty = "ExecDescription")]
-    public class Wrr : StdfRecord, IHeadIndexable {
+    public class Wrr : StdfRecord, IHeadIndexable
+    {
 
-        public override RecordType RecordType {
+        public override RecordType RecordType
+        {
             get { return new RecordType(2, 20); }
         }
 

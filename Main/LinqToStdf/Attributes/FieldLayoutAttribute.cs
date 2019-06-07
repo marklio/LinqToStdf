@@ -6,7 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Attributes {
+namespace LinqToStdf.Attributes
+{
 
     /// <summary>
     /// This is the basic attribute used to specify the layout of an STDF record.
@@ -46,7 +47,8 @@ namespace LinqToStdf.Attributes {
     /// </para>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    public class FieldLayoutAttribute : Attribute {
+    public class FieldLayoutAttribute : Attribute
+    {
 
         private int _FieldIndex;
         /// <summary>
@@ -57,10 +59,13 @@ namespace LinqToStdf.Attributes {
         /// there must be an attribute with FieldIndex 0, and there must be no gaps
         /// in FieldIndex for all provided attributes.
         /// </remarks>
-        public int FieldIndex {
+        public int FieldIndex
+        {
             get { return _FieldIndex; }
-            set {
-                if (value < 0) {
+            set
+            {
+                if (value < 0)
+                {
                     throw new ArgumentOutOfRangeException("value", Resources.NegativeFieldIndex);
                 }
                 _FieldIndex = value;

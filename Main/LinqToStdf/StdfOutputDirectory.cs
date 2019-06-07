@@ -9,7 +9,8 @@ using System.Text;
 using System.IO;
 using LinqToStdf.Records;
 
-namespace LinqToStdf {
+namespace LinqToStdf
+{
 
     /// <summary>
     /// Provides a "larger scale" STDF writing mechanism.
@@ -18,15 +19,18 @@ namespace LinqToStdf {
     /// <see cref="StartOfStreamRecord"/> and <see cref="EndOfStreamRecord"/>
     /// are used to indicate the start and end a file.
     /// </summary>
-    public class StdfOutputDirectory {
+    public class StdfOutputDirectory
+    {
         readonly string _Path;
 
         /// <summary>
         /// Creates an StdfOutputDirectory using the given path as a root directory.
         /// </summary>
         /// <param name="path">The directory to use as the root.  It must exist.</param>
-        public StdfOutputDirectory(string path) {
-            if (!Directory.Exists(path)) {
+        public StdfOutputDirectory(string path)
+        {
+            if (!Directory.Exists(path))
+            {
                 throw new DirectoryNotFoundException(string.Format(Resources.DirectoryNotFound, path));
             }
             _Path = path;
@@ -37,32 +41,40 @@ namespace LinqToStdf {
         /// Files cannot span calls to this method.
         /// </summary>
         /// <param name="records">The records to write.</param>
-        public void WriteRecords(IEnumerable<StdfRecord> records) {
+        public void WriteRecords(IEnumerable<StdfRecord> records)
+        {
             StdfFileWriter writer = null;
-            foreach (var r in records) {
-                if (r.GetType() == typeof(StartOfStreamRecord)) {
-					var sos = (StartOfStreamRecord)r;
-                    if (writer != null) {
+            foreach (var r in records)
+            {
+                if (r.GetType() == typeof(StartOfStreamRecord))
+                {
+                    var sos = (StartOfStreamRecord)r;
+                    if (writer != null)
+                    {
                         throw new InvalidOperationException(Resources.SOFBeforeEOF);
                     }
                     writer = new StdfFileWriter(Path.Combine(_Path, sos.FileName), sos.Endian);
                 }
-                else if (r.GetType() == typeof(EndOfStreamException)) {
+                else if (r.GetType() == typeof(EndOfStreamException))
+                {
                     EnsureWriter(writer);
                     writer.Dispose();
                     writer = null;
                 }
-                else {
+                else
+                {
                     EnsureWriter(writer);
                     writer.WriteRecord(r);
                 }
             }
-            if (writer != null) {
+            if (writer != null)
+            {
                 throw new InvalidOperationException(Resources.EndWithoutEOS);
             }
         }
 
-        static void EnsureWriter(StdfFileWriter writer) {
+        static void EnsureWriter(StdfFileWriter writer)
+        {
             if (writer == null) throw new InvalidOperationException(Resources.WriteOutsideSOSEOS);
         }
     }

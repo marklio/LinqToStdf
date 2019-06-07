@@ -6,15 +6,18 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Records.V4 {
-	using Attributes;
-	
-	[StringFieldLayout(FieldIndex = 0, IsOptional = true, RecordProperty = "Name")]
-	public class Bps : StdfRecord {
+namespace LinqToStdf.Records.V4
+{
+    using Attributes;
 
-		public override RecordType RecordType {
-			get { return new RecordType(20, 10); }
-		}
+    [StringFieldLayout(FieldIndex = 0, IsOptional = true, RecordProperty = "Name")]
+    public class Bps : StdfRecord
+    {
+
+        public override RecordType RecordType
+        {
+            get { return new RecordType(20, 10); }
+        }
         public string Name { get; set; }
-	}
+    }
 }

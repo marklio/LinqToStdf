@@ -50,7 +50,8 @@ namespace StdfFileTests
 
     public class RoundTrip : IDisposable
     {
-        public RoundTrip() {
+        public RoundTrip()
+        {
             LinqToStdf.RecordConverting.ConverterLog.MessageLogged += Log;
         }
 

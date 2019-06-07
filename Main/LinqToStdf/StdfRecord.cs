@@ -6,12 +6,14 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf {
+namespace LinqToStdf
+{
 
     /// <summary>
     /// Abstract stdf record type
     /// </summary>
-    public abstract class StdfRecord : IRecordContext {
+    public abstract class StdfRecord : IRecordContext
+    {
 
         /// <summary>
         /// The <see cref="RecordType"/> of the instance
@@ -38,13 +40,17 @@ namespace LinqToStdf {
         /// <summary>
         /// The file/stream offset of this record's header
         /// </summary>
-        public long Offset {
+        public long Offset
+        {
             get { return (long)(_OffsetData & _OffsetMask); }
-            set {
-                if (value < 0) {
+            set
+            {
+                if (value < 0)
+                {
                     throw new ArgumentOutOfRangeException("value", "Offset must be >= 0");
                 }
-                if (value >= (long)_OffsetMask) {
+                if (value >= (long)_OffsetMask)
+                {
                     throw new ArgumentOutOfRangeException("value", "The offset is to large to be stored in an StdfRecord.");
                 }
                 _OffsetData = (~_OffsetMask & _OffsetData) | (_OffsetMask & (ulong)value);
@@ -59,7 +65,8 @@ namespace LinqToStdf {
         /// <summary>
         /// Indicates whether or not this record was synthesized
         /// </summary>
-        public bool Synthesized {
+        public bool Synthesized
+        {
             get { return (_SynthesizedMask & _OffsetData) != 0; }
             set { _OffsetData = value ? _OffsetData | _SynthesizedMask : _OffsetData & ~_SynthesizedMask; }
         }

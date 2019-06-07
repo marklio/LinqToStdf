@@ -6,16 +6,19 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Records.V4 {
-	using Attributes;
+namespace LinqToStdf.Records.V4
+{
+    using Attributes;
 
-	[StringFieldLayout(FieldIndex = 0, RecordProperty = "Text")]
-	public class Dtr : StdfRecord {
+    [StringFieldLayout(FieldIndex = 0, RecordProperty = "Text")]
+    public class Dtr : StdfRecord
+    {
 
-		public override RecordType RecordType {
-			get { return new RecordType(50, 30); }
-		}
+        public override RecordType RecordType
+        {
+            get { return new RecordType(50, 30); }
+        }
 
         public string Text { get; set; }
-	}
+    }
 }

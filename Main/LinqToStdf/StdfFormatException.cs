@@ -8,7 +8,8 @@ using System.Collections.Generic;
 using System.Text;
 using LinqToStdf.Records;
 
-namespace LinqToStdf {
+namespace LinqToStdf
+{
 
     /// <summary>
     /// Indicates there was a problem with the format of the file.
@@ -20,7 +21,8 @@ namespace LinqToStdf {
     /// STDF stream instead.  This would allow an application to be more tolerant
     /// of corrupted data.
     /// </remarks>
-    public class StdfFormatException : StdfException {
+    public class StdfFormatException : StdfException
+    {
         //
         // For guidelines regarding the creation of new exception types, see
         //    http://msdn.microsoft.com/library/default.asp?url=/library/en-us/cpgenref/html/cpconerrorraisinghandlingguidelines.asp

@@ -8,7 +8,8 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace LinqToStdf {
+namespace LinqToStdf
+{
     using Attributes;
     using CompiledQuerySupport;
     using LinqToStdf.RecordConverting;
@@ -35,7 +36,8 @@ namespace LinqToStdf {
     /// </para>
     /// </summary>
     /// <seealso cref="FieldLayoutAttribute"/>
-    public class RecordConverterFactory {
+    public class RecordConverterFactory
+    {
 
         public event Action<ConverterType, Type> ConverterGenerated;
 
@@ -48,7 +50,8 @@ namespace LinqToStdf {
         /// Used internally by compiled query support
         /// </summary>
         /// <param name="recordsAndFields"></param>
-        internal RecordConverterFactory(RecordsAndFields recordsAndFields) {
+        internal RecordConverterFactory(RecordsAndFields recordsAndFields)
+        {
             _RecordsAndFields = recordsAndFields;
             _Converters = new Dictionary<RecordType, Converter<UnknownRecord, StdfRecord>>();
             _Unconverters = new Dictionary<Type, Func<StdfRecord, Endian, UnknownRecord>>();
@@ -94,7 +97,8 @@ namespace LinqToStdf {
         /// on <paramref name="type"/>.</param>
         /// <param name="type">The type that contains the metadata to build a converter.
         /// Must inherit from <see cref="StdfRecord"/></param>
-        public void RegisterRecordType(RecordType recordType, Type type) {
+        public void RegisterRecordType(RecordType recordType, Type type)
+        {
             var converter = CreateConverterForType(type);
             var unconverter = CreateUnconverterForType(type);
             RegisterRecordConverter(recordType, converter);
@@ -129,7 +133,8 @@ namespace LinqToStdf {
         /// <param name="recordType">the record type to retrieve</param>
         /// <returns>If a converter for <paramref name="recordType"/> is register, the registered converter delegate,
         /// otherwise, a "null" converter that passes the unknown record through.</returns>
-        public Converter<UnknownRecord, StdfRecord> GetConverter(RecordType recordType) {
+        public Converter<UnknownRecord, StdfRecord> GetConverter(RecordType recordType)
+        {
             //if we don't have a converter, return identity conversion
             if (_Converters.TryGetValue(recordType, out var converter))
             {
@@ -174,21 +179,24 @@ namespace LinqToStdf {
         /// <summary>
         /// Converts an unknown record into a concrete record
         /// </summary>
-        public StdfRecord Convert(UnknownRecord unknownRecord) {
+        public StdfRecord Convert(UnknownRecord unknownRecord)
+        {
             return GetConverter(unknownRecord.RecordType)(unknownRecord);
         }
 
         /// <summary>
         /// Converts a concrete record into an unknown record of the given endianness
         /// </summary>
-        public UnknownRecord Unconvert(StdfRecord record, Endian endian) {
+        public UnknownRecord Unconvert(StdfRecord record, Endian endian)
+        {
             return GetUnconverter(record.GetType())(record, endian);
         }
 
         AssemblyBuilder _DynamicAssembly;
         ModuleBuilder _DynamicModule;
 
-        void InitializeDynamicAssembly() {
+        void InitializeDynamicAssembly()
+        {
             _DynamicAssembly = AssemblyBuilder.DefineDynamicAssembly(
                 new AssemblyName("DynamicConverters"),
                 AssemblyBuilderAccess.Run);
@@ -202,24 +210,30 @@ namespace LinqToStdf {
         /// </summary>
         /// <param name="type">The destination record type. (must be assignable to <see cref="StdfRecord"/>)</param>
         /// <returns></returns>
-        Converter<UnknownRecord, StdfRecord> CreateConverterForType(Type type) {
-            if (!typeof(StdfRecord).IsAssignableFrom(type)) {
+        Converter<UnknownRecord, StdfRecord> CreateConverterForType(Type type)
+        {
+            if (!typeof(StdfRecord).IsAssignableFrom(type))
+            {
                 throw new InvalidOperationException(string.Format(Resources.ConverterTargetNotStdfRecord, type));
             }
             Converter<UnknownRecord, StdfRecord> converter = null;
             //only bother creating a converter if we need to parse fields
-            if (_RecordsAndFields == null || _RecordsAndFields.TypeHasFields(type)) {
+            if (_RecordsAndFields == null || _RecordsAndFields.TypeHasFields(type))
+            {
                 //TODO:consider making the pattern more clear here
-                return (ur) => {
+                return (ur) =>
+                {
                     //there's a subtle race condition here, but unlikely to cause problems
                     //or actually be hit in normal scenarios.
-                    if (converter == null) {
+                    if (converter == null)
+                    {
                         converter = LazyCreateConverterForType(type);
                     }
                     return converter(ur);
                 };
             }
-            else {
+            else
+            {
                 return (ur) => new SkippedRecord(type);
             }
         }
