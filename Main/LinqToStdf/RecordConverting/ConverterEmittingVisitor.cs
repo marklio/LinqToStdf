@@ -41,6 +41,7 @@ namespace LinqToStdf.RecordConverting
             ILGen.Stloc(_ConcreteRecordLocal);
             return node;
         }
+
         static readonly MethodInfo _EnsureConvertibleToMethod = typeof(UnknownRecord).GetMethod("EnsureConvertibleTo", typeof(StdfRecord));
         public override CodeNode VisitEnsureCompat(EnsureCompatNode node)
         {
@@ -50,11 +51,8 @@ namespace LinqToStdf.RecordConverting
             ILGen.Callvirt(_EnsureConvertibleToMethod);
             return node;
         }
-#if SILVERLIGHT
-            static MethodInfo _GetBinaryReaderForContentMethod = typeof(UnknownRecord).GetMethod("GetBinaryReaderForContent");
-#else
+
         static readonly MethodInfo _GetBinaryReaderForContentMethod = typeof(UnknownRecord).GetMethod("GetBinaryReaderForContent", BindingFlags.Instance | BindingFlags.Public);
-#endif
         public override CodeNode VisitInitReaderNode(InitReaderNode node)
         {
             Log($"Initializing reader");

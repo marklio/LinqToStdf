@@ -234,11 +234,7 @@ namespace LinqToStdf {
             Func<Converter<UnknownRecord, StdfRecord>> finalizeConverter = null;
             if (Debug)
             {
-#if SILVERLIGHT
-                throw new NotSupportedException(Resources.NoDebugInSilverlight);
-#else
                 ilGenerator = CreateNewRefEmitMethod<Converter<UnknownRecord, StdfRecord>>(string.Format("{0}Converter", type.Name), string.Format("ConvertTo{0}", type.Name), ref finalizeConverter);
-#endif
             }
             else
             {
@@ -280,11 +276,7 @@ namespace LinqToStdf {
             Func<Func<StdfRecord, Endian, UnknownRecord>> finalizeUnconverter = null;
             if (Debug)
             {
-#if SILVERLIGHT
-                throw new NotSupportedException(Resources.NoDebugInSilverlight);
-#else
                 ilGenerator = CreateNewRefEmitMethod<Func<StdfRecord, Endian, UnknownRecord>>(string.Format("{0}Unconverter", type.Name), string.Format("UnconvertFrom{0}", type.Name), ref finalizeUnconverter);
-#endif
             }
             else
             {
