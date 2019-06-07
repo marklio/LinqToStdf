@@ -13,6 +13,7 @@ namespace LinqToStdf {
     using CompiledQuerySupport;
     using LinqToStdf.RecordConverting;
     using LinqToStdf.Records;
+    using System.Runtime.Loader;
 
     public enum ConverterType
     {
@@ -184,30 +185,15 @@ namespace LinqToStdf {
             return GetUnconverter(record.GetType())(record, endian);
         }
 
-#if !SILVERLIGHT
         AssemblyBuilder _DynamicAssembly;
         ModuleBuilder _DynamicModule;
 
         void InitializeDynamicAssembly() {
-            _DynamicAssembly = AppDomain.CurrentDomain.DefineDynamicAssembly(
+            _DynamicAssembly = AssemblyBuilder.DefineDynamicAssembly(
                 new AssemblyName("DynamicConverters"),
-                AssemblyBuilderAccess.RunAndSave);
-            _DynamicModule = _DynamicAssembly.DefineDynamicModule(
-                "DynamicConverters",
-                "DynamicConverters.dll",
-                true);
+                AssemblyBuilderAccess.Run);
+            _DynamicModule = _DynamicAssembly.DefineDynamicModule("DynamicConverters");
         }
-
-        /// <summary>
-        /// If <see cref="Debug"/> is set, saves a dynamic assembly
-        /// with all the converters and unconverters created so far.
-        /// </summary>
-        public void SaveDynamicAssembly()
-        {
-            if (!Debug || _DynamicAssembly == null) throw new InvalidOperationException(Resources.InvalidSaveAssembly);
-            _DynamicAssembly.Save("DynamicConverters.dll");
-        }
-#endif
 
         #region CreateConverterForType
 

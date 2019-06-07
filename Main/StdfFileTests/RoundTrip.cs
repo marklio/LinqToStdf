@@ -1,13 +1,12 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using LinqToStdf;
 using System.IO;
-using LinqToStdf.Indexing;
 using System.Linq;
 using LinqToStdf.Records.V4;
 using LinqToStdf.Records;
 using System.Reflection;
 using System.Collections.Generic;
+using Xunit;
 
 namespace StdfFileTests
 {
@@ -34,12 +33,12 @@ namespace StdfFileTests
                 else if (eos == null) eos = (EndOfStreamRecord)record;
                 else
                 {
-                    Assert.Fail("There were extra records");
+                    Assert.True(false, "There were extra records");
                 }
             }
-            Assert.IsNotNull(sos, "No start of stream");
-            Assert.IsNotNull(recordOfInterest, "No record of interest");
-            Assert.IsNotNull(eos, "No end of stream");
+            Assert.NotNull(sos);
+            Assert.NotNull(recordOfInterest);
+            Assert.NotNull(eos);
             //TODO: assert things about sos/eos?
             return recordOfInterest;
         }
@@ -49,26 +48,23 @@ namespace StdfFileTests
         }
     }
 
-    [TestClass]
-    public class RoundTrip
+    public class RoundTrip : IDisposable
     {
-        public void Log(string msg)
-        {
-            System.Diagnostics.Debug.WriteLine(msg);
-        }
-        [TestInitialize]
-        public void Init()
-        {
+        public RoundTrip() {
             LinqToStdf.RecordConverting.ConverterLog.MessageLogged += Log;
         }
 
-        [TestCleanup]
-        public void Cleanup()
+        void Log(string msg)
+        {
+            System.Diagnostics.Debug.WriteLine(msg);
+        }
+
+        void IDisposable.Dispose()
         {
             LinqToStdf.RecordConverting.ConverterLog.MessageLogged -= Log;
         }
 
-        [TestMethod]
+        [Fact]
         public void TestFar()
         {
             var far = new Far();
@@ -85,7 +81,7 @@ namespace StdfFileTests
             TestRoundTripEquality(far);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestAtr()
         {
             var atr = new Atr();
@@ -99,7 +95,7 @@ namespace StdfFileTests
             TestRoundTripEquality(atr);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestMir()
         {
             var mir = new Mir();
@@ -108,7 +104,7 @@ namespace StdfFileTests
             TestRoundTripEquality(mir);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestMrr()
         {
             var mrr = new Mrr();
@@ -117,7 +113,7 @@ namespace StdfFileTests
             TestRoundTripEquality(mrr);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestPcr()
         {
             var pcr = new Pcr
@@ -130,7 +126,7 @@ namespace StdfFileTests
             TestRoundTripEquality(pcr);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestHbr()
         {
             var hbr = new Hbr
@@ -143,7 +139,7 @@ namespace StdfFileTests
             TestRoundTripEquality(hbr);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestSbr()
         {
             var sbr = new Sbr
@@ -156,7 +152,7 @@ namespace StdfFileTests
             TestRoundTripEquality(sbr);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestPmr()
         {
             var pmr = new Pmr
@@ -169,7 +165,7 @@ namespace StdfFileTests
             TestRoundTripEquality(pmr);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestPgr()
         {
             var pgr = new Pgr();
@@ -178,7 +174,7 @@ namespace StdfFileTests
             TestRoundTripEquality(pgr);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestPlr()
         {
             var plr = new Plr
@@ -188,7 +184,7 @@ namespace StdfFileTests
             TestRoundTripEquality(plr);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestRdr()
         {
             var rdr = new Rdr();
@@ -197,7 +193,7 @@ namespace StdfFileTests
             TestRoundTripEquality(rdr);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestSdr()
         {
             var sdr = new Sdr
@@ -209,7 +205,7 @@ namespace StdfFileTests
             TestRoundTripEquality(sdr);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestWir()
         {
             var wir = new Wir
@@ -221,7 +217,7 @@ namespace StdfFileTests
             TestRoundTripEquality(wir);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestWrr()
         {
             var wrr = new Wrr
@@ -233,7 +229,7 @@ namespace StdfFileTests
             TestRoundTripEquality(wrr);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestWcr()
         {
             var wcr = new Wcr();
@@ -242,7 +238,7 @@ namespace StdfFileTests
             TestRoundTripEquality(wcr);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestPir()
         {
             var pir = new Pir();
@@ -254,7 +250,7 @@ namespace StdfFileTests
             TestRoundTripEquality(pir);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestPrr()
         {
             var prr = new Prr
@@ -267,7 +263,7 @@ namespace StdfFileTests
             TestRoundTripEquality(prr);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestTsr()
         {
             var tsr = new Tsr
@@ -280,7 +276,7 @@ namespace StdfFileTests
             TestRoundTripEquality(tsr);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestPtr()
         {
             var ptr = new Ptr
@@ -295,7 +291,7 @@ namespace StdfFileTests
             TestRoundTripEquality(ptr);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestMpr()
         {
             var mpr = new Mpr
@@ -310,7 +306,7 @@ namespace StdfFileTests
             TestRoundTripEquality(mpr);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestFtr()
         {
             var ftr = new Ftr
@@ -321,39 +317,39 @@ namespace StdfFileTests
             TestRoundTripEquality(ftr);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestBps()
         {
             var bps = new Bps();
             TestRoundTripEquality(bps);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestEps()
         {
             var eps = new Eps();
             TestRoundTripEquality(eps);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestGdr()
         {
             var gdr = new Gdr();
             TestRoundTripEquality(gdr);
         }
 
-        [TestMethod]
+        [Fact]
         public void TestDtr()
         {
             var dtr = new Dtr();
             TestRoundTripEquality(dtr);
         }
 
-        public void TestRoundTripEquality<TRecord>(TRecord record, Endian endian = Endian.Big, IEnumerable<string> skipProps = null) where TRecord : StdfRecord
+        void TestRoundTripEquality<TRecord>(TRecord record, Endian endian = Endian.Big, IEnumerable<string> skipProps = null) where TRecord : StdfRecord
         {
             TestRecordEquality(record, RoundTripRecord(record, endian, debug: true), skipProps);
         }
-        public void TestRecordEquality<TRecord>(TRecord one, TRecord two, IEnumerable<string> skipProps = null) where TRecord : StdfRecord
+        void TestRecordEquality<TRecord>(TRecord one, TRecord two, IEnumerable<string> skipProps = null) where TRecord : StdfRecord
         {
             var props = from prop in typeof(TRecord).GetProperties(BindingFlags.Public | BindingFlags.Instance)
                         where prop.Name != nameof(StdfRecord.StdfFile)
@@ -367,15 +363,15 @@ namespace StdfFileTests
                             {
                                 var listOne = (System.Collections.IList)del(one);
                                 var listTwo = (System.Collections.IList)del(two);
-                                Assert.AreEqual(listOne?.Count, listTwo?.Count, $"Arrays for {prop.Name} have different length");
+                                Assert.Equal(listOne?.Count, listTwo?.Count);
                                 for (int i = 0; i < (listOne?.Count ?? 0); i++)
                                 {
-                                    Assert.AreEqual(listOne[i], listTwo[i], $"{prop.Name} index {i} is different");
+                                    Assert.Equal(listOne[i], listTwo[i]);
                                 }
                             }
                             else
                             {
-                                Assert.AreEqual(del(one), del(two), $"{prop.Name} not equal");
+                                Assert.Equal(del(one), del(two));
                             }
                         })
                         select test;
@@ -385,28 +381,24 @@ namespace StdfFileTests
 
         public TRecord RoundTripRecord<TRecord>(TRecord record, Endian endian, bool debug) where TRecord : StdfRecord
         {
-            using (var testStream = new MemoryStream())
+            using var testStream = new MemoryStream();
+            using (var writer = new StdfFileWriter(testStream, endian, debug: true))
             {
-                using (var writer = new StdfFileWriter(testStream, endian, debug: true))
+                if (typeof(TRecord) != typeof(Far))
                 {
-                    if (typeof(TRecord) != typeof(Far))
+                    writer.WriteRecord(new Far
                     {
-                        writer.WriteRecord(new Far
-                        {
-                            CpuType = endian == Endian.Big ? (byte)1 : (byte)2,
-                            StdfVersion = 4,
-                        });
-                    }
-                    writer.WriteRecord(record);
+                        CpuType = endian == Endian.Big ? (byte)1 : (byte)2,
+                        StdfVersion = 4,
+                    });
                 }
-                testStream.Seek(0, SeekOrigin.Begin);
-
-                using (var streamManager = new TestStreamManager(testStream))
-                {
-                    var file = new StdfFile(streamManager, debug) { ThrowOnFormatError = true };
-                    return file.GetSingleRecord<TRecord>();
-                }
+                writer.WriteRecord(record);
             }
+            testStream.Seek(0, SeekOrigin.Begin);
+
+            using var streamManager = new TestStreamManager(testStream);
+            var file = new StdfFile(streamManager, debug) { ThrowOnFormatError = true };
+            return file.GetSingleRecord<TRecord>();
         }
     }
 
