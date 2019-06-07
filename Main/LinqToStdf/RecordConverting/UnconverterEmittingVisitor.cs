@@ -20,7 +20,7 @@ namespace LinqToStdf.RecordConverting
         LocalBuilder _ConcreteRecordLocal;
         LocalBuilder _StartedWriting;
         LocalBuilder _Writer;
-        Dictionary<int, LocalBuilder> _FieldLocals = new Dictionary<int, LocalBuilder>();
+        readonly Dictionary<int, LocalBuilder> _FieldLocals = new Dictionary<int, LocalBuilder>();
 
         void Log(string msg)
         {
@@ -276,7 +276,7 @@ namespace LinqToStdf.RecordConverting
             ILGen.Callvirt(typeof(BinaryWriter).GetMethod("WriteString", typeof(string), typeof(int)));
             return node;
         }
-        static Dictionary<Type, MethodInfo> _WriteMethods = new Dictionary<Type, MethodInfo>();
+        static readonly Dictionary<Type, MethodInfo> _WriteMethods = new Dictionary<Type, MethodInfo>();
         public override CodeNode VisitWriteType(WriteTypeNode node)
         {
             MethodInfo writeMethod;

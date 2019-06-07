@@ -55,27 +55,20 @@ namespace LinqToStdf {
     /// to the scope's lifetime and will be disposed with the scope.
     /// </summary>
     public class OwnedStdfStreamScope : IStdfStreamScope {
-
-        Stream _Stream;
         public OwnedStdfStreamScope(Stream stream) {
-            if (stream == null) {
-                throw new ArgumentNullException("stream");
-            }
-            _Stream = stream;
+            Stream = stream ?? throw new ArgumentNullException("stream");
         }
 
         #region IStdfStreamScope Members
 
-        public Stream Stream {
-            get { return _Stream; }
-        }
+        public Stream Stream { get; }
 
         #endregion
 
         #region IDisposable Members
 
         public void Dispose() {
-            _Stream.Dispose();
+            Stream.Dispose();
         }
 
         #endregion
@@ -86,11 +79,9 @@ namespace LinqToStdf {
 	/// based on a path.
 	/// </summary>
 	public class StdfFileStreamManager : IStdfStreamManager {
-
-		string _Path;
+        readonly string _Path;
 		public StdfFileStreamManager(string path) {
-			if (path == null) throw new ArgumentNullException("path");
-			_Path = path;
+            _Path = path ?? throw new ArgumentNullException("path");
 		}
 
 		#region IStdfStreamManager Members
@@ -112,8 +103,7 @@ namespace LinqToStdf {
 	/// </summary>
 	/// <remarks>This manager will auto-select the appropriate manager based on the path</remarks>
 	public class DefaultFileStreamManager : IStdfStreamManager {
-
-		IStdfStreamManager _InnerManager;
+        readonly IStdfStreamManager _InnerManager;
 
 		public DefaultFileStreamManager(string path) {
 			if (path == null) throw new ArgumentNullException("path");
@@ -158,11 +148,9 @@ namespace LinqToStdf {
 	/// based on a path.
 	/// </summary>
 	public class GZipStdfFileStreamManager : IStdfStreamManager {
-
-        string _Path;
+        readonly string _Path;
 		public GZipStdfFileStreamManager(string path) {
-            if (path == null) throw new ArgumentNullException("path");
-            _Path = path;
+            _Path = path ?? throw new ArgumentNullException("path");
         }
 
 		#region IStdfStreamManager Members

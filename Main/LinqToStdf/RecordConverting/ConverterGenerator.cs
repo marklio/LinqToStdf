@@ -17,9 +17,9 @@ namespace LinqToStdf.RecordConverting
     /// </summary>
     class ConverterGenerator
     {
-        ILGenerator _ILGen;
-        Type _Type;
-        HashSet<string> _Fields;
+        readonly ILGenerator _ILGen;
+        readonly Type _Type;
+        readonly HashSet<string> _Fields;
 
         /// <summary>
         /// Constructs a converter using the supplied il generator and the type we're converting to.
@@ -29,10 +29,8 @@ namespace LinqToStdf.RecordConverting
         /// <param name="fields">The fields we should parse (null if we should parse everything, empty if we shouldn't parse at all)</param>
         public ConverterGenerator(ILGenerator ilgen, Type type, HashSet<string> fields)
         {
-            if (ilgen == null) throw new ArgumentNullException("ilgen");
-            if (type == null) throw new ArgumentNullException("type");
-            _ILGen = ilgen;
-            _Type = type;
+            _ILGen = ilgen ?? throw new ArgumentNullException("ilgen");
+            _Type = type ?? throw new ArgumentNullException("type");
             if (fields != null) _Fields = new HashSet<string>(fields);
         }
 
@@ -59,8 +57,7 @@ namespace LinqToStdf.RecordConverting
                     if (pair.Value != null && _Fields.Contains(pair.Value.Name))
                     {
                         //if it's an optional field
-                        var op = pair.Key as FlaggedFieldLayoutAttribute;
-                        if (op != null)
+                        if (pair.Key is FlaggedFieldLayoutAttribute op)
                         {
                             //if the flag index is an assigned field, add it to our list of parsed fields
                             var prop = fields[op.FlagIndex].Value;
@@ -68,8 +65,7 @@ namespace LinqToStdf.RecordConverting
                         }
                         else
                         {
-                            var dep = pair.Key as DependencyProperty;
-                            if (dep != null)
+                            if (pair.Key is DependencyProperty dep)
                             {
                                 var prop = fields[dep.DependentOnIndex].Value;
                                 if (prop != null) _Fields.Add(prop.Name);
@@ -151,9 +147,8 @@ namespace LinqToStdf.RecordConverting
             }
 
             //get the length if this is a fixed-length string
-            StringFieldLayoutAttribute stringLayout = pair.Key as StringFieldLayoutAttribute;
             var stringLength = -1;
-            if (stringLayout != null && stringLayout.Length > 0)
+            if (pair.Key is StringFieldLayoutAttribute stringLayout && stringLayout.Length > 0)
             {
                 stringLength = stringLayout.Length;
             }
@@ -188,8 +183,7 @@ namespace LinqToStdf.RecordConverting
             {
                 var assignmentNodes = new List<CodeNode>();
                 //if this is optional, set us up to skip if the missing flag is set
-                FlaggedFieldLayoutAttribute optionalLayout = pair.Key as FlaggedFieldLayoutAttribute;
-                if (optionalLayout != null)
+                if (pair.Key is FlaggedFieldLayoutAttribute optionalLayout)
                 {
                     assignmentNodes.Add(new SkipAssignmentIfFlagSetNode(optionalLayout.FlagIndex, optionalLayout.FlagMask));
                 }

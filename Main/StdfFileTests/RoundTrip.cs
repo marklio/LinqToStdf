@@ -349,11 +349,6 @@ namespace StdfFileTests
             TestRoundTripEquality(dtr);
         }
 
-        private void TestRoundTripEquality(object eps)
-        {
-            throw new NotImplementedException();
-        }
-
         public void TestRoundTripEquality<TRecord>(TRecord record, Endian endian = Endian.Big, IEnumerable<string> skipProps = null) where TRecord : StdfRecord
         {
             TestRecordEquality(record, RoundTripRecord(record, endian, debug: true), skipProps);
@@ -406,16 +401,18 @@ namespace StdfFileTests
                 }
                 testStream.Seek(0, SeekOrigin.Begin);
 
-                var streamManager = new TestStreamManager(testStream);
-                var file = new StdfFile(streamManager, debug) { ThrowOnFormatError = true };
-                return file.GetSingleRecord<TRecord>();
+                using (var streamManager = new TestStreamManager(testStream))
+                {
+                    var file = new StdfFile(streamManager, debug) { ThrowOnFormatError = true };
+                    return file.GetSingleRecord<TRecord>();
+                }
             }
         }
     }
 
     class TestStreamManager : IStdfStreamManager, IStdfStreamScope
     {
-        MemoryStream _TestStream;
+        readonly MemoryStream _TestStream;
         public TestStreamManager(MemoryStream testStream)
         {
             _TestStream = testStream;

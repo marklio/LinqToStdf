@@ -17,7 +17,7 @@ namespace LinqToStdf.CompiledQuerySupport {
         /// <summary>
         /// The internal datastructure Type is a record type, and the hashset is a set of property names
         /// </summary>
-        Dictionary<Type, HashSet<string>> _Fields = new Dictionary<Type, HashSet<string>>();
+        readonly Dictionary<Type, HashSet<string>> _Fields = new Dictionary<Type, HashSet<string>>();
 
         /// <summary>
         /// adds a field for a type
@@ -40,8 +40,7 @@ namespace LinqToStdf.CompiledQuerySupport {
 
         public HashSet<string> GetFieldsForType(Type type)
         {
-            HashSet<string> fields = null;
-            if (_Fields.TryGetValue(type, out fields))
+            if (_Fields.TryGetValue(type, out var fields))
             {
                 return new HashSet<string>(fields);
             }
@@ -52,8 +51,7 @@ namespace LinqToStdf.CompiledQuerySupport {
         /// Gets the fields for a type
         /// </summary>
         HashSet<string> GetFieldsForAdding(Type type) {
-            HashSet<string> fields;
-            if (!_Fields.TryGetValue(type, out fields)) {
+            if (!_Fields.TryGetValue(type, out var fields)) {
                 fields = new HashSet<string>();
                 _Fields[type] = fields;
             }

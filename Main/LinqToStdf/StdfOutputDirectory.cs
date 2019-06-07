@@ -19,7 +19,7 @@ namespace LinqToStdf {
     /// are used to indicate the start and end a file.
     /// </summary>
     public class StdfOutputDirectory {
-        string _Path;
+        readonly string _Path;
 
         /// <summary>
         /// Creates an StdfOutputDirectory using the given path as a root directory.

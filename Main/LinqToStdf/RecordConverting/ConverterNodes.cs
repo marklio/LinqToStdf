@@ -46,7 +46,6 @@ namespace LinqToStdf.RecordConverting
     }
     class DisposeReaderNode : CodeNode
     {
-        static MethodInfo _DisposeMethod = typeof(IDisposable).GetMethod("Dispose", new Type[0]);
         public override CodeNode Accept(CodeNodeVisitor visitor)
         {
             return visitor.VisitDisposeReader(this);
@@ -87,7 +86,6 @@ namespace LinqToStdf.RecordConverting
     }
     class SkipRawBytesNode : CodeNode
     {
-        static MethodInfo _SkipMethod = typeof(BinaryReader).GetMethod("Skip", typeof(int));
         public int Bytes { get; private set; }
         public SkipRawBytesNode(int bytes)
         {

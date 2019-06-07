@@ -65,7 +65,7 @@ namespace LinqToStdf {
                 else {
                     stdf = new StdfFile(new StdfFileStreamManager(path), factory) { IndexingStrategy = new NonCachingStrategy() };
                 }
-                if (stdfFileInit != null) stdfFileInit(stdf);
+                stdfFileInit?.Invoke(stdf);
                 return compiled(stdf);
             };
         }
@@ -87,7 +87,7 @@ namespace LinqToStdf {
                 else {
                     stdf = new StdfFile(new StdfFileStreamManager(path), factory) { IndexingStrategy = new NonCachingStrategy() };
                 }
-                if (stdfFileInit != null) stdfFileInit(stdf);
+                stdfFileInit?.Invoke(stdf);
                 return compiled(stdf, t1);
             };
         }
@@ -109,7 +109,7 @@ namespace LinqToStdf {
                 else {
                     stdf = new StdfFile(new StdfFileStreamManager(path), factory) { IndexingStrategy = new NonCachingStrategy() };
                 }
-                if (stdfFileInit != null) stdfFileInit(stdf);
+                stdfFileInit?.Invoke(stdf);
                 return compiled(stdf, t1, t2);
             };
         }
@@ -131,7 +131,7 @@ namespace LinqToStdf {
                 else {
                     stdf = new StdfFile(new StdfFileStreamManager(path), factory) { IndexingStrategy = new NonCachingStrategy() };
                 }
-                if (stdfFileInit != null) stdfFileInit(stdf);
+                stdfFileInit?.Invoke(stdf);
                 return compiled(stdf, t1, t2, t3);
             };
         }

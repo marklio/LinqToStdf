@@ -71,13 +71,13 @@ namespace LinqToStdf {
         /// <summary>
         /// Internal storage for the converter delegates
         /// </summary>
-        Dictionary<RecordType, Converter<UnknownRecord, StdfRecord>> _Converters;
+        readonly Dictionary<RecordType, Converter<UnknownRecord, StdfRecord>> _Converters;
+
         /// <summary>
         /// Internal storage for the unconverter delegates
         /// </summary>
-        Dictionary<Type, Func<StdfRecord, Endian, UnknownRecord>> _Unconverters;
-
-        RecordsAndFields _RecordsAndFields;
+        readonly Dictionary<Type, Func<StdfRecord, Endian, UnknownRecord>> _Unconverters;
+        readonly RecordsAndFields _RecordsAndFields;
 
         /// <summary>
         /// If this is set to true, rather than use LCG, a dynamic assembly will
@@ -130,10 +130,10 @@ namespace LinqToStdf {
         /// otherwise, a "null" converter that passes the unknown record through.</returns>
         public Converter<UnknownRecord, StdfRecord> GetConverter(RecordType recordType) {
             //if we don't have a converter, return identity conversion
-            Converter<UnknownRecord, StdfRecord> converter;
-            if (_Converters.TryGetValue(recordType, out converter)) {
+            if (_Converters.TryGetValue(recordType, out var converter))
+            {
                 return converter;
-                
+
             }
             return converter = (r) => r;
         }
@@ -146,7 +146,6 @@ namespace LinqToStdf {
         /// otherwise, an invalid operation exception is thrown.</returns>
         public Func<StdfRecord, Endian, UnknownRecord> GetUnconverter(Type type)
         {
-            Func<StdfRecord, Endian, UnknownRecord> unconverter;
             //if it is already an UnknownRecord, make sure it is the right endianness
             if (type == typeof(UnknownRecord))
             {
@@ -160,7 +159,7 @@ namespace LinqToStdf {
                     return ur;
                 };
             }
-            else if (_Unconverters.TryGetValue(type, out unconverter))
+            else if (_Unconverters.TryGetValue(type, out var unconverter))
             {
                 return unconverter;
             }

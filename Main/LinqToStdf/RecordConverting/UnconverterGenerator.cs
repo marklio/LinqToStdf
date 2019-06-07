@@ -14,17 +14,15 @@ namespace LinqToStdf.RecordConverting
 {
     class UnconverterGenerator
     {
-        ILGenerator _ILGen;
-        Type _Type;
-        HashSet<int> _FieldLocalsTouched = new HashSet<int>();
+        readonly ILGenerator _ILGen;
+        readonly Type _Type;
+        readonly HashSet<int> _FieldLocalsTouched = new HashSet<int>();
         List<KeyValuePair<FieldLayoutAttribute, PropertyInfo>> _Fields;
 
         public UnconverterGenerator(ILGenerator ilgen, Type type)
         {
-            if (ilgen == null) throw new ArgumentNullException("ilgen");
-            if (type == null) throw new ArgumentNullException("type");
-            _ILGen = ilgen;
-            _Type = type;
+            _ILGen = ilgen ?? throw new ArgumentNullException("ilgen");
+            _Type = type ?? throw new ArgumentNullException("type");
         }
 
         public void GenerateUnconverter()
@@ -73,9 +71,8 @@ namespace LinqToStdf.RecordConverting
         {
             var fieldType = pair.Key.FieldType;
             StringFieldLayoutAttribute stringLayout = pair.Key as StringFieldLayoutAttribute;
-            ArrayFieldLayoutAttribute arrayLayout = pair.Key as ArrayFieldLayoutAttribute;
             //if it is an array, defer to GenerateArrayAssignment
-            if (arrayLayout != null)
+            if (pair.Key is ArrayFieldLayoutAttribute)
             {
                 // TODO: Why do we need these fieldType checks at all?
                 if (fieldType == typeof(string))
@@ -196,7 +193,6 @@ namespace LinqToStdf.RecordConverting
             }
 
             CodeNode writeNode;
-            FieldLayoutAttribute lengthLayout = _Fields[arrayLayout.ArrayLengthFieldIndex].Key;
             if (_FieldLocalsTouched.Add(arrayLayout.ArrayLengthFieldIndex))
             {
                 writeNode = new BlockNode(

@@ -45,10 +45,10 @@ namespace LinqToStdf {
     /// </para>
     /// </remarks>
     public sealed partial class StdfFile : IRecordContext {
-        IStdfStreamManager _StreamManager;
+        readonly IStdfStreamManager _StreamManager;
         RewindableByteStream _Stream;
-        static internal RecordConverterFactory _V4ConverterFactory = new RecordConverterFactory();
-        RecordConverterFactory _ConverterFactory;
+        readonly static internal RecordConverterFactory _V4ConverterFactory = new RecordConverterFactory();
+        readonly RecordConverterFactory _ConverterFactory;
         /// <summary>
         /// Exposes the ConverterFactory in use for parsing.
         /// This allows record un/converters to be registered.
@@ -68,10 +68,8 @@ namespace LinqToStdf {
         public long? ExpectedLength { get { return _ExpectedLength; } }
 
         RecordFilter _RecordFilter = null;
-        RecordFilter _CachingFilter = BuiltInFilters.CachingFilter;
         bool _FiltersLocked;
-
-        object _ISLock = new object();
+        readonly object _ISLock = new object();
         private IIndexingStrategy _IndexingStrategy = null;
 
         public IIndexingStrategy IndexingStrategy
@@ -187,7 +185,7 @@ namespace LinqToStdf {
             _ConverterFactory = rcf;
         }
 
-        private StdfFile(IStdfStreamManager streamManager, PrivateImpl pi) {
+        private StdfFile(IStdfStreamManager streamManager, PrivateImpl _) {
             _StreamManager = streamManager;
             _RecordFilter = BuiltInFilters.IdentityFilter;
         }
@@ -247,8 +245,8 @@ namespace LinqToStdf {
         internal class Queryable<T> : Queryable, IOrderedQueryable<T>, IQueryProvider
         {
             EnumerableQuery<T> _EnumerableQuery;
-            Func<Expression, Expression> _ExpressionTransform;
-            Expression _Expression;
+            readonly Func<Expression, Expression> _ExpressionTransform;
+            readonly Expression _Expression;
 
             Queryable(Func<Expression, Expression> expressionTransform)
             {
@@ -362,8 +360,7 @@ namespace LinqToStdf {
             {
                 protected override Expression VisitConstant(ConstantExpression node)
                 {
-                    var queryable = node.Value as Queryable;
-                    if (queryable == null)
+                    if (!(node.Value is Queryable queryable))
                     {
                         return base.VisitConstant(node);
                     }
@@ -506,10 +503,10 @@ namespace LinqToStdf {
                             _Stream.RewindAll();
                             int backup = -1;
                             //create the callback algorithms use to indicate the found something
-                            BackUpCallback backupCallback = (bytes) => { backup = bytes; };
+                            void BackupCallback(int bytes) { backup = bytes; }
                             var corruptOffset = _Stream.Offset;
                             //set up the seek algorithms and consume the sequence.
-                            var algorithm = _SeekAlgorithm(_Stream.ReadAsByteSequence(), endian, backupCallback);
+                            var algorithm = _SeekAlgorithm(_Stream.ReadAsByteSequence(), endian, BackupCallback);
                             algorithm.Count();
                             //when we get here, one of the algorithms has found the record stream,
                             //or we went to the end of the stream

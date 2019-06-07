@@ -22,7 +22,7 @@ namespace LinqToStdf.RecordConverting
         bool _InFieldAssignment = false;
         Label _EndLabel;
         Label _SkipAssignmentLabel;
-        Dictionary<int, LocalBuilder> _FieldLocals = new Dictionary<int, LocalBuilder>();
+        readonly Dictionary<int, LocalBuilder> _FieldLocals = new Dictionary<int, LocalBuilder>();
 
         LocalBuilder _FieldLocal = null;
 
@@ -41,7 +41,7 @@ namespace LinqToStdf.RecordConverting
             ILGen.Stloc(_ConcreteRecordLocal);
             return node;
         }
-        static MethodInfo _EnsureConvertibleToMethod = typeof(UnknownRecord).GetMethod("EnsureConvertibleTo", typeof(StdfRecord));
+        static readonly MethodInfo _EnsureConvertibleToMethod = typeof(UnknownRecord).GetMethod("EnsureConvertibleTo", typeof(StdfRecord));
         public override CodeNode VisitEnsureCompat(EnsureCompatNode node)
         {
             Log($"Ensuring compatibility of record");
@@ -53,7 +53,7 @@ namespace LinqToStdf.RecordConverting
 #if SILVERLIGHT
             static MethodInfo _GetBinaryReaderForContentMethod = typeof(UnknownRecord).GetMethod("GetBinaryReaderForContent");
 #else
-        static MethodInfo _GetBinaryReaderForContentMethod = typeof(UnknownRecord).GetMethod("GetBinaryReaderForContent", BindingFlags.Instance | BindingFlags.Public);
+        static readonly MethodInfo _GetBinaryReaderForContentMethod = typeof(UnknownRecord).GetMethod("GetBinaryReaderForContent", BindingFlags.Instance | BindingFlags.Public);
 #endif
         public override CodeNode VisitInitReaderNode(InitReaderNode node)
         {
@@ -74,7 +74,7 @@ namespace LinqToStdf.RecordConverting
 
             return node;
         }
-        static MethodInfo _DisposeMethod = typeof(IDisposable).GetMethod("Dispose", new Type[0]);
+        static readonly MethodInfo _DisposeMethod = typeof(IDisposable).GetMethod("Dispose", new Type[0]);
         public override CodeNode VisitDisposeReader(DisposeReaderNode node)
         {
             Log($"Disposing reader");
@@ -107,7 +107,7 @@ namespace LinqToStdf.RecordConverting
             ILGen.Ret();
             return node;
         }
-        static MethodInfo _SkipRawMethod = typeof(BinaryReader).GetMethod("Skip", typeof(int));
+        static readonly MethodInfo _SkipRawMethod = typeof(BinaryReader).GetMethod("Skip", typeof(int));
         public override CodeNode VisitSkipRawBytes(SkipRawBytesNode node)
         {
             Log($"Skipping {node.Bytes} bytes.");
@@ -116,7 +116,8 @@ namespace LinqToStdf.RecordConverting
             ILGen.Callvirt(_SkipRawMethod);
             return node;
         }
-        Dictionary<Type, MethodInfo> _SkipTypeMethods = new Dictionary<Type, MethodInfo>();
+
+        readonly Dictionary<Type, MethodInfo> _SkipTypeMethods = new Dictionary<Type, MethodInfo>();
         public override CodeNode VisitSkipType(SkipTypeNode node)
         {
             MethodInfo skipTypeMethod;
@@ -167,7 +168,7 @@ namespace LinqToStdf.RecordConverting
             ILGen.Callvirt(skipTypeMethod);
             return node;
         }
-        static MethodInfo _ReadFixedStringMethod = typeof(BinaryReader).GetMethod("ReadString", typeof(int));
+        static readonly MethodInfo _ReadFixedStringMethod = typeof(BinaryReader).GetMethod("ReadString", typeof(int));
         public override CodeNode VisitReadFixedString(ReadFixedStringNode node)
         {
             if (_FieldLocal == null) throw new InvalidOperationException("Cannot read string outside a FieldAssignmentNode");
@@ -178,7 +179,8 @@ namespace LinqToStdf.RecordConverting
             ILGen.Stloc(_FieldLocal);
             return node;
         }
-        Dictionary<Type, MethodInfo> _ReadTypeMethods = new Dictionary<Type, MethodInfo>();
+
+        readonly Dictionary<Type, MethodInfo> _ReadTypeMethods = new Dictionary<Type, MethodInfo>();
         public override CodeNode VisitReadType(ReadTypeNode node)
         {
             if (_FieldLocal == null) throw new InvalidOperationException("Cannot read string outside a FieldAssignmentNode");
@@ -231,7 +233,7 @@ namespace LinqToStdf.RecordConverting
             ILGen.Stloc(_FieldLocal);
             return node;
         }
-        static MethodInfo _AtEndOfStreamMethod = typeof(BinaryReader).GetProperty("AtEndOfStream").GetGetMethod();
+        static readonly MethodInfo _AtEndOfStreamMethod = typeof(BinaryReader).GetProperty("AtEndOfStream").GetGetMethod();
         public override CodeNode VisitFieldAssignment(FieldAssignmentNode node)
         {
             //ensure we're in a FieldAssignmentBlock

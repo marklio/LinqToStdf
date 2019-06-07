@@ -47,38 +47,16 @@ namespace StdfDump
             }
         }
 
-        static Dictionary<Type, Action<StdfRecord>> _Dumpers = new Dictionary<Type, Action<StdfRecord>>();
+        static readonly Dictionary<Type, Action<StdfRecord>> _Dumpers = new Dictionary<Type, Action<StdfRecord>>();
         private static void DumpRecord(StdfRecord r)
         {
             var type = r.GetType();
-            Action<StdfRecord> dumper;
-            if (!_Dumpers.TryGetValue(type, out dumper))
+            if (!_Dumpers.TryGetValue(type, out var dumper))
             {
                 dumper = CreateDumperForType(type);
                 _Dumpers[type] = dumper;
             }
             dumper(r);
-        }
-
-        /// <summary>
-        /// Creates a string representation of an array
-        /// </summary>
-        private static string DumpArrayRepresentation<T>(T[] array)
-        {
-            if (array == null) return null;
-            var builder = new StringBuilder();
-            foreach (var t in array)
-            {
-                if (builder.Length > 0) builder.Append(",");
-                builder.Append(t.ToString());
-            }
-            return builder.ToString();
-        }
-
-        private static string DumpBitArrayRepresentation(BitArray bitArray)
-        {
-            if (bitArray == null) return null;
-            return DumpArrayRepresentation(bitArray.Cast<bool>().ToArray());
         }
 
         //crazy codegen for building record dumpers

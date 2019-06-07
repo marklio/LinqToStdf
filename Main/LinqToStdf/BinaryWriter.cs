@@ -34,7 +34,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Encoder used to encoding strings and characters
         /// </summary>
-        static Encoding _Encoding = CreateEncoding();
+        static readonly Encoding _Encoding = CreateEncoding();
 
         /// <summary>
         /// Creates an ASCII encoder that throws if we can't encode the string to ASCII
@@ -66,10 +66,10 @@ namespace LinqToStdf {
             _WriteBackwards = writeBackwards;
         }
 
-        private Stream _Stream;
-        private Endian _StreamEndian;
+        private readonly Stream _Stream;
+        private readonly Endian _StreamEndian;
         private byte[] _Buffer;
-        private bool _WriteBackwards;
+        private readonly bool _WriteBackwards;
 
         /// <summary>
         /// Writes from the buffer to the stream

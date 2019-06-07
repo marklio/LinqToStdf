@@ -62,7 +62,7 @@ namespace LinqToStdf.CompiledQuerySupport {
             /// This is the set of types we've checked to reduce duplication
             /// and prevent following circular references
             /// </summary>
-            HashSet<Type> _CheckedTypes = new HashSet<Type>();
+            readonly HashSet<Type> _CheckedTypes = new HashSet<Type>();
 
             /// <summary>
             /// Throws if the type, its interfaces, or any generic parameters leak stdf records

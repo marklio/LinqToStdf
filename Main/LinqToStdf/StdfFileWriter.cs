@@ -23,11 +23,9 @@ namespace LinqToStdf
     /// <seealso cref="StdfOutputDirectory"/>
     public sealed class StdfFileWriter : IDisposable
     {
-
-        RecordConverterFactory _Factory;
-        Stream _Stream;
+        readonly Stream _Stream;
         Endian _Endian;
-        bool _OwnsStream;
+        readonly bool _OwnsStream;
         public StdfFileWriter(string path, Endian endian, bool debug = false) : this(new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read), endian, debug, ownsStream: true) { }
 
         public StdfFileWriter(string path, bool debug = false) : this(path, Endian.Unknown, debug) { }
@@ -39,16 +37,16 @@ namespace LinqToStdf
             _OwnsStream = ownsStream;
             if (debug)
             {
-                _Factory = new RecordConverterFactory() { Debug = debug };
-                StdfV4Specification.RegisterRecords(_Factory);
+                ConverterFactory = new RecordConverterFactory() { Debug = debug };
+                StdfV4Specification.RegisterRecords(ConverterFactory);
             }
             else
             {
-                _Factory = new RecordConverterFactory(StdfFile._V4ConverterFactory);
+                ConverterFactory = new RecordConverterFactory(StdfFile._V4ConverterFactory);
             }
         }
 
-        public RecordConverterFactory ConverterFactory => _Factory;
+        public RecordConverterFactory ConverterFactory { get; }
 
         public StdfFileWriter(Stream stream, bool debug = false, bool ownsStream = false) : this(stream, Endian.Unknown, debug, ownsStream) { }
 
@@ -78,7 +76,7 @@ namespace LinqToStdf
             if (record.IsWritable)
             {
                 var writer = new LinqToStdf.BinaryWriter(_Stream, _Endian, false);
-                var ur = _Factory.Unconvert(record, _Endian);
+                var ur = ConverterFactory.Unconvert(record, _Endian);
                 writer.WriteHeader(new RecordHeader((ushort)ur.Content.Length, ur.RecordType));
                 _Stream.Write(ur.Content, 0, ur.Content.Length);
                 return ur.Content.Length + 4;

@@ -8,8 +8,8 @@ namespace LinqToStdf.RecordConverting
 {
     class PrettyPrintVisitor : CodeNodeVisitor
     {
-        StringWriter _Output;
-        System.Xml.XmlTextWriter _Writer;
+        readonly StringWriter _Output;
+        readonly System.Xml.XmlTextWriter _Writer;
         public PrettyPrintVisitor(CodeNode node)
         {
             _Output = new StringWriter();

@@ -48,7 +48,7 @@ namespace LinqToStdf.Indexing {
             /// <summary>
             /// A list of extents from the file
             /// </summary>
-            List<Extents> _ExtentsList = new List<Extents>();
+            readonly List<Extents> _ExtentsList = new List<Extents>();
             /// <summary>
             /// Gets the extents containing the specified record
             /// </summary>
@@ -85,14 +85,10 @@ namespace LinqToStdf.Indexing {
         //we keep track of the structural scopes
         Mir _Mir;
         Mrr _Mrr;
-        List<Pcr> _Pcrs = new List<Pcr>();
+        readonly List<Pcr> _Pcrs = new List<Pcr>();
         List<StdfRecord> _AllRecords = null;
-        ParentMap _PartsMap = new ParentMap();
-        ParentMap _WafersMap = new ParentMap();
-
-        void EnsureRecordsCached() {
-            throw new NotImplementedException();
-        }
+        readonly ParentMap _PartsMap = new ParentMap();
+        readonly ParentMap _WafersMap = new ParentMap();
 
         /// <summary>
         /// Finds all the records in the specified extents
@@ -126,21 +122,23 @@ namespace LinqToStdf.Indexing {
             bool waferEnding = false;
             bool partsEnding = false;
             //ends the current wafer extents at the specified index
-            Action<int> endWafer = (endIndex) => {
+            void EndWafer(int endIndex)
+            {
                 currentWaferExtents.EndIndex = endIndex;
                 currentWaferExtents.EndOffset = _AllRecords[endIndex].Offset;
                 _WafersMap.AddExtents(currentWaferExtents);
                 currentWaferExtents = null;
                 waferEnding = false;
-            };
+            }
             //ends the current part extents at the specified index
-            Action<int> endParts = (endIndex) => {
+            void EndParts(int endIndex)
+            {
                 currentPartExtents.EndIndex = endIndex;
                 currentPartExtents.EndOffset = _AllRecords[endIndex].Offset;
                 _PartsMap.AddExtents(currentPartExtents);
                 currentPartExtents = null;
                 partsEnding = false;
-            };
+            }
             //loop through the records, building the structure
             foreach (var r in records) {
                 var index = _AllRecords.Count;
@@ -151,12 +149,12 @@ namespace LinqToStdf.Indexing {
                 else if (r.GetType() == typeof(Pcr)) _Pcrs.Add((Pcr)r);
                 //if we think we're looking for the end of the wafers, and we hit something other than Wrr, we passed the end
                 if (waferEnding && r.GetType() != typeof(Wrr)) {
-                    endWafer(index - 1);
+                    EndWafer(index - 1);
                 }
                 //if we think we're looking for the end of the parts, and we hit something other than Prr, we passed the end
                 if (partsEnding && r.GetType() != typeof(Prr))
                 {
-                    endParts(index - 1);
+                    EndParts(index - 1);
                 }
                 //when we hit Wrr or Prr, start looking for something else
                 if (r.GetType() == typeof(Wrr)) {
@@ -183,10 +181,10 @@ namespace LinqToStdf.Indexing {
             var lastIndex = _AllRecords.Count - 1;
             //end any open wafers/parts at the last index
             if (waferEnding) {
-                endWafer(lastIndex);
+                EndWafer(lastIndex);
             }
             if (partsEnding) {
-                endParts(lastIndex);
+                EndParts(lastIndex);
             }
         }
 
@@ -209,7 +207,7 @@ namespace LinqToStdf.Indexing {
         /// Expression visitor that rewrites queries to leverage the indexed data
         /// </summary>
         class OptimizingVisitor : ExpressionVisitor {
-            V4StructureIndexingStrategy _Strategy;
+            readonly V4StructureIndexingStrategy _Strategy;
             public OptimizingVisitor(V4StructureIndexingStrategy strategy) {
                 _Strategy = strategy;
             }
@@ -219,7 +217,7 @@ namespace LinqToStdf.Indexing {
             /// <summary>
             /// This map stores information for how we optimize queries for this strategy
             /// </summary>
-            static Dictionary<MethodInfo, MethodInfo> OptimizingMap = new Dictionary<MethodInfo, MethodInfo> {
+            static readonly Dictionary<MethodInfo, MethodInfo> OptimizingMap = new Dictionary<MethodInfo, MethodInfo> {
                 { typeof(Extensions).GetMethod("GetMir"), typeof(V4StructureIndexingStrategy).GetMethod("GetMir")},
                 { typeof(Extensions).GetMethod("GetMrr"), typeof(V4StructureIndexingStrategy).GetMethod("GetMrr")},
                 {
@@ -263,9 +261,8 @@ namespace LinqToStdf.Indexing {
             /// Lets us know the expression is a call to StdfFile.GetRecordsEnumerable
             /// </summary>
             static bool IsAllRecords(Expression exp) {
-
-                MethodCallExpression call = exp as MethodCallExpression;
-                if (call != null) {
+                if (exp is MethodCallExpression call)
+                {
                     return call.Method == GetRecordsEnumerable;
                 }
                 return false;
@@ -275,8 +272,7 @@ namespace LinqToStdf.Indexing {
             /// optimizes method calls
             /// </summary>
             protected override Expression VisitMethodCall(MethodCallExpression m) {
-                MethodInfo optimized = null;
-                if (OptimizingMap.TryGetValue(m.Method, out optimized)) {
+                if (OptimizingMap.TryGetValue(m.Method, out var optimized)) {
                     //It's in the optimizing map. Replace with a call to the optimized method
                     m = Expression.Call(Expression.Constant(_Strategy), optimized, m.Arguments);
                 }
