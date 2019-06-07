@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
     using Attributes;
@@ -19,6 +21,10 @@ namespace LinqToStdf.Records.V4
     FieldLayout(FieldIndex = 6, FieldType = typeof(byte), IsOptional = true, MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "SiteNumber")]
     public class Pmr : StdfRecord
     {
+        public Pmr(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
 
         public override RecordType RecordType
         {
@@ -35,12 +41,5 @@ namespace LinqToStdf.Records.V4
         public string LogicalName { get; set; }
         public byte? HeadNumber { get; set; }
         public byte? SiteNumber { get; set; }
-
-        [Obsolete("Pmr.Index has been renamed Pmr.PinIndex to be consistent with Pgr.PinIndexes")]
-        public ushort Index
-        {
-            get { return PinIndex; }
-            set { PinIndex = value; }
-        }
     }
 }

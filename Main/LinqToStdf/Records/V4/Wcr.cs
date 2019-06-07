@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
     using Attributes;
@@ -21,6 +23,11 @@ namespace LinqToStdf.Records.V4
     StringFieldLayout(FieldIndex = 8, IsOptional = true, Length = 1, MissingValue = " ", RecordProperty = "PositiveY")]
     public class Wcr : StdfRecord
     {
+        public Wcr(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
+
 
         public override RecordType RecordType
         {

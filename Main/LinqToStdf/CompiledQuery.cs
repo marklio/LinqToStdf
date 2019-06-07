@@ -10,6 +10,8 @@ using System.Linq.Expressions;
 using LinqToStdf.CompiledQuerySupport;
 using LinqToStdf.Indexing;
 
+#nullable enable
+
 namespace LinqToStdf
 {
     /// <summary>

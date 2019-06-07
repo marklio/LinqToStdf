@@ -5,6 +5,8 @@
 using System;
 using System.Linq;
 
+#nullable enable
+
 namespace LinqToStdf.RecordConverting
 {
     abstract class CodeNodeVisitor

@@ -12,6 +12,8 @@ using System.Reflection.Emit;
 using System.Reflection;
 using System.Collections;
 
+#nullable enable
+
 namespace StdfDump
 {
     class Program
@@ -19,7 +21,7 @@ namespace StdfDump
         static void Main(string[] args)
         {
             var file = new StdfFile(args[0]);
-            StdfFileWriter outFile = null;
+            StdfFileWriter? outFile = null;
             if (args.Length > 1)
             {
                 outFile = new StdfFileWriter(args[1]);

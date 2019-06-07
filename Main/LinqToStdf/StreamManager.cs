@@ -5,6 +5,8 @@ using System.Text;
 using System.IO;
 using System.IO.Compression;
 
+#nullable enable
+
 namespace LinqToStdf
 {
 
@@ -173,7 +175,7 @@ namespace LinqToStdf
 
         public IStdfStreamScope GetScope()
         {
-            Stream stream = new FileStream(_Path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var stream = new FileStream(_Path, FileMode.Open, FileAccess.Read, FileShare.Read);
             return new OwnedStdfStreamScope(new GZipStream(stream, CompressionMode.Decompress));
         }
 

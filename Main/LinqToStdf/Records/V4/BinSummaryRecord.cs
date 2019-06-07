@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
     using Attributes;
@@ -18,6 +20,11 @@ namespace LinqToStdf.Records.V4
     StringFieldLayout(FieldIndex = 5, IsOptional = true, RecordProperty = "BinName")]
     public abstract class BinSummaryRecord : StdfRecord, IHeadSiteIndexable
     {
+        public BinSummaryRecord(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
+
         public abstract BinType BinType { get; }
         public byte? HeadNumber { get; set; }
         public byte? SiteNumber { get; set; }

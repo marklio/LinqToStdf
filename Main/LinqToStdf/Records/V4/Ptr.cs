@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
     using Attributes;
@@ -32,6 +34,10 @@ namespace LinqToStdf.Records.V4
     FlaggedFieldLayout(FieldIndex = 19, FieldType = typeof(float), FlagIndex = 8, FlagMask = (byte)0x08, MissingValue = (float)0, RecordProperty = "HighSpecLimit")]
     public class Ptr : StdfRecord, IHeadSiteIndexable
     {
+        public Ptr(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
 
         public override RecordType RecordType
         {

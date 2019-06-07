@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf
 {
 
@@ -14,6 +16,10 @@ namespace LinqToStdf
     /// </summary>
     public abstract class StdfRecord : IRecordContext
     {
+        public StdfRecord(StdfFile stdfFile)
+        {
+            StdfFile = stdfFile;
+        }
 
         /// <summary>
         /// The <see cref="RecordType"/> of the instance
@@ -23,7 +29,7 @@ namespace LinqToStdf
         /// <summary>
         /// Reference to the "owning" StdfFile.
         /// </summary>
-        public StdfFile StdfFile { get; set; }
+        public StdfFile StdfFile { get; }
 
         /// <summary>
         /// Indicates whether this record should be considered for persisting to a file.

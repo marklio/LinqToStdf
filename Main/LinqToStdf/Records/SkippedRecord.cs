@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records
 {
     /// <summary>
@@ -17,7 +19,7 @@ namespace LinqToStdf.Records
     public class SkippedRecord : StdfRecord
     {
 
-        public SkippedRecord(Type skippedType)
+        public SkippedRecord(StdfFile stdfFile, Type skippedType) : base(stdfFile)
         {
             SkippedType = skippedType;
         }

@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Text;
 using LinqToStdf.Records;
 
+#nullable enable
+
 namespace LinqToStdf
 {
 

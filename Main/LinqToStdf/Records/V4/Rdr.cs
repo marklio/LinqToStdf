@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
     using Attributes;
@@ -14,6 +16,10 @@ namespace LinqToStdf.Records.V4
     ArrayFieldLayout(FieldIndex = 1, FieldType = typeof(ushort), MissingValue = ushort.MinValue, ArrayLengthFieldIndex = 0, RecordProperty = "RetestBins")]
     public class Rdr : StdfRecord
     {
+        public Rdr(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
 
         public override RecordType RecordType
         {

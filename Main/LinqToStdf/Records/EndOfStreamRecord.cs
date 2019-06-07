@@ -7,6 +7,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records
 {
 
@@ -17,7 +19,7 @@ namespace LinqToStdf.Records
     public class EndOfStreamRecord : StdfRecord
     {
 
-        public EndOfStreamRecord()
+        public EndOfStreamRecord(StdfFile stdfFile) : base(stdfFile)
         {
             Synthesized = true;
         }

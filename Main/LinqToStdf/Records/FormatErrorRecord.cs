@@ -7,6 +7,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records
 {
 
@@ -26,6 +28,11 @@ namespace LinqToStdf.Records
     public class FormatErrorRecord : ErrorRecord
     {
         public bool Recoverable { get; set; }
+
+        public FormatErrorRecord(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
 
         public override StdfException ToException()
         {

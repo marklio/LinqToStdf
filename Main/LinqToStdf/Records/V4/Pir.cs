@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
     using Attributes;
@@ -14,6 +16,10 @@ namespace LinqToStdf.Records.V4
     FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "SiteNumber")]
     public class Pir : StdfRecord, IHeadSiteIndexable
     {
+        public Pir(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
 
         public override RecordType RecordType
         {

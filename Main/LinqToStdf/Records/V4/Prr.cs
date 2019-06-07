@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
     using Attributes;
@@ -29,6 +31,10 @@ namespace LinqToStdf.Records.V4
     DependencyProperty(FieldIndex = 16, DependentOnIndex = 2, RecordProperty = "Failed")]
     public class Prr : StdfRecord, IHeadSiteIndexable
     {
+        public Prr(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
 
         public override RecordType RecordType
         {

@@ -9,6 +9,8 @@ using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
 
+#nullable enable
+
 namespace LinqToStdf.RecordConverting
 {
     class UnconverterEmittingVisitor : CodeNodeVisitor

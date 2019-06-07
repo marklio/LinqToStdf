@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
     using Attributes;
@@ -50,7 +52,10 @@ namespace LinqToStdf.Records.V4
     StringFieldLayout(FieldIndex = 37, IsOptional = true, RecordProperty = "SupervisorName")]
     public class Mir : StdfRecord
     {
+        public Mir(StdfFile stdfFile) : base(stdfFile)
+        {
 
+        }
         public override RecordType RecordType
         {
             get { return new RecordType(1, 10); }

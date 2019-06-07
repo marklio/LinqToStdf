@@ -10,6 +10,8 @@ using System.IO;
 using LinqToStdf.Records;
 using LinqToStdf.Records.V4;
 
+#nullable enable
+
 namespace LinqToStdf
 {
 

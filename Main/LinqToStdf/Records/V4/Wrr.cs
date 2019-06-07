@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
     using Attributes;
@@ -26,6 +28,11 @@ namespace LinqToStdf.Records.V4
     StringFieldLayout(FieldIndex = 13, IsOptional = true, RecordProperty = "ExecDescription")]
     public class Wrr : StdfRecord, IHeadIndexable
     {
+        public Wrr(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
+
 
         public override RecordType RecordType
         {

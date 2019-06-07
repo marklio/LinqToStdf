@@ -10,6 +10,8 @@ using System.Reflection;
 using System.Reflection.Emit;
 using LinqToStdf.Attributes;
 
+#nullable enable
+
 namespace LinqToStdf.RecordConverting
 {
     class UnconverterGenerator

@@ -7,6 +7,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records
 {
 
@@ -15,6 +17,10 @@ namespace LinqToStdf.Records
     /// </summary>
     public class CorruptDataRecord : FormatErrorRecord
     {
+        public CorruptDataRecord(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
 
         public override string Message
         {

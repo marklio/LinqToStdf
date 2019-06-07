@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
     using Attributes;
@@ -28,6 +30,10 @@ namespace LinqToStdf.Records.V4
     FlaggedFieldLayout(FieldIndex = 15, FieldType = typeof(float), IsOptional = true, FlagIndex = 10, FlagMask = (byte)0x20, RecordProperty = "TestSumOfSquares")]
     public class Tsr : StdfRecord, IHeadSiteIndexable
     {
+        public Tsr(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
 
         public override RecordType RecordType
         {

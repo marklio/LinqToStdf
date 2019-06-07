@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 
+#nullable enable
+
 namespace LinqToStdf.RecordConverting
 {
     class ConverterEmittingVisitor : CodeNodeVisitor
@@ -37,7 +39,7 @@ namespace LinqToStdf.RecordConverting
         {
             Log($"Initializing {ConcreteType}");
             _ConcreteRecordLocal = ILGen.DeclareLocal(ConcreteType);
-            ILGen.Newobj(ConcreteType);
+            ILGen.Newobj(ConcreteType, typeof(StdfFile));
             ILGen.Stloc(_ConcreteRecordLocal);
             return node;
         }

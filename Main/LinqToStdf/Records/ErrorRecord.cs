@@ -7,6 +7,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records
 {
 
@@ -27,7 +29,7 @@ namespace LinqToStdf.Records
     public abstract class ErrorRecord : StdfRecord
     {
 
-        protected ErrorRecord()
+        protected ErrorRecord(StdfFile stdfFile) : base(stdfFile)
         {
             Synthesized = true;
         }

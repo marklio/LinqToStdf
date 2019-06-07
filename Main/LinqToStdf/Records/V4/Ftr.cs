@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
     using Attributes;
@@ -41,7 +43,9 @@ namespace LinqToStdf.Records.V4
     FieldLayout(FieldIndex = 27, FieldType = typeof(BitArray), IsOptional = true, RecordProperty = "SpinMap")]
     public class Ftr : StdfRecord, IHeadSiteIndexable
     {
-
+        public Ftr(StdfFile stdfFile) : base(stdfFile)
+        {
+        }
         public override RecordType RecordType
         {
             get { return new RecordType(15, 20); }

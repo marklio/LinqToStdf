@@ -12,6 +12,8 @@ using System.Reflection;
 using System.Collections.ObjectModel;
 using System.Collections;
 
+#nullable enable
+
 namespace LinqToStdf.Indexing
 {
     /// <summary>

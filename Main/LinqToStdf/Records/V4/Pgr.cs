@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
     using Attributes;
@@ -16,6 +18,10 @@ namespace LinqToStdf.Records.V4
     ArrayFieldLayout(FieldIndex = 3, FieldType = typeof(ushort), IsOptional = true, ArrayLengthFieldIndex = 2, RecordProperty = "PinIndexes")]
     public class Pgr : StdfRecord
     {
+        public Pgr(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
 
         public override RecordType RecordType
         {

@@ -15,6 +15,8 @@ using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
 
+#nullable enable
+
 namespace LinqToStdf
 {
 
@@ -510,19 +512,19 @@ namespace LinqToStdf
                 //validate record type
                 if (far[3] != 10)
                 {
-                    yield return new StartOfStreamRecord { Endian = endian, ExpectedLength = _Stream.Length };
-                    yield return new FormatErrorRecord
+                    yield return new StartOfStreamRecord(this) { Endian = endian, ExpectedLength = _Stream.Length };
+                    yield return new FormatErrorRecord(this)
                     {
                         Offset = 3,
                         Message = Resources.FarRecordSubTypeError,
                         Recoverable = false
                     };
-                    yield return new EndOfStreamRecord { Offset = 3 };
+                    yield return new EndOfStreamRecord(this) { Offset = 3 };
                     yield break;
                 }
                 //OK we're satisfied, let's go
-                yield return new StartOfStreamRecord() { Endian = endian, ExpectedLength = _Stream.Length };
-                yield return new LinqToStdf.Records.V4.Far() { CpuType = far[4], StdfVersion = far[5] };
+                yield return new StartOfStreamRecord(this) { Endian = endian, ExpectedLength = _Stream.Length };
+                yield return new Records.V4.Far(this) { CpuType = far[4], StdfVersion = far[5] };
 
                 //flush the memory
                 _Stream.Flush();
@@ -551,7 +553,7 @@ namespace LinqToStdf
                             recoverable = true;
                         }
                         //spit out the corrupt data
-                        yield return new CorruptDataRecord()
+                        yield return new CorruptDataRecord(this)
                         {
                             CorruptData = _Stream.DumpDataToCurrentOffset(),
                             Offset = corruptOffset,
@@ -563,13 +565,13 @@ namespace LinqToStdf
                         {
                             //we got to the end without finding anything
                             //spit out a format error
-                            yield return new FormatErrorRecord()
+                            yield return new FormatErrorRecord(this)
                             {
                                 Message = Resources.EOFInSeekMode,
                                 Recoverable = false,
                                 Offset = _Stream.Offset
                             };
-                            yield return new EndOfStreamRecord() { Offset = _Stream.Offset };
+                            yield return new EndOfStreamRecord(this) { Offset = _Stream.Offset };
                             yield break;
                         }
                         _InSeekMode = false;
@@ -585,7 +587,7 @@ namespace LinqToStdf
                             //Something's wrong. We know the offset is rewound
                             //to the begining of the header.  If there's still
                             //data, we're corrupt
-                            yield return new CorruptDataRecord()
+                            yield return new CorruptDataRecord(this)
                             {
                                 Offset = position,
                                 //TODO: leverage the data in the stream.
@@ -594,14 +596,14 @@ namespace LinqToStdf
                                 CorruptData = _Stream.DumpRemainingData(),
                                 Recoverable = false
                             };
-                            yield return new FormatErrorRecord()
+                            yield return new FormatErrorRecord(this)
                             {
                                 Message = Resources.EOFInHeader,
                                 Recoverable = false,
                                 Offset = position
                             };
                         }
-                        yield return new EndOfStreamRecord() { Offset = _Stream.Offset };
+                        yield return new EndOfStreamRecord(this) { Offset = _Stream.Offset };
                         yield break;
                     }
                     var contents = new byte[header.Value.Length];
@@ -610,13 +612,13 @@ namespace LinqToStdf
                     {
                         //rewind to the beginning of the record (read bytes + the header)
                         _Stream.Rewind(_Stream.Offset - position);
-                        yield return new CorruptDataRecord()
+                        yield return new CorruptDataRecord(this)
                         {
                             Offset = position,
                             CorruptData = _Stream.DumpRemainingData(),
                             Recoverable = false
                         };
-                        yield return new FormatErrorRecord()
+                        yield return new FormatErrorRecord(this)
                         {
                             Message = Resources.EOFInRecordContent,
                             Recoverable = false,

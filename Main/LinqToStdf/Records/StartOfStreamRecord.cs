@@ -7,6 +7,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records
 {
 
@@ -29,6 +31,10 @@ namespace LinqToStdf.Records
     /// </remarks>
     public class StartOfStreamRecord : StdfRecord
     {
+        public StartOfStreamRecord(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
 
         public override RecordType RecordType
         {

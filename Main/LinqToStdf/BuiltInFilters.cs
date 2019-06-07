@@ -9,6 +9,8 @@ using System.Text;
 using LinqToStdf.Records.V4;
 using LinqToStdf.Records;
 
+#nullable enable
+
 namespace LinqToStdf
 {
 
@@ -89,7 +91,7 @@ namespace LinqToStdf
         /// the site-specific records.
         /// </summary>
         /// <typeparam name="T">The kind of <see cref="BinSummaryRecord"/> to provide.</typeparam>
-        class MissingBinSummaryFilterImpl<T> where T : BinSummaryRecord, new()
+        class MissingBinSummaryFilterImpl<T> where T : BinSummaryRecord
         {
             /// <summary>
             /// Indicates whether summary records are already in place
@@ -107,6 +109,7 @@ namespace LinqToStdf
             /// </summary>
             public IEnumerable<StdfRecord> Filter(IEnumerable<StdfRecord> input)
             {
+
                 foreach (var r in input)
                 {
                     if (r.GetType() == typeof(T))
@@ -117,7 +120,7 @@ namespace LinqToStdf
                     }
                     else if (r.GetType() == typeof(Mrr) && !_FoundSummary)
                     {
-                        foreach (var gen in GenerateSummaries(r.Offset))
+                        foreach (var gen in GenerateSummaries(r.Offset, r.StdfFile))
                         {
                             yield return gen;
                         }
@@ -129,26 +132,36 @@ namespace LinqToStdf
             /// <summary>
             /// Generates the summary records
             /// </summary>
-            private IEnumerable<StdfRecord> GenerateSummaries(long offset)
+            private IEnumerable<StdfRecord> GenerateSummaries(long offset, StdfFile stdfFile)
             {
                 var q = from b in _Brs
                         group b by b.BinNumber into g
-                        select new T()
-                        {
-                            Synthesized = true,
-                            Offset = offset,
-                            HeadNumber = 255,
-                            SiteNumber = 0,
-                            BinNumber = g.Key,
-                            BinName = g.First().BinName,
-                            BinPassFail = g.First().BinPassFail,
-                            BinCount = (uint)g.Sum((b) => b.BinCount),
-                        };
+                        select InitOne(stdfFile, offset, g.Key, g.First().BinName, g.First().BinPassFail, (uint)g.Sum((b) => b.BinCount));
 
                 foreach (var b in q)
                 {
                     yield return b;
                 }
+            }
+
+            BinSummaryRecord InitOne(StdfFile stdfFile, long offset, ushort binNumber, string binName, string binPassFail, uint binCount)
+            {
+                var r = GetOne(stdfFile);
+                r.Synthesized = true;
+                r.Offset = offset;
+                r.HeadNumber = 255;
+                r.SiteNumber = 0;
+                r.BinNumber = binNumber;
+                r.BinName = binName;
+                r.BinPassFail = binPassFail;
+                r.BinCount = binCount;
+                return r;
+            }
+            BinSummaryRecord GetOne(StdfFile stdfFile)
+            {
+                if (typeof(T) == typeof(Hbr)) return new Hbr(stdfFile);
+                if (typeof(T) == typeof(Sbr)) return new Sbr(stdfFile);
+                throw new InvalidOperationException("We only support Hbrs and Sbrs");
             }
         }
 
@@ -174,16 +187,20 @@ namespace LinqToStdf
 
         class MissingPcrSummaryFilterImpl
         {
-            Pcr _Summary = new Pcr()
-            {
-                Synthesized = true,
-                HeadNumber = 255,
-                SiteNumber = 0
-            };
             public IEnumerable<StdfRecord> Filter(IEnumerable<StdfRecord> input)
             {
+                Pcr summary = null;
                 foreach (var r in input)
                 {
+                    if (summary == null)
+                    {
+                        summary = new Pcr(r.StdfFile)
+                        {
+                            Synthesized = true,
+                            HeadNumber = 255,
+                            SiteNumber = 0
+                        };
+                    }
                     if (r.GetType() == typeof(Pcr) && _Summary != null)
                     {
                         Pcr p = (Pcr)r;

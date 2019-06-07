@@ -5,6 +5,8 @@
 using System;
 using System.Reflection;
 
+#nullable enable
+
 namespace LinqToStdf.RecordConverting
 {
     class UnconverterShellNode : CodeNode
@@ -47,10 +49,10 @@ namespace LinqToStdf.RecordConverting
         public WriteFieldNode(
             int fieldIndex,
             Type fieldType,
-            CodeNode initialization = null,
-            PropertyInfo sourceProperty = null,
-            CodeNode writeOperation = null,
-            CodeNode noValueWriteContingency = null,
+            CodeNode? initialization = null,
+            PropertyInfo? sourceProperty = null,
+            CodeNode? writeOperation = null,
+            CodeNode? noValueWriteContingency = null,
             int? optionalFieldIndex = null,
             byte optionalFieldMask = 0)
         {

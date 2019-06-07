@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
     using Attributes;
@@ -16,6 +18,11 @@ namespace LinqToStdf.Records.V4
     StringFieldLayout(FieldIndex = 3, IsOptional = true, RecordProperty = "WaferId")]
     public class Wir : StdfRecord, IHeadIndexable
     {
+        public Wir(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
+
 
         public override RecordType RecordType
         {

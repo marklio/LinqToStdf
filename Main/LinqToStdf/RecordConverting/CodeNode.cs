@@ -3,6 +3,8 @@
 // See http://www.microsoft.com/resources/sharedsource/licensingbasics/sharedsourcelicenses.mspx.
 // All other rights reserved.
 
+#nullable enable
+
 namespace LinqToStdf.RecordConverting
 {
     abstract class CodeNode

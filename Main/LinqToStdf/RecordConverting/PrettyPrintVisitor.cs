@@ -4,6 +4,8 @@
 // All other rights reserved.
 using System.IO;
 
+#nullable enable
+
 namespace LinqToStdf.RecordConverting
 {
     class PrettyPrintVisitor : CodeNodeVisitor

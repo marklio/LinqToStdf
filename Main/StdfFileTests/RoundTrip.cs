@@ -8,6 +8,8 @@ using System.Reflection;
 using System.Collections.Generic;
 using Xunit;
 
+#nullable enable
+
 namespace StdfFileTests
 {
     static class HelperExtensions
@@ -346,11 +348,11 @@ namespace StdfFileTests
             TestRoundTripEquality(dtr);
         }
 
-        void TestRoundTripEquality<TRecord>(TRecord record, Endian endian = Endian.Big, IEnumerable<string> skipProps = null) where TRecord : StdfRecord
+        void TestRoundTripEquality<TRecord>(TRecord record, Endian endian = Endian.Big, IEnumerable<string>? skipProps = null) where TRecord : StdfRecord
         {
             TestRecordEquality(record, RoundTripRecord(record, endian, debug: true), skipProps);
         }
-        void TestRecordEquality<TRecord>(TRecord one, TRecord two, IEnumerable<string> skipProps = null) where TRecord : StdfRecord
+        void TestRecordEquality<TRecord>(TRecord one, TRecord two, IEnumerable<string>? skipProps = null) where TRecord : StdfRecord
         {
             var props = from prop in typeof(TRecord).GetProperties(BindingFlags.Public | BindingFlags.Instance)
                         where prop.Name != nameof(StdfRecord.StdfFile)

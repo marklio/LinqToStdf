@@ -9,6 +9,8 @@ using System.Text;
 using System.IO;
 using LinqToStdf.Records;
 
+#nullable enable
+
 namespace LinqToStdf
 {
 

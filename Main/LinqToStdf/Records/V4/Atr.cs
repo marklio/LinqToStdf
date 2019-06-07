@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
     using Attributes;
@@ -14,6 +16,10 @@ namespace LinqToStdf.Records.V4
     StringFieldLayout(FieldIndex = 1, RecordProperty = "CommandLine")]
     public class Atr : StdfRecord
     {
+        public Atr(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
 
         public override RecordType RecordType
         {

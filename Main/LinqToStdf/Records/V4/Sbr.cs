@@ -6,11 +6,16 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
     public class Sbr : BinSummaryRecord
     {
+        public Sbr(StdfFile stdfFile) : base(stdfFile)
+        {
 
+        }
         public override RecordType RecordType
         {
             get { return new RecordType(1, 50); }

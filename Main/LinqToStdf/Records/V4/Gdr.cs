@@ -8,11 +8,17 @@ using System.IO;
 using System.Text;
 using System.Collections;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
 
     public class Gdr : StdfRecord
     {
+        public Gdr(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
 
         static readonly object[] _Empty = new object[0];
 
@@ -28,9 +34,9 @@ namespace LinqToStdf.Records.V4
             set { _GenericData = value; }
         }
 
-        internal static Gdr ConvertToGdr(UnknownRecord unknownRecord)
+        internal static Gdr ConvertToGdr(UnknownRecord unknownRecord, StdfFile stdfFile)
         {
-            Gdr gdr = new Gdr();
+            Gdr gdr = new Gdr(stdfFile);
             using (BinaryReader reader = new BinaryReader(new MemoryStream(unknownRecord.Content), unknownRecord.Endian, true))
             {
                 ushort fieldCount = reader.ReadUInt16();

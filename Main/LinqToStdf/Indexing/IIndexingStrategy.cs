@@ -8,6 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Linq.Expressions;
 
+#nullable enable
+
 namespace LinqToStdf.Indexing
 {
     public interface IIndexingStrategy

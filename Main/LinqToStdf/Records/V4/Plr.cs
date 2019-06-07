@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
     using Attributes;
@@ -21,6 +23,10 @@ namespace LinqToStdf.Records.V4
     ArrayFieldLayout(FieldIndex = 7, FieldType = typeof(string), IsOptional = true, MissingValue = "", ArrayLengthFieldIndex = 0, AllowTruncation = true, RecordProperty = "ReturnStatesLeft")]
     public class Plr : StdfRecord
     {
+        public Plr(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
 
         public override RecordType RecordType
         {
@@ -41,9 +47,9 @@ namespace LinqToStdf.Records.V4
         public string[] ProgramStatesLeft { get; set; }
         public string[] ReturnStatesLeft { get; set; }
 
-        internal static Plr ConvertToPlr(UnknownRecord unknownRecord)
+        internal static Plr ConvertToPlr(UnknownRecord unknownRecord, StdfFile stdfFile)
         {
-            Plr plr = new Plr();
+            Plr plr = new Plr(stdfFile);
             using (BinaryReader reader = new BinaryReader(new MemoryStream(unknownRecord.Content), unknownRecord.Endian, true))
             {
                 // Group count and list of group indexes are required

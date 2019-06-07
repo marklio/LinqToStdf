@@ -9,6 +9,8 @@ using System.Text;
 using System.Reflection.Emit;
 using System.Reflection;
 
+#nullable enable
+
 namespace LinqToStdf
 {
 

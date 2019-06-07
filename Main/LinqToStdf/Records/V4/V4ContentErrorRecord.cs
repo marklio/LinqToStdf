@@ -7,9 +7,16 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
     public class V4ContentErrorRecord : ErrorRecord
     {
+        public V4ContentErrorRecord(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
+
     }
 }

@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace LinqToStdf.Records.V4
 {
     using Attributes;
@@ -13,6 +15,10 @@ namespace LinqToStdf.Records.V4
     [StringFieldLayout(FieldIndex = 0, IsOptional = true, RecordProperty = "Name")]
     public class Bps : StdfRecord
     {
+        public Bps(StdfFile stdfFile) : base(stdfFile)
+        {
+
+        }
 
         public override RecordType RecordType
         {

@@ -5,6 +5,8 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 
+#nullable enable
+
 namespace LinqToStdf
 {
     public partial class StdfFile

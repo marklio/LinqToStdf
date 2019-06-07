@@ -10,6 +10,8 @@ using System.Text;
 using LinqToStdf;
 using LinqToStdf.Records.V4;
 
+#nullable enable
+
 namespace SampleApp
 {
     class Program

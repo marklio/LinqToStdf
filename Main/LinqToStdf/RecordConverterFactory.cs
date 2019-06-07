@@ -8,6 +8,8 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
+#nullable enable
+
 namespace LinqToStdf
 {
     using Attributes;
@@ -53,7 +55,7 @@ namespace LinqToStdf
         internal RecordConverterFactory(RecordsAndFields recordsAndFields)
         {
             _RecordsAndFields = recordsAndFields;
-            _Converters = new Dictionary<RecordType, Converter<UnknownRecord, StdfRecord>>();
+            _Converters = new Dictionary<RecordType, Func<UnknownRecord, StdfFile, StdfRecord>>();
             _Unconverters = new Dictionary<Type, Func<StdfRecord, Endian, UnknownRecord>>();
         }
 
@@ -68,14 +70,14 @@ namespace LinqToStdf
         /// <param name="factoryToClone"></param>
         public RecordConverterFactory(RecordConverterFactory factoryToClone)
         {
-            _Converters = new Dictionary<RecordType, Converter<UnknownRecord, StdfRecord>>(factoryToClone._Converters);
+            _Converters = new Dictionary<RecordType, Func<UnknownRecord, StdfFile, StdfRecord>>(factoryToClone._Converters);
             _Unconverters = new Dictionary<Type, Func<StdfRecord, Endian, UnknownRecord>>(factoryToClone._Unconverters);
         }
 
         /// <summary>
         /// Internal storage for the converter delegates
         /// </summary>
-        readonly Dictionary<RecordType, Converter<UnknownRecord, StdfRecord>> _Converters;
+        readonly Dictionary<RecordType, Func<UnknownRecord, StdfFile, StdfRecord>> _Converters;
 
         /// <summary>
         /// Internal storage for the unconverter delegates
@@ -111,7 +113,7 @@ namespace LinqToStdf
         /// </summary>
         /// <param name="recordType">The recordType to register.</param>
         /// <param name="converter">A converter delegate that will handle conversions</param>
-        public void RegisterRecordConverter(RecordType recordType, Converter<UnknownRecord, StdfRecord> converter)
+        public void RegisterRecordConverter(RecordType recordType, Func<UnknownRecord, StdfFile, StdfRecord> converter)
         {
             _Converters.Add(recordType, converter);
         }
@@ -133,7 +135,7 @@ namespace LinqToStdf
         /// <param name="recordType">the record type to retrieve</param>
         /// <returns>If a converter for <paramref name="recordType"/> is register, the registered converter delegate,
         /// otherwise, a "null" converter that passes the unknown record through.</returns>
-        public Converter<UnknownRecord, StdfRecord> GetConverter(RecordType recordType)
+        public Func<UnknownRecord, StdfFile, StdfRecord> GetConverter(RecordType recordType)
         {
             //if we don't have a converter, return identity conversion
             if (_Converters.TryGetValue(recordType, out var converter))
@@ -141,7 +143,7 @@ namespace LinqToStdf
                 return converter;
 
             }
-            return converter = (r) => r;
+            return converter = (r, s) => r;
         }
 
         /// <summary>
@@ -179,9 +181,9 @@ namespace LinqToStdf
         /// <summary>
         /// Converts an unknown record into a concrete record
         /// </summary>
-        public StdfRecord Convert(UnknownRecord unknownRecord)
+        public StdfRecord Convert(UnknownRecord unknownRecord, StdfFile origin)
         {
-            return GetConverter(unknownRecord.RecordType)(unknownRecord);
+            return GetConverter(unknownRecord.RecordType)(unknownRecord, origin);
         }
 
         /// <summary>
@@ -210,31 +212,24 @@ namespace LinqToStdf
         /// </summary>
         /// <param name="type">The destination record type. (must be assignable to <see cref="StdfRecord"/>)</param>
         /// <returns></returns>
-        Converter<UnknownRecord, StdfRecord> CreateConverterForType(Type type)
+        Func<UnknownRecord, StdfFile, StdfRecord> CreateConverterForType(Type type)
         {
             if (!typeof(StdfRecord).IsAssignableFrom(type))
             {
                 throw new InvalidOperationException(string.Format(Resources.ConverterTargetNotStdfRecord, type));
             }
-            Converter<UnknownRecord, StdfRecord> converter = null;
             //only bother creating a converter if we need to parse fields
             if (_RecordsAndFields == null || _RecordsAndFields.TypeHasFields(type))
             {
                 //TODO:consider making the pattern more clear here
-                return (ur) =>
+                return (ur, stdfFile) =>
                 {
-                    //there's a subtle race condition here, but unlikely to cause problems
-                    //or actually be hit in normal scenarios.
-                    if (converter == null)
-                    {
-                        converter = LazyCreateConverterForType(type);
-                    }
-                    return converter(ur);
+                    return LazyCreateConverterForType(type)(ur, stdfFile);
                 };
             }
             else
             {
-                return (ur) => new SkippedRecord(type);
+                return (ur, stdfFile) => new SkippedRecord(stdfFile, type);
             }
         }
 
@@ -242,17 +237,17 @@ namespace LinqToStdf
         /// Does the actual work of creating the converter.  Note that this does not operate lazily,
         /// it is merely called lazily.
         /// </summary>
-        Converter<UnknownRecord, StdfRecord> LazyCreateConverterForType(Type type)
+        Func<UnknownRecord, StdfFile, StdfRecord> LazyCreateConverterForType(Type type)
         {
-            ILGenerator ilGenerator = null;
-            Func<Converter<UnknownRecord, StdfRecord>> finalizeConverter = null;
+            ILGenerator ilGenerator;
+            Func<Func<UnknownRecord, StdfFile, StdfRecord>> finalizeConverter;
             if (Debug)
             {
-                ilGenerator = CreateNewRefEmitMethod<Converter<UnknownRecord, StdfRecord>>(string.Format("{0}Converter", type.Name), string.Format("ConvertTo{0}", type.Name), ref finalizeConverter);
+                ilGenerator = CreateNewRefEmitMethod<Func<UnknownRecord, StdfFile, StdfRecord>>(string.Format("{0}Converter", type.Name), string.Format("ConvertTo{0}", type.Name), out finalizeConverter);
             }
             else
             {
-                ilGenerator = CreateNewLCGMethod<Converter<UnknownRecord, StdfRecord>>(string.Format("ConvertTo{0}", type.Name), ref finalizeConverter);
+                ilGenerator = CreateNewLCGMethod<Func<UnknownRecord, StdfFile, StdfRecord>>(string.Format("ConvertTo{0}", type.Name), out finalizeConverter);
             }
             var generator = new ConverterGenerator(ilGenerator, type, _RecordsAndFields?.GetFieldsForType(type));
             {
@@ -287,14 +282,14 @@ namespace LinqToStdf
         Func<StdfRecord, Endian, UnknownRecord> LazyCreateUnconverterForType(Type type)
         {
             ILGenerator ilGenerator = null;
-            Func<Func<StdfRecord, Endian, UnknownRecord>> finalizeUnconverter = null;
+            Func<Func<StdfRecord, Endian, UnknownRecord>> finalizeUnconverter;
             if (Debug)
             {
-                ilGenerator = CreateNewRefEmitMethod<Func<StdfRecord, Endian, UnknownRecord>>(string.Format("{0}Unconverter", type.Name), string.Format("UnconvertFrom{0}", type.Name), ref finalizeUnconverter);
+                ilGenerator = CreateNewRefEmitMethod<Func<StdfRecord, Endian, UnknownRecord>>(string.Format("{0}Unconverter", type.Name), string.Format("UnconvertFrom{0}", type.Name), out finalizeUnconverter);
             }
             else
             {
-                ilGenerator = CreateNewLCGMethod<Func<StdfRecord, Endian, UnknownRecord>>(string.Format("UnconvertFrom{0}", type.Name), ref finalizeUnconverter);
+                ilGenerator = CreateNewLCGMethod<Func<StdfRecord, Endian, UnknownRecord>>(string.Format("UnconvertFrom{0}", type.Name), out finalizeUnconverter);
             }
             var generator = new UnconverterGenerator(ilGenerator, type);
             generator.GenerateUnconverter();
@@ -328,7 +323,7 @@ namespace LinqToStdf
         /// <param name="bakeMethod">A delegate to call with IL generation is complete to get the created method in
         /// the form of a delegate</param>
         /// <returns>The ILGenerator for the new method</returns>
-        private ILGenerator CreateNewRefEmitMethod<TSig>(string typeName, string methodName, ref Func<TSig> bakeMethod)
+        private ILGenerator CreateNewRefEmitMethod<TSig>(string typeName, string methodName, out Func<TSig> bakeMethod)
         {
             var sigMethod = GetSignatureInfo<TSig>();
             if (_DynamicAssembly == null) InitializeDynamicAssembly();
@@ -357,7 +352,7 @@ namespace LinqToStdf
         /// <param name="bakeMethod">A delegate to call with IL generation is complete to get the created method in
         /// the form of a delegate</param>
         /// <returns>The ILGenerator for the new method</returns>
-        private ILGenerator CreateNewLCGMethod<TSig>(string methodName, ref Func<TSig> bakeMethod)
+        private ILGenerator CreateNewLCGMethod<TSig>(string methodName, out Func<TSig> bakeMethod)
         {
             var sigMethod = GetSignatureInfo<TSig>();
             var dynamicMethod = new DynamicMethod(
