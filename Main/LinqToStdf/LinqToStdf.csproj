@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>LinqToStdf</RootNamespace>
     <AssemblyName>LinqToStdf</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
@@ -30,6 +30,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -75,13 +76,15 @@
     <Compile Include="BuiltInFilters.cs" />
     <Compile Include="CompiledQuery.cs" />
     <Compile Include="CompiledQuerySupport\ExpressionInspector.cs" />
-    <Compile Include="CompiledQuerySupport\FuncOp.cs" />
     <Compile Include="CompiledQuerySupport\RecordsAndFields.cs" />
     <Compile Include="Endian.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="IHeadIndexable.cs" />
     <Compile Include="IHeadSiteIndexable.cs" />
     <Compile Include="ILGenHelpers.cs" />
+    <Compile Include="Indexing\IIndexingStrategy.cs" />
+    <Compile Include="Indexing\TypeHelper.cs" />
+    <Compile Include="Indexing\V4StructureIndexingStrategy.cs" />
     <Compile Include="InvalidRecordConversionException.cs" />
     <Compile Include="IRecordContext.cs" />
     <Compile Include="NonConsecutiveFieldIndexException.cs" />
@@ -91,6 +94,7 @@
     <Compile Include="RecordConverting\CodeNodeVisitor.cs" />
     <Compile Include="RecordConverting\ConverterEmittingVisitor.cs" />
     <Compile Include="RecordConverting\ConverterGenerator.cs" />
+    <Compile Include="RecordConverting\ConverterLog.cs" />
     <Compile Include="RecordConverting\ConverterNodes.cs" />
     <Compile Include="RecordConverting\PrettyPrintVisitor.cs" />
     <Compile Include="RecordConverting\UnconverterEmittingVisitor.cs" />

@@ -21,32 +21,26 @@ namespace LinqToStdf {
 		/// <param name="type">The STDF type</param>
 		/// <param name="subtype">The STDF subtype</param>
 		public RecordType(byte type, byte subtype) {
-			this._Type = type;
-			this._Subtype = subtype;
+			this.Type = type;
+			this.Subtype = subtype;
 		}
 
-		private byte _Type;
-		/// <summary>
-		/// The STDF type
-		/// </summary>
-		public byte Type {
-			get { return _Type; }
-		}
+        /// <summary>
+        /// The STDF type
+        /// </summary>
+        public byte Type { get; }
 
-		private byte _Subtype;
-		/// <summary>
-		/// The STDF subtype
-		/// </summary>
-		public byte Subtype {
-			get { return _Subtype; }
-		}
+        /// <summary>
+        /// The STDF subtype
+        /// </summary>
+        public byte Subtype { get; }
 
-		/// <summary>
-		/// Overrides <see cref="Object.Equals(object)"/> appropriately
-		/// </summary>
-		/// <param name="obj">the object to compare to</param>
-		/// <returns>true if the instance is equal to <paramref name="obj"/>, otherwise false</returns>
-		public override bool Equals(object obj) {
+        /// <summary>
+        /// Overrides <see cref="Object.Equals(object)"/> appropriately
+        /// </summary>
+        /// <param name="obj">the object to compare to</param>
+        /// <returns>true if the instance is equal to <paramref name="obj"/>, otherwise false</returns>
+        public override bool Equals(object obj) {
 			if (!(obj is RecordType)) {
 				return false;
 			}
@@ -57,14 +51,14 @@ namespace LinqToStdf {
 		/// Gets an appropriate hash code for this instance
 		/// </summary>
 		public override int GetHashCode() {
-			return (_Type << 24) | _Subtype;
+			return (Type << 24) | Subtype;
 		}
 
 		/// <summary>
 		/// Supplies an appropriate string representation of this instance.
 		/// </summary>
 		public override string ToString() {
-			return string.Format("StdfRecord:{0}:{1}", this._Type, this._Subtype);
+			return string.Format("StdfRecord:{0}:{1}", this.Type, this.Subtype);
 		}
 
 		#region IEquatable<RecordType> Members
@@ -75,7 +69,7 @@ namespace LinqToStdf {
 		/// <param name="other">the RecordType to compare to</param>
 		/// <returns>true if the instance is equal to <paramref name="other"/>, otherwise false</returns>
 		public bool Equals(RecordType other) {
-			return (this._Type == other._Type && this._Subtype == other._Subtype);
+			return (this.Type == other.Type && this.Subtype == other.Subtype);
 		}
 
 		#endregion
@@ -89,9 +83,9 @@ namespace LinqToStdf {
 		/// <returns>the standard comparison values</returns>
 		/// <seealso cref="IComparable.CompareTo"/>
 		public int CompareTo(RecordType other) {
-			int value = this._Type.CompareTo(other._Type);
+			int value = this.Type.CompareTo(other.Type);
 			if (value == 0) {
-				value = this._Subtype.CompareTo(other._Subtype);
+				value = this.Subtype.CompareTo(other.Subtype);
 			}
 			return value;
 		}

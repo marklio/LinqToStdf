@@ -44,10 +44,10 @@ namespace LinqToStdf {
             _OwnsStream = ownsStream;
         }
 
-        private Stream _Stream;
-        private Endian _StreamEndian;
+        private readonly Stream _Stream;
+        private readonly Endian _StreamEndian;
         private byte[] _Buffer;
-        private bool _OwnsStream;
+        private readonly bool _OwnsStream;
 
         /// <summary>
         /// Reads an STDF record header from the stream
@@ -157,8 +157,10 @@ namespace LinqToStdf {
             int length = ReadUInt16();
             if (length == 0) return null;
             var realLength = (length + 7) / 8;
-            var bitArray = new BitArray(ReadByteArray(realLength));
-            bitArray.Length = length;
+            var bitArray = new BitArray(ReadByteArray(realLength))
+            {
+                Length = length
+            };
             return bitArray;
         }
 

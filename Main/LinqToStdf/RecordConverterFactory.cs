@@ -14,6 +14,11 @@ namespace LinqToStdf {
     using LinqToStdf.RecordConverting;
     using LinqToStdf.Records;
 
+    public enum ConverterType
+    {
+        Converter,
+        Unconverter,
+    }
     /// <summary>
     /// <para>
     /// Manages appropriate converter and unconverter delegates for various registered <see cref="RecordType">RecordTypes</see>.
@@ -30,6 +35,8 @@ namespace LinqToStdf {
     /// </summary>
     /// <seealso cref="FieldLayoutAttribute"/>
     public class RecordConverterFactory {
+
+        public event Action<ConverterType, Type> ConverterGenerated;
 
         /// <summary>
         /// Creates a new factory
@@ -64,13 +71,13 @@ namespace LinqToStdf {
         /// <summary>
         /// Internal storage for the converter delegates
         /// </summary>
-        Dictionary<RecordType, Converter<UnknownRecord, StdfRecord>> _Converters;
+        readonly Dictionary<RecordType, Converter<UnknownRecord, StdfRecord>> _Converters;
+
         /// <summary>
         /// Internal storage for the unconverter delegates
         /// </summary>
-        Dictionary<Type, Func<StdfRecord, Endian, UnknownRecord>> _Unconverters;
-
-        RecordsAndFields _RecordsAndFields;
+        readonly Dictionary<Type, Func<StdfRecord, Endian, UnknownRecord>> _Unconverters;
+        readonly RecordsAndFields _RecordsAndFields;
 
         /// <summary>
         /// If this is set to true, rather than use LCG, a dynamic assembly will
@@ -123,10 +130,10 @@ namespace LinqToStdf {
         /// otherwise, a "null" converter that passes the unknown record through.</returns>
         public Converter<UnknownRecord, StdfRecord> GetConverter(RecordType recordType) {
             //if we don't have a converter, return identity conversion
-            Converter<UnknownRecord, StdfRecord> converter;
-            if (_Converters.TryGetValue(recordType, out converter)) {
+            if (_Converters.TryGetValue(recordType, out var converter))
+            {
                 return converter;
-                
+
             }
             return converter = (r) => r;
         }
@@ -139,7 +146,6 @@ namespace LinqToStdf {
         /// otherwise, an invalid operation exception is thrown.</returns>
         public Func<StdfRecord, Endian, UnknownRecord> GetUnconverter(Type type)
         {
-            Func<StdfRecord, Endian, UnknownRecord> unconverter;
             //if it is already an UnknownRecord, make sure it is the right endianness
             if (type == typeof(UnknownRecord))
             {
@@ -153,7 +159,7 @@ namespace LinqToStdf {
                     return ur;
                 };
             }
-            else if (_Unconverters.TryGetValue(type, out unconverter))
+            else if (_Unconverters.TryGetValue(type, out var unconverter))
             {
                 return unconverter;
             }
@@ -196,7 +202,8 @@ namespace LinqToStdf {
         /// If <see cref="Debug"/> is set, saves a dynamic assembly
         /// with all the converters and unconverters created so far.
         /// </summary>
-        public void SaveDynamicAssembly() {
+        public void SaveDynamicAssembly()
+        {
             if (!Debug || _DynamicAssembly == null) throw new InvalidOperationException(Resources.InvalidSaveAssembly);
             _DynamicAssembly.Save("DynamicConverters.dll");
         }
@@ -215,7 +222,7 @@ namespace LinqToStdf {
             }
             Converter<UnknownRecord, StdfRecord> converter = null;
             //only bother creating a converter if we need to parse fields
-            if (_RecordsAndFields == null || _RecordsAndFields.GetFieldsForType(type).Count > 0) {
+            if (_RecordsAndFields == null || _RecordsAndFields.TypeHasFields(type)) {
                 //TODO:consider making the pattern more clear here
                 return (ur) => {
                     //there's a subtle race condition here, but unlikely to cause problems
@@ -235,22 +242,29 @@ namespace LinqToStdf {
         /// Does the actual work of creating the converter.  Note that this does not operate lazily,
         /// it is merely called lazily.
         /// </summary>
-        Converter<UnknownRecord, StdfRecord> LazyCreateConverterForType(Type type) {
+        Converter<UnknownRecord, StdfRecord> LazyCreateConverterForType(Type type)
+        {
             ILGenerator ilGenerator = null;
             Func<Converter<UnknownRecord, StdfRecord>> finalizeConverter = null;
-            if (Debug) {
+            if (Debug)
+            {
 #if SILVERLIGHT
                 throw new NotSupportedException(Resources.NoDebugInSilverlight);
 #else
                 ilGenerator = CreateNewRefEmitMethod<Converter<UnknownRecord, StdfRecord>>(string.Format("{0}Converter", type.Name), string.Format("ConvertTo{0}", type.Name), ref finalizeConverter);
 #endif
             }
-            else {
+            else
+            {
                 ilGenerator = CreateNewLCGMethod<Converter<UnknownRecord, StdfRecord>>(string.Format("ConvertTo{0}", type.Name), ref finalizeConverter);
             }
-            var generator = new ConverterGenerator(ilGenerator, type, _RecordsAndFields == null ? null : _RecordsAndFields.GetFieldsForType(type));
-            generator.GenerateConverter();
-            return finalizeConverter();
+            var generator = new ConverterGenerator(ilGenerator, type, _RecordsAndFields?.GetFieldsForType(type));
+            {
+                generator.GenerateConverter();
+            }
+            var converter = finalizeConverter();
+            ConverterGenerated?.Invoke(ConverterType.Converter, type);
+            return converter;
         }
 
         #endregion
@@ -292,7 +306,9 @@ namespace LinqToStdf {
             }
             var generator = new UnconverterGenerator(ilGenerator, type);
             generator.GenerateUnconverter();
-            return finalizeUnconverter();
+            var unconverter = finalizeUnconverter();
+            ConverterGenerated?.Invoke(ConverterType.Unconverter, type);
+            return unconverter;
         }
 
         #endregion

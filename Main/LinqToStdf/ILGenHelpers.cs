@@ -17,6 +17,13 @@ namespace LinqToStdf {
     /// IL OpCodes, which makes things much more readable.
     /// </summary>
     static class ILGenHelpers {
+        static readonly MethodInfo _LogMethod = typeof(RecordConverting.ConverterLog).GetMethod(nameof(RecordConverting.ConverterLog.Log), BindingFlags.Static | BindingFlags.Public);
+
+        public static void Log(this ILGenerator ilgen, string msg)
+        {
+            ilgen.Ldstr(msg);
+            ilgen.Call(_LogMethod);
+        }
 
         /// <seealso cref="OpCodes.Ret"/>
         public static void Ret(this ILGenerator ilgen) {
@@ -129,10 +136,25 @@ namespace LinqToStdf {
             {
                 ilgen.Ldstr((string)value);
             }
+            else if (type == typeof(DateTime))
+            {
+                //we only support loading the Epoch
+                if ((DateTime)value != Attributes.TimeFieldLayoutAttribute.Epoch)
+                {
+                    //TODO:resource
+                    throw new NotSupportedException("we can only load the Epoch as a \"constant\"");
+                }
+                ilgen.Ldsfld(typeof(Attributes.TimeFieldLayoutAttribute).GetField(nameof(Attributes.TimeFieldLayoutAttribute.Epoch), BindingFlags.Public | BindingFlags.Static));
+            }
             else
             {
                 throw new NotSupportedException(string.Format(Resources.CodeGen_UnsupportedGenericLdc, type));
             }
+        }
+
+        public static void Ldsfld(this ILGenerator ilgen, FieldInfo field)
+        {
+            ilgen.Emit(OpCodes.Ldsfld, field);
         }
 
         /// <seealso cref="OpCodes.Ldc_I4"/>

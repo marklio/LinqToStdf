@@ -7,6 +7,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using LinqToStdf.Records.V4;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToStdf {
 
@@ -26,6 +28,15 @@ namespace LinqToStdf {
                 if (r.GetType() == typeof(TRecord)) yield return (TRecord)r;
             }
         }
+
+        public static IQueryable<TRecord> OfExactType<TRecord>(this IQueryable<StdfRecord> source) where TRecord : StdfRecord
+        {
+            return source.Provider.CreateQuery<TRecord>(
+                Expression.Call(
+                    ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TRecord)),
+                    source.Expression));
+        }
+
 
         #region extending IRecordContext
 
@@ -261,7 +272,6 @@ namespace LinqToStdf {
         /// <returns>The records associated with the part (between the <see cref="Pir"/>
         /// and <see cref="Prr"/> and sharing the same head/site information.</returns>
         public static IEnumerable<StdfRecord> GetChildRecords(this Pir pir) {
-            var prrHandle = typeof(Prr).TypeHandle;
             return pir.After()
                 .OfType<IHeadSiteIndexable>()
                 .Where(r => r.HeadNumber == pir.HeadNumber && r.SiteNumber == pir.SiteNumber)

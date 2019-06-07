@@ -10,7 +10,7 @@ namespace LinqToStdf.Records.V4 {
     using Attributes;
 
     [FieldLayout(FieldIndex = 0, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "HeadNumber"),
-    FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = byte.MaxValue, PersistMissingValue = true, RecordProperty = "SiteGroup"),
+    FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = byte.MaxValue, RecordProperty = "SiteGroup"),
     TimeFieldLayout(FieldIndex = 2, RecordProperty = "FinishTime"),
     FieldLayout(FieldIndex = 3, FieldType = typeof(uint), RecordProperty = "PartCount"),
     FieldLayout(FieldIndex = 4, FieldType = typeof(uint), IsOptional = true, MissingValue = uint.MaxValue, RecordProperty = "RetestCount"),

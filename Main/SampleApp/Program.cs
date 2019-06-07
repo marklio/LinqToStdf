@@ -52,8 +52,10 @@ namespace SampleApp {
             // Output STDF to a new file
             if (args.Length == 2) {
                 Console.WriteLine("Writing to {0}...", args[1]);
-                StdfFileWriter writer = new StdfFileWriter(args[1]);
-                writer.WriteRecords(stdf.GetRecords());
+                using (StdfFileWriter writer = new StdfFileWriter(args[1]))
+                {
+                    writer.WriteRecords(stdf.GetRecords());
+                }
             }
         }
 

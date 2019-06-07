@@ -17,24 +17,18 @@ namespace LinqToStdf {
 		/// Constructs a new record header
 		/// </summary>
 		public RecordHeader(ushort length, RecordType recordType) {
-			this._Length = length;
-			this._RecordType = recordType;
+			this.Length = length;
+			this.RecordType = recordType;
 		}
 
-		private ushort _Length;
-		/// <summary>
-		/// The length of the record
-		/// </summary>
-		public ushort Length {
-			get { return _Length; }
-		}
+        /// <summary>
+        /// The length of the record
+        /// </summary>
+        public ushort Length { get; }
 
-		private RecordType _RecordType;
-		/// <summary>
-		/// The <see cref="RecordType"/> of the record.
-		/// </summary>
-		public RecordType RecordType {
-			get { return _RecordType; }
-		}
-	}
+        /// <summary>
+        /// The <see cref="RecordType"/> of the record.
+        /// </summary>
+        public RecordType RecordType { get; }
+    }
 }

@@ -41,7 +41,7 @@ namespace LinqToStdf {
             this._Endian = endian;
         }
 
-        private RecordType _RecordType;
+        private readonly RecordType _RecordType;
         /// <summary>
         /// The records <see cref="RecordType"/>
         /// </summary>
@@ -49,7 +49,7 @@ namespace LinqToStdf {
             get { return this._RecordType; }
         }
 
-        private Endian _Endian;
+        private readonly Endian _Endian;
         /// <summary>
         /// The endian-ness of <see cref="Content"/>
         /// </summary>
@@ -57,7 +57,7 @@ namespace LinqToStdf {
             get { return _Endian; }
         }
         
-        private byte[] _Content;
+        private readonly byte[] _Content;
         /// <summary>
         /// The original byte content of the record
         /// </summary>

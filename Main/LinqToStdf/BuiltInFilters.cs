@@ -85,10 +85,11 @@ namespace LinqToStdf {
             /// Indicates whether summary records are already in place
             /// </summary>
             bool _FoundSummary = false;
+
             /// <summary>
             /// The list of bin records
             /// </summary>
-            List<T> _Brs = new List<T>();
+            readonly List<T> _Brs = new List<T>();
             /// <summary>
             /// Passes through the records provided by input,
             /// taking note of the bin records.  If no summary records
@@ -194,7 +195,7 @@ namespace LinqToStdf {
 
         class MissingTsrSummaryFilterImpl {
             bool _FoundSummary;
-            List<Tsr> _Tsrs = new List<Tsr>();
+            readonly List<Tsr> _Tsrs = new List<Tsr>();
             public IEnumerable<StdfRecord> Filter(IEnumerable<StdfRecord> input) {
                 foreach (var r in input) {
                     if (r.GetType() == typeof(Tsr)) {
@@ -266,8 +267,7 @@ namespace LinqToStdf {
 
         static IEnumerable<StdfRecord> ThrowOnFormatErrorFilter(IEnumerable<StdfRecord> input) {
             foreach (var r in input) {
-                var err = r as FormatErrorRecord;
-                if (err != null) { throw err.ToException(); }
+                if (r is FormatErrorRecord err) { throw err.ToException(); }
                 yield return r;
             }
         }
@@ -291,7 +291,7 @@ namespace LinqToStdf {
         /// <summary>
         /// These records are not allowed after the initial sequence, or before the Mrr
         /// </summary>
-        static HashSet<RuntimeTypeHandle> _InitialSequenceSet = new HashSet<RuntimeTypeHandle>() { typeof(Far).TypeHandle, typeof(Atr).TypeHandle, typeof(Mir).TypeHandle, typeof(Rdr).TypeHandle, typeof(Sdr).TypeHandle, typeof(EndOfStreamRecord).TypeHandle };
+        static readonly HashSet<RuntimeTypeHandle> _InitialSequenceSet = new HashSet<RuntimeTypeHandle>() { typeof(Far).TypeHandle, typeof(Atr).TypeHandle, typeof(Mir).TypeHandle, typeof(Rdr).TypeHandle, typeof(Sdr).TypeHandle, typeof(EndOfStreamRecord).TypeHandle };
 
         /// <summary>
         /// Uses a state machine to enforce the V4 content spec (initial sequence and mrr at the end)
@@ -382,8 +382,7 @@ namespace LinqToStdf {
 
         static IEnumerable<StdfRecord> ThrowOnV4ContentErrorFilter(IEnumerable<StdfRecord> input) {
             foreach (var r in input) {
-                var err = r as V4ContentErrorRecord;
-                if (err != null) { throw err.ToException(); }
+                if (r is V4ContentErrorRecord err) { throw err.ToException(); }
                 yield return r;
             }
         }
@@ -450,8 +449,7 @@ namespace LinqToStdf {
             foreach (var r in records) {
                 if (r.GetType() == typeof(Ptr)) {
                     var ptr = (Ptr)r;
-                    Ptr first;
-                    if (firstPtrs.TryGetValue(ptr.TestNumber, out first)) {
+                    if (firstPtrs.TryGetValue(ptr.TestNumber, out var first)) {
                         if (ptr.ResultScalingExponent == null)
                             ptr.ResultScalingExponent = first.ResultScalingExponent;
                         if (ptr.LowLimitScalingExponent == null)

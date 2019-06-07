@@ -10,7 +10,7 @@ namespace LinqToStdf.Records.V4 {
 	using Attributes;
 
     [FieldLayout(FieldIndex = 0, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "HeadNumber"),
-    FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = byte.MaxValue, PersistMissingValue = true, RecordProperty = "SiteGroup"),
+    FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = byte.MaxValue, RecordProperty = "SiteGroup"),
     FieldLayout(FieldIndex = 2, FieldType = typeof(byte)),
     ArrayFieldLayout(FieldIndex = 3, FieldType = typeof(byte), ArrayLengthFieldIndex = 2, RecordProperty = "SiteNumbers"),
     StringFieldLayout(FieldIndex = 4, IsOptional = true, RecordProperty = "HandlerType"),
@@ -54,11 +54,5 @@ namespace LinqToStdf.Records.V4 {
         public string LaserId { get; set; }
         public string ExtraType { get; set; }
         public string ExtraId { get; set; }
-
-        [Obsolete("Sdr.Sites has been renamed Sdr.SiteNumbers to be consistent other records")]
-        public byte[] Sites {
-            get { return SiteNumbers; }
-            set { SiteNumbers = value; }
-        }
     }
 }

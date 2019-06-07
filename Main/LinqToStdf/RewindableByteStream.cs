@@ -16,12 +16,13 @@ namespace LinqToStdf {
             /// <summary>
             /// The underlying Stream
             /// </summary>
-            Stream _Stream;
+            readonly Stream _Stream;
+
             /// <summary>
             /// A stream we use for memoizing results of previous read operations,
             /// enabling us to rewind back into them
             /// </summary>
-            MemoryStream _MemoizedData;
+            readonly MemoryStream _MemoizedData;
             /// <summary>
             /// Indicates how far we're rewound into the memoized data
             /// </summary>
@@ -30,10 +31,11 @@ namespace LinqToStdf {
             /// Tracks our current offset in the stream
             /// </summary>
             int _Offset = 0;
+
             /// <summary>
             /// buffer used for reading a record header
             /// </summary>
-            byte[] _Buffer = new byte[2];
+            readonly byte[] _Buffer = new byte[2];
 
             public RewindableByteStream(Stream stream) {
                 _Stream = stream;
@@ -205,7 +207,7 @@ namespace LinqToStdf {
             /// </summary>
             /// <returns>The read value, or -1 if we are past the end of the stream.</returns>
             public int ReadByte() {
-                int value = -1;
+                int value;
                 if (_Rewound > 0) {
                     value = _MemoizedData.ReadByte();
                     Debug.Assert(value != -1, "We read past the end memory stream.");
@@ -250,7 +252,6 @@ namespace LinqToStdf {
             }
             public byte[] DumpRemainingData() {
                 if (_Rewound > 0) {
-                    var position = _MemoizedData.Position;
                     var bytes = new byte[_Rewound];
                     //TODO: reconcile types
                     _MemoizedData.Read(bytes, 0, _Rewound);

@@ -46,7 +46,6 @@ namespace LinqToStdf.RecordConverting
     }
     class DisposeReaderNode : CodeNode
     {
-        static MethodInfo _DisposeMethod = typeof(IDisposable).GetMethod("Dispose", new Type[0]);
         public override CodeNode Accept(CodeNodeVisitor visitor)
         {
             return visitor.VisitDisposeReader(this);
@@ -87,7 +86,6 @@ namespace LinqToStdf.RecordConverting
     }
     class SkipRawBytesNode : CodeNode
     {
-        static MethodInfo _SkipMethod = typeof(BinaryReader).GetMethod("Skip", typeof(int));
         public int Bytes { get; private set; }
         public SkipRawBytesNode(int bytes)
         {
@@ -204,13 +202,11 @@ namespace LinqToStdf.RecordConverting
     class SkipAssignmentIfMissingValueNode : CodeNode
     {
         //TODO: find out if we need to be more explicit about type, or if we can infer it from the missing value.
-        public SkipAssignmentIfMissingValueNode(object missingValue, bool allowMissingValue)
+        public SkipAssignmentIfMissingValueNode(object missingValue)
         {
             MissingValue = missingValue;
-            AllowMissingValue = allowMissingValue;
         }
         public object MissingValue { get; private set; }
-        public bool AllowMissingValue { get; private set; }
         public override CodeNode Accept(CodeNodeVisitor visitor)
         {
             return visitor.VisitSkipAssignmentIfMissingValue(this);

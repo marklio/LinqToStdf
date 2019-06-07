@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Linq.Expressions;
 using LinqToStdf.CompiledQuerySupport;
+using LinqToStdf.Indexing;
 
 namespace LinqToStdf {
     /// <summary>
@@ -58,13 +59,13 @@ namespace LinqToStdf {
             return (path) => {
                 StdfFile stdf;
                 if (factory == null) {
-                    stdf = new StdfFile(new StdfFileStreamManager(path), false, rnf) { EnableCaching = false };
+                    stdf = new StdfFile(new StdfFileStreamManager(path), false, rnf) { IndexingStrategy = new NonCachingStrategy() };
                     factory = stdf.ConverterFactory;
                 }
                 else {
-                    stdf = new StdfFile(new StdfFileStreamManager(path), factory) { EnableCaching = false };
+                    stdf = new StdfFile(new StdfFileStreamManager(path), factory) { IndexingStrategy = new NonCachingStrategy() };
                 }
-                if (stdfFileInit != null) stdfFileInit(stdf);
+                stdfFileInit?.Invoke(stdf);
                 return compiled(stdf);
             };
         }
@@ -80,13 +81,13 @@ namespace LinqToStdf {
             return (path, t1) => {
                 StdfFile stdf;
                 if (factory == null) {
-                    stdf = new StdfFile(new StdfFileStreamManager(path), false, rnf) { EnableCaching = false };
+                    stdf = new StdfFile(new StdfFileStreamManager(path), false, rnf) { IndexingStrategy = new NonCachingStrategy() };
                     factory = stdf.ConverterFactory;
                 }
                 else {
-                    stdf = new StdfFile(new StdfFileStreamManager(path), factory) { EnableCaching = false };
+                    stdf = new StdfFile(new StdfFileStreamManager(path), factory) { IndexingStrategy = new NonCachingStrategy() };
                 }
-                if (stdfFileInit != null) stdfFileInit(stdf);
+                stdfFileInit?.Invoke(stdf);
                 return compiled(stdf, t1);
             };
         }
@@ -102,13 +103,13 @@ namespace LinqToStdf {
             return (path, t1, t2) => {
                 StdfFile stdf;
                 if (factory == null) {
-                    stdf = new StdfFile(new StdfFileStreamManager(path), false, rnf) { EnableCaching = false };
+                    stdf = new StdfFile(new StdfFileStreamManager(path), false, rnf) { IndexingStrategy = new NonCachingStrategy() };
                     factory = stdf.ConverterFactory;
                 }
                 else {
-                    stdf = new StdfFile(new StdfFileStreamManager(path), factory) { EnableCaching = false };
+                    stdf = new StdfFile(new StdfFileStreamManager(path), factory) { IndexingStrategy = new NonCachingStrategy() };
                 }
-                if (stdfFileInit != null) stdfFileInit(stdf);
+                stdfFileInit?.Invoke(stdf);
                 return compiled(stdf, t1, t2);
             };
         }
@@ -124,13 +125,13 @@ namespace LinqToStdf {
             return (path, t1, t2, t3) => {
                 StdfFile stdf;
                 if (factory == null) {
-                    stdf = new StdfFile(new StdfFileStreamManager(path), false, rnf) { EnableCaching = false };
+                    stdf = new StdfFile(new StdfFileStreamManager(path), false, rnf) { IndexingStrategy = new NonCachingStrategy() };
                     factory = stdf.ConverterFactory;
                 }
                 else {
-                    stdf = new StdfFile(new StdfFileStreamManager(path), factory) { EnableCaching = false };
+                    stdf = new StdfFile(new StdfFileStreamManager(path), factory) { IndexingStrategy = new NonCachingStrategy() };
                 }
-                if (stdfFileInit != null) stdfFileInit(stdf);
+                stdfFileInit?.Invoke(stdf);
                 return compiled(stdf, t1, t2, t3);
             };
         }

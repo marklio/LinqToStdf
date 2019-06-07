@@ -10,6 +10,10 @@ using System.IO;
 using LinqToStdf.Records;
 using LinqToStdf.CompiledQuerySupport;
 using System.Diagnostics;
+using LinqToStdf.Indexing;
+using System.Collections;
+using System.Linq.Expressions;
+using System.Reflection;
 
 #if SILVERLIGHT
 using System.Windows.Controls;
@@ -41,10 +45,10 @@ namespace LinqToStdf {
     /// </para>
     /// </remarks>
     public sealed partial class StdfFile : IRecordContext {
-        IStdfStreamManager _StreamManager;
+        readonly IStdfStreamManager _StreamManager;
         RewindableByteStream _Stream;
-        static internal RecordConverterFactory _V4ConverterFactory = new RecordConverterFactory();
-        RecordConverterFactory _ConverterFactory;
+        readonly static internal RecordConverterFactory _V4ConverterFactory = new RecordConverterFactory();
+        readonly RecordConverterFactory _ConverterFactory;
         /// <summary>
         /// Exposes the ConverterFactory in use for parsing.
         /// This allows record un/converters to be registered.
@@ -64,23 +68,36 @@ namespace LinqToStdf {
         public long? ExpectedLength { get { return _ExpectedLength; } }
 
         RecordFilter _RecordFilter = null;
-        RecordFilter _CachingFilter = BuiltInFilters.CachingFilter;
         bool _FiltersLocked;
+        readonly object _ISLock = new object();
+        private IIndexingStrategy _IndexingStrategy = null;
 
-        private bool _EnableCaching = true;
-        /// <summary>
-        /// Indicates whether caching is enabled. (default=true)
-        /// This can only be set before parsing has begun.
-        /// </summary>
-        /// <remarks>
-        /// Caching enables multiple queries without reparsing the file.
-        /// Naturally, there is memory overhead associated with this.
-        /// The default is to enable caching, which will suit the primary scenarios
-        /// better.  There will be scenarios where caching is not desirable.
-        /// </remarks>
-        public bool EnableCaching {
-            get { return _EnableCaching; }
-            set { EnsureFiltersUnlocked(); _EnableCaching = value; }
+        public IIndexingStrategy IndexingStrategy
+        {
+            get
+            {
+                //TODO: get this locking pattern right
+                if (_IndexingStrategy == null)
+                {
+                    lock (_ISLock)
+                    {
+                        if (_IndexingStrategy == null)
+                        {
+                            _IndexingStrategy = new SimpleIndexingStrategy();
+                        }
+                    }
+                }
+                return _IndexingStrategy;
+            }
+            set
+            {
+                //TODO: prevent this from changing
+                lock (_ISLock)
+                {
+                    EnsureFiltersUnlocked();
+                    _IndexingStrategy = value;
+                }
+            }
         }
 
         private bool _ThrowOnFormatError = true;
@@ -168,7 +185,7 @@ namespace LinqToStdf {
             _ConverterFactory = rcf;
         }
 
-        private StdfFile(IStdfStreamManager streamManager, PrivateImpl pi) {
+        private StdfFile(IStdfStreamManager streamManager, PrivateImpl _) {
             _StreamManager = streamManager;
             _RecordFilter = BuiltInFilters.IdentityFilter;
         }
@@ -200,13 +217,167 @@ namespace LinqToStdf {
         }
 
         private RecordFilter GetTopRecordFilter() {
-            return _EnableCaching ? _CachingFilter : BuiltInFilters.IdentityFilter;
+            return IndexingStrategy.CacheRecords;
+        }
+
+        public IQueryable<StdfRecord> GetRecords()
+        {
+            return new Queryable<StdfRecord>(GetRecordsEnumerable(), IndexingStrategy.TransformQuery);
+        }
+
+        internal abstract class Queryable
+        {
+
+            internal static IQueryable Create(Type elementType, IEnumerable sequence, Func<Expression, Expression> transform)
+            {
+                return (IQueryable)Activator.CreateInstance(typeof(Queryable<>).MakeGenericType(new Type[] { elementType }), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { sequence, transform }, null);
+            }
+
+            internal static IQueryable Create(Type elementType, Expression expression, Func<Expression, Expression> transform)
+            {
+                return (IQueryable)Activator.CreateInstance(typeof(Queryable<>).MakeGenericType(new Type[] { elementType }), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { expression, transform }, null);
+            }
+
+            public abstract IEnumerable Enumerable { get; }
+            public abstract Expression Expression { get; }
+        }
+
+        internal class Queryable<T> : Queryable, IOrderedQueryable<T>, IQueryProvider
+        {
+            EnumerableQuery<T> _EnumerableQuery;
+            readonly Func<Expression, Expression> _ExpressionTransform;
+            readonly Expression _Expression;
+
+            Queryable(Func<Expression, Expression> expressionTransform)
+            {
+                _ExpressionTransform = expressionTransform;
+            }
+
+            public Queryable(IEnumerable<T> enumerable, Func<Expression, Expression> expressionTransform)
+                : this(expressionTransform)
+            {
+                _EnumerableQuery = new EnumerableQuery<T>(enumerable);
+                _Expression = Expression.Constant(this);
+            }
+
+            public Queryable(Expression expression, Func<Expression, Expression> expressionTransform)
+                : this(expressionTransform)
+            {
+                _Expression = expression;
+            }
+
+            private IEnumerator<T> GetEnumeratorInternal()
+            {
+                if (_EnumerableQuery == null)
+                {
+                    _EnumerableQuery = new EnumerableQuery<T>(new QueryableRewriter().Visit(_ExpressionTransform(_Expression)));
+                }
+                return ((IEnumerable<T>)this._EnumerableQuery).GetEnumerator();
+            }
+
+            #region IEnumerable<T> Members
+
+            public IEnumerator<T> GetEnumerator()
+            {
+                return GetEnumeratorInternal();
+            }
+
+            #endregion
+
+            #region IEnumerable Members
+
+            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+            {
+                return GetEnumeratorInternal();
+            }
+
+            #endregion
+
+            #region IQueryable Members
+
+            public Type ElementType
+            {
+                get { return typeof(T); }
+            }
+
+            public override Expression Expression
+            {
+                get { return _Expression; }
+            }
+
+            public override IEnumerable Enumerable
+            {
+                get { return _EnumerableQuery; }
+            }
+
+            public IQueryProvider Provider
+            {
+                get { return this; }
+            }
+
+            #endregion
+
+            #region IQueryProvider Members
+
+            public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
+            {
+                return new Queryable<TElement>(expression, _ExpressionTransform);
+            }
+
+            public IQueryable CreateQuery(Expression expression)
+            {
+                Type type = TypeHelper.FindGenericType(typeof(IQueryable<>), expression.Type);
+                if (type == null)
+                {
+                    throw new ArgumentException("Could not find type", "expression");
+                }
+                return Queryable.Create(type.GetGenericArguments()[0], expression, _ExpressionTransform);
+            }
+
+            public TResult Execute<TResult>(Expression expression)
+            {
+                EnumerableQuery<T> queryable = _EnumerableQuery;
+                if (queryable == null)
+                {
+                    queryable = new EnumerableQuery<T>(_Expression);
+                }
+                return ((IQueryProvider)queryable).Execute<TResult>((new QueryableRewriter().Visit(_ExpressionTransform(expression))));
+            }
+
+            public object Execute(Expression expression)
+            {
+                EnumerableQuery<T> queryable = _EnumerableQuery;
+                if (queryable == null)
+                {
+                    queryable = new EnumerableQuery<T>(_Expression);
+                }
+                return ((IQueryProvider)queryable).Execute(new QueryableRewriter().Visit(_ExpressionTransform(expression)));
+            }
+
+            #endregion
+
+            class QueryableRewriter : ExpressionVisitor
+            {
+                protected override Expression VisitConstant(ConstantExpression node)
+                {
+                    if (!(node.Value is Queryable queryable))
+                    {
+                        return base.VisitConstant(node);
+                    }
+                    if (queryable.Enumerable != null)
+                    {
+                        //TODO: get public type?
+                        return base.VisitConstant(Expression.Constant(queryable.Enumerable));
+                    }
+                    return Visit(queryable.Expression);
+                }
+            }
         }
 
         /// <summary>
         /// Gets all the records in the file as a "stream" of StdfRecord object
         /// </summary>
-        public IEnumerable<StdfRecord> GetRecords() {
+        public IEnumerable<StdfRecord> GetRecordsEnumerable() {
             _FiltersLocked = true;
             foreach (var record in GetTopRecordFilter()(_RecordFilter(GetBaseRecordFilter()(InternalGetAllRecords())))) {
                 if (record.GetType() == typeof(StartOfStreamRecord)) {
@@ -332,10 +503,10 @@ namespace LinqToStdf {
                             _Stream.RewindAll();
                             int backup = -1;
                             //create the callback algorithms use to indicate the found something
-                            BackUpCallback backupCallback = (bytes) => { backup = bytes; };
+                            void BackupCallback(int bytes) { backup = bytes; }
                             var corruptOffset = _Stream.Offset;
                             //set up the seek algorithms and consume the sequence.
-                            var algorithm = _SeekAlgorithm(_Stream.ReadAsByteSequence(), endian, backupCallback);
+                            var algorithm = _SeekAlgorithm(_Stream.ReadAsByteSequence(), endian, BackupCallback);
                             algorithm.Count();
                             //when we get here, one of the algorithms has found the record stream,
                             //or we went to the end of the stream

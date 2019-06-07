@@ -1,11 +1,15 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToStdf", "LinqToStdf\LinqToStdf.csproj", "{E251DABB-78AF-4451-93EF-B8C3420BEBC5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StdfDump", "StdfDump\StdfDump.csproj", "{9D6155E6-6C9F-40B2-9346-5B4CBAAE1E18}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleApp", "SampleApp\SampleApp.csproj", "{215B69CF-07FB-4BF4-B63A-0529D52C1239}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StdfFileTests", "StdfFileTests\StdfFileTests.csproj", "{9537D244-9465-4C2D-A665-AF53035DE90F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,6 +51,18 @@ Global
 		{215B69CF-07FB-4BF4-B63A-0529D52C1239}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{215B69CF-07FB-4BF4-B63A-0529D52C1239}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{215B69CF-07FB-4BF4-B63A-0529D52C1239}.Release|x86.ActiveCfg = Release|Any CPU
+		{9537D244-9465-4C2D-A665-AF53035DE90F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9537D244-9465-4C2D-A665-AF53035DE90F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9537D244-9465-4C2D-A665-AF53035DE90F}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{9537D244-9465-4C2D-A665-AF53035DE90F}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{9537D244-9465-4C2D-A665-AF53035DE90F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9537D244-9465-4C2D-A665-AF53035DE90F}.Debug|x86.Build.0 = Debug|Any CPU
+		{9537D244-9465-4C2D-A665-AF53035DE90F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9537D244-9465-4C2D-A665-AF53035DE90F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9537D244-9465-4C2D-A665-AF53035DE90F}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{9537D244-9465-4C2D-A665-AF53035DE90F}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{9537D244-9465-4C2D-A665-AF53035DE90F}.Release|x86.ActiveCfg = Release|Any CPU
+		{9537D244-9465-4C2D-A665-AF53035DE90F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

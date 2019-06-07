@@ -33,7 +33,7 @@ namespace LinqToStdf {
         /// <summary>
         /// The mask used for the offset data. (we're reserving the 2 highest bits)
         /// </summary>
-        static ulong _OffsetMask = 0x3fffffffffffffff;
+        static readonly ulong _OffsetMask = 0x3fffffffffffffff;
 
         /// <summary>
         /// The file/stream offset of this record's header
@@ -54,7 +54,7 @@ namespace LinqToStdf {
         /// <summary>
         /// The mask used for the synthesized bit
         /// </summary>
-        static ulong _SynthesizedMask = 0x8000000000000000;
+        static readonly ulong _SynthesizedMask = 0x8000000000000000;
 
         /// <summary>
         /// Indicates whether or not this record was synthesized

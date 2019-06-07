@@ -11,7 +11,7 @@ namespace LinqToStdf.Records.V4 {
 
     [FieldLayout(FieldIndex = 0, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "HeadNumber"),
     FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "SiteNumber"),
-    StringFieldLayout(FieldIndex = 2, Length = 1, RecordProperty = "TestType"),
+    StringFieldLayout(FieldIndex = 2, Length = 1, MissingValue = " ", RecordProperty = "TestType"),
     FieldLayout(FieldIndex = 3, FieldType = typeof(uint), RecordProperty = "TestNumber"),
     FieldLayout(FieldIndex = 4, FieldType = typeof(uint), IsOptional = true, MissingValue = uint.MaxValue, RecordProperty = "ExecutedCount"),
     FieldLayout(FieldIndex = 5, FieldType = typeof(uint), IsOptional = true, MissingValue = uint.MaxValue, RecordProperty = "FailedCount"),

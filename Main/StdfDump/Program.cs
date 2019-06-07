@@ -12,64 +12,56 @@ using System.Reflection.Emit;
 using System.Reflection;
 using System.Collections;
 
-namespace StdfDump {
-    class Program {
-        static void Main(string[] args) {
+namespace StdfDump
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
             var file = new StdfFile(args[0]);
             StdfFileWriter outFile = null;
-            if (args.Length > 1) {
+            if (args.Length > 1)
+            {
                 outFile = new StdfFileWriter(args[1]);
             }
-            try {
+            try
+            {
                 int bytesWritten = 0;
                 long bytesRead = 0;
-                foreach (var r in file.GetRecords()) {
+                foreach (var r in file.GetRecords())
+                {
                     Console.WriteLine("Read Length: {0}", r.Offset - bytesRead);
                     bytesRead = r.Offset;
                     Console.WriteLine("{0}", r.GetType());
                     DumpRecord(r);
-                    if (outFile != null) {
+                    if (outFile != null)
+                    {
                         bytesWritten = outFile.WriteRecord(r);
                         Console.WriteLine("Written Length: {0}", bytesWritten);
                     }
                 }
             }
-            finally {
+            finally
+            {
                 if (outFile != null) outFile.Dispose();
             }
         }
 
-        static Dictionary<Type, Action<StdfRecord>> _Dumpers = new Dictionary<Type, Action<StdfRecord>>();
-        private static void DumpRecord(StdfRecord r) {
+        static readonly Dictionary<Type, Action<StdfRecord>> _Dumpers = new Dictionary<Type, Action<StdfRecord>>();
+        private static void DumpRecord(StdfRecord r)
+        {
             var type = r.GetType();
-            Action<StdfRecord> dumper;
-            if (!_Dumpers.TryGetValue(type, out dumper)) {
+            if (!_Dumpers.TryGetValue(type, out var dumper))
+            {
                 dumper = CreateDumperForType(type);
                 _Dumpers[type] = dumper;
             }
             dumper(r);
         }
 
-        /// <summary>
-        /// Creates a string representation of an array
-        /// </summary>
-        private static string DumpArrayRepresentation<T>(T[] array) {
-            if (array == null) return null;
-            var builder = new StringBuilder();
-            foreach (var t in array) {
-                if (builder.Length > 0) builder.Append(",");
-                builder.Append(t.ToString());
-            }
-            return builder.ToString();
-        }
-
-        private static string DumpBitArrayRepresentation(BitArray bitArray) {
-            if (bitArray == null) return null;
-            return DumpArrayRepresentation(bitArray.Cast<bool>().ToArray());
-        }
-
         //crazy codegen for building record dumpers
-        private static Action<StdfRecord> CreateDumperForType(Type type) {
+        private static Action<StdfRecord> CreateDumperForType(Type type)
+        {
             var dynDumper = new DynamicMethod(String.Format("Dump{0}", type.Name), null, new[] { typeof(StdfRecord) }, typeof(Program));
             var ilgen = dynDumper.GetILGenerator();
             var record = ilgen.DeclareLocal(type);
@@ -88,16 +80,19 @@ namespace StdfDump {
             var dumpArray = typeof(Program).GetMethod("DumpArrayRepresentation", BindingFlags.Static | BindingFlags.NonPublic);
             var dumpBitArray = typeof(Program).GetMethod("DumpBitArrayRepresentation", BindingFlags.Static | BindingFlags.NonPublic);
 
-            foreach (var prop in type.GetProperties()) {
+            foreach (var prop in type.GetProperties())
+            {
                 if (prop.Name == "RecordType") continue;
                 if (prop.Name == "StdfFile") continue;
                 if (prop.Name == "Offset") continue;
                 LocalBuilder propLocal;
-                if (prop.PropertyType.IsArray || prop.PropertyType == typeof(BitArray)) {
+                if (prop.PropertyType.IsArray || prop.PropertyType == typeof(BitArray))
+                {
                     //if it is an array, we'll store its string representation
                     propLocal = ilgen.DeclareLocal(typeof(string));
                 }
-                else {
+                else
+                {
                     propLocal = ilgen.DeclareLocal(prop.PropertyType);
                 }
                 var getter = prop.GetGetMethod();
@@ -106,11 +101,13 @@ namespace StdfDump {
                 ilgen.Emit(OpCodes.Ldloc, record);
                 ilgen.Emit(OpCodes.Callvirt, getter);
                 //if it's an array, get its structural representation
-                if (prop.PropertyType.IsArray) {
+                if (prop.PropertyType.IsArray)
+                {
                     //call the dump array method to get a string (or null)
                     ilgen.EmitCall(OpCodes.Call, dumpArray.MakeGenericMethod(prop.PropertyType.GetElementType()), null);
                 }
-                else if (prop.PropertyType == typeof(BitArray)) {
+                else if (prop.PropertyType == typeof(BitArray))
+                {
                     //call the dump array method to get a string (or null)
                     ilgen.EmitCall(OpCodes.Call, dumpBitArray, null);
                 }
@@ -129,7 +126,8 @@ namespace StdfDump {
                 var notNullLabel = ilgen.DefineLabel();
                 var storeLabel = ilgen.DefineLabel();
                 //check the value for null
-                if (!prop.PropertyType.IsValueType) {
+                if (!prop.PropertyType.IsValueType)
+                {
                     ilgen.Emit(OpCodes.Ldloc, propLocal);
                     ilgen.Emit(OpCodes.Brtrue, notNullLabel);
                     ilgen.Emit(OpCodes.Ldstr, "[NULL]");

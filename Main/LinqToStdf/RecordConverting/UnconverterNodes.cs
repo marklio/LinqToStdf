@@ -86,10 +86,14 @@ namespace LinqToStdf.RecordConverting
     {
         public Type Type { get; private set; }
         public CodeNode ValueSource { get; set; }
-        public WriteTypeNode(Type type, CodeNode valueSource)
+        public bool IsNibble { get; }
+        public WriteTypeNode(Type type, CodeNode valueSource, bool isNibble = false)
         {
             Type = type;
             ValueSource = valueSource;
+            if (isNibble && type != typeof(byte[])) throw new InvalidOperationException("Nibble arrays can only be read into byte arrays.");
+            IsNibble = isNibble;
+
         }
         public override CodeNode Accept(CodeNodeVisitor visitor)
         {

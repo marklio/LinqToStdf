@@ -13,7 +13,7 @@ namespace LinqToStdf.Records.V4 {
     FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "SiteNumber"),
     FieldLayout(FieldIndex = 2, FieldType = typeof(ushort), RecordProperty = "BinNumber"),
     FieldLayout(FieldIndex = 3, FieldType = typeof(uint), RecordProperty = "BinCount"),
-    StringFieldLayout(FieldIndex = 4, IsOptional = true, Length = 1, RecordProperty = "BinPassFail"),
+    StringFieldLayout(FieldIndex = 4, IsOptional = true, Length = 1, MissingValue = " ", RecordProperty = "BinPassFail"),
     StringFieldLayout(FieldIndex = 5, IsOptional = true, RecordProperty = "BinName")]
     public abstract class BinSummaryRecord : StdfRecord, IHeadSiteIndexable {
         public abstract BinType BinType { get; }
