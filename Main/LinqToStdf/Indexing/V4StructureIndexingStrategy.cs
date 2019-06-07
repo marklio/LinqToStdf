@@ -12,16 +12,19 @@ using System.Reflection;
 using System.Collections.ObjectModel;
 using System.Collections;
 
-namespace LinqToStdf.Indexing {
+namespace LinqToStdf.Indexing
+{
     /// <summary>
     /// This indexing strategy aims to provide performant, memory-efficient indexing of V4 STDFs that improve query performance
     /// </summary>
-    public class V4StructureIndexingStrategy : CachingIndexingStrategy {
+    public class V4StructureIndexingStrategy : CachingIndexingStrategy
+    {
 
         /// <summary>
         /// Describes the scope of a section of the stdf file, like the records in the scope of a particular part, wafer, etc.
         /// </summary>
-        class Extents {
+        class Extents
+        {
             /// <summary>
             /// The starting record index
             /// </summary>
@@ -43,7 +46,8 @@ namespace LinqToStdf.Indexing {
         /// <summary>
         /// Maps records to "extents" of different scopes.  Also capable of mapping outer extents to extents
         /// </summary>
-        class ParentMap {
+        class ParentMap
+        {
 
             /// <summary>
             /// A list of extents from the file
@@ -52,7 +56,8 @@ namespace LinqToStdf.Indexing {
             /// <summary>
             /// Gets the extents containing the specified record
             /// </summary>
-            public Extents GetExtents(StdfRecord record) {
+            public Extents GetExtents(StdfRecord record)
+            {
                 //TODO: optimized search (binary?)
                 var candidate = _ExtentsList.TakeWhile(e => e.StartOffset <= record.Offset)
                     .LastOrDefault();
@@ -62,7 +67,8 @@ namespace LinqToStdf.Indexing {
             /// <summary>
             /// Enumerates the extents that are fully within the specified outer extents
             /// </summary>
-            public IEnumerable<Extents> GetExtentsListWithin(Extents outerExtents) {
+            public IEnumerable<Extents> GetExtentsListWithin(Extents outerExtents)
+            {
                 return _ExtentsList.SkipWhile(e => e.StartIndex < outerExtents.StartIndex)
                     .TakeWhile(e => e.EndIndex < outerExtents.EndIndex);
             }
@@ -70,14 +76,16 @@ namespace LinqToStdf.Indexing {
             /// <summary>
             /// Gets all the extents in the map
             /// </summary>
-            public IEnumerable<Extents> GetAllExtents() {
+            public IEnumerable<Extents> GetAllExtents()
+            {
                 return from e in _ExtentsList select e;
             }
 
             /// <summary>
             /// Adds extents to the map
             /// </summary>
-            public void AddExtents(Extents extents) {
+            public void AddExtents(Extents extents)
+            {
                 _ExtentsList.Add(extents);
             }
         }
@@ -93,8 +101,10 @@ namespace LinqToStdf.Indexing {
         /// <summary>
         /// Finds all the records in the specified extents
         /// </summary>
-        IEnumerable<StdfRecord> GetRecordsInExtents(Extents extents) {
-            for (var i = extents.StartIndex; i <= extents.EndIndex; i++) {
+        IEnumerable<StdfRecord> GetRecordsInExtents(Extents extents)
+        {
+            for (var i = extents.StartIndex; i <= extents.EndIndex; i++)
+            {
                 yield return _AllRecords[i];
             }
         }
@@ -104,8 +114,10 @@ namespace LinqToStdf.Indexing {
         /// </summary>
         /// <param name="extents"></param>
         /// <returns></returns>
-        IEnumerable<StdfRecord> GetRecordsInExtentsReverse(Extents extents) {
-            for (var i = extents.EndIndex; i >= extents.StartIndex; i--) {
+        IEnumerable<StdfRecord> GetRecordsInExtentsReverse(Extents extents)
+        {
+            for (var i = extents.EndIndex; i >= extents.StartIndex; i--)
+            {
                 yield return _AllRecords[i];
             }
         }
@@ -113,7 +125,8 @@ namespace LinqToStdf.Indexing {
         /// <summary>
         /// This is the method that is used to index a stream of records
         /// </summary>
-        public override void IndexRecords(IEnumerable<StdfRecord> records) {
+        public override void IndexRecords(IEnumerable<StdfRecord> records)
+        {
             _AllRecords = new List<StdfRecord>();
             //extents for the current wafer and part
             Extents currentWaferExtents = null;
@@ -140,7 +153,8 @@ namespace LinqToStdf.Indexing {
                 partsEnding = false;
             }
             //loop through the records, building the structure
-            foreach (var r in records) {
+            foreach (var r in records)
+            {
                 var index = _AllRecords.Count;
                 //look for marker records
                 //TODO: does all this checking/casting slow us down too much?
@@ -148,7 +162,8 @@ namespace LinqToStdf.Indexing {
                 else if (r.GetType() == typeof(Mrr)) _Mrr = (Mrr)r;
                 else if (r.GetType() == typeof(Pcr)) _Pcrs.Add((Pcr)r);
                 //if we think we're looking for the end of the wafers, and we hit something other than Wrr, we passed the end
-                if (waferEnding && r.GetType() != typeof(Wrr)) {
+                if (waferEnding && r.GetType() != typeof(Wrr))
+                {
                     EndWafer(index - 1);
                 }
                 //if we think we're looking for the end of the parts, and we hit something other than Prr, we passed the end
@@ -157,21 +172,27 @@ namespace LinqToStdf.Indexing {
                     EndParts(index - 1);
                 }
                 //when we hit Wrr or Prr, start looking for something else
-                if (r.GetType() == typeof(Wrr)) {
+                if (r.GetType() == typeof(Wrr))
+                {
                     waferEnding = true;
                 }
-                else if (r.GetType() == typeof(Prr)) {
+                else if (r.GetType() == typeof(Prr))
+                {
                     partsEnding = true;
                 }
                 //if it's a new Pir/Wir, start new extents
-                if (r.GetType() == typeof(Pir) && currentPartExtents == null) {
-                    currentPartExtents = new Extents {
+                if (r.GetType() == typeof(Pir) && currentPartExtents == null)
+                {
+                    currentPartExtents = new Extents
+                    {
                         StartIndex = index,
                         StartOffset = r.Offset
                     };
                 }
-                if (r.GetType() == typeof(Wir) && currentWaferExtents == null) {
-                    currentWaferExtents = new Extents {
+                if (r.GetType() == typeof(Wir) && currentWaferExtents == null)
+                {
+                    currentWaferExtents = new Extents
+                    {
                         StartIndex = index,
                         StartOffset = r.Offset
                     };
@@ -180,10 +201,12 @@ namespace LinqToStdf.Indexing {
             }
             var lastIndex = _AllRecords.Count - 1;
             //end any open wafers/parts at the last index
-            if (waferEnding) {
+            if (waferEnding)
+            {
                 EndWafer(lastIndex);
             }
-            if (partsEnding) {
+            if (partsEnding)
+            {
                 EndParts(lastIndex);
             }
         }
@@ -192,23 +215,27 @@ namespace LinqToStdf.Indexing {
         /// Enumerates the records that we've indexed
         /// </summary>
         /// <returns></returns>
-        public override IEnumerable<StdfRecord> EnumerateIndexedRecords() {
+        public override IEnumerable<StdfRecord> EnumerateIndexedRecords()
+        {
             return from r in _AllRecords select r;
         }
 
         /// <summary>
         /// Transform a query to use the indexing strategy
         /// </summary>
-        public override System.Linq.Expressions.Expression TransformQuery(Expression query) {
+        public override System.Linq.Expressions.Expression TransformQuery(Expression query)
+        {
             return new OptimizingVisitor(this).Visit(query);
         }
 
         /// <summary>
         /// Expression visitor that rewrites queries to leverage the indexed data
         /// </summary>
-        class OptimizingVisitor : ExpressionVisitor {
+        class OptimizingVisitor : ExpressionVisitor
+        {
             readonly V4StructureIndexingStrategy _Strategy;
-            public OptimizingVisitor(V4StructureIndexingStrategy strategy) {
+            public OptimizingVisitor(V4StructureIndexingStrategy strategy)
+            {
                 _Strategy = strategy;
             }
 
@@ -260,7 +287,8 @@ namespace LinqToStdf.Indexing {
             /// <summary>
             /// Lets us know the expression is a call to StdfFile.GetRecordsEnumerable
             /// </summary>
-            static bool IsAllRecords(Expression exp) {
+            static bool IsAllRecords(Expression exp)
+            {
                 if (exp is MethodCallExpression call)
                 {
                     return call.Method == GetRecordsEnumerable;
@@ -271,16 +299,20 @@ namespace LinqToStdf.Indexing {
             /// <summary>
             /// optimizes method calls
             /// </summary>
-            protected override Expression VisitMethodCall(MethodCallExpression m) {
-                if (OptimizingMap.TryGetValue(m.Method, out var optimized)) {
+            protected override Expression VisitMethodCall(MethodCallExpression m)
+            {
+                if (OptimizingMap.TryGetValue(m.Method, out var optimized))
+                {
                     //It's in the optimizing map. Replace with a call to the optimized method
                     m = Expression.Call(Expression.Constant(_Strategy), optimized, m.Arguments);
                 }
-                else if (m.Method == OfExactTypePir && IsAllRecords(m.Arguments[0])) {
+                else if (m.Method == OfExactTypePir && IsAllRecords(m.Arguments[0]))
+                {
                     //It's OfExactType<Pir>, replace with optimized method
                     m = Expression.Call(Expression.Constant(_Strategy), OptOfExactTypePir, m.Arguments);
                 }
-                else if (m.Method == OfExactTypePrr && IsAllRecords(m.Arguments[0])) {
+                else if (m.Method == OfExactTypePrr && IsAllRecords(m.Arguments[0]))
+                {
                     //It's OfExactType<Prr>, replace with optimized method
                     m = Expression.Call(Expression.Constant(_Strategy), OptOfExactTypePrr, m.Arguments);
                 }
@@ -294,7 +326,8 @@ namespace LinqToStdf.Indexing {
         /// Leverages the parts extents to get all Prrs.
         /// Note that this optimization gives them to you in a slightly different order if using multi-site data
         /// </summary>
-        public IEnumerable<Prr> OfExactTypePrr(IEnumerable<StdfRecord> records) {
+        public IEnumerable<Prr> OfExactTypePrr(IEnumerable<StdfRecord> records)
+        {
             records.Any(); //TODO: I don't remember what this is for :(
             return from e in _PartsMap.GetAllExtents()
                    from p in GetRecordsInExtentsReverse(e).Select(r => r as Prr).TakeWhile(r => r != null)
@@ -304,7 +337,8 @@ namespace LinqToStdf.Indexing {
         /// <summary>
         /// The IQueryable implementation of OfExactTypePrr
         /// </summary>
-        public IQueryable<Prr> OfExactTypePrr(IQueryable<StdfRecord> records) {
+        public IQueryable<Prr> OfExactTypePrr(IQueryable<StdfRecord> records)
+        {
             return records.Provider.CreateQuery<Prr>(Expression.Call(Expression.Constant(this), (MethodInfo)MethodBase.GetCurrentMethod(), records.Expression));
         }
 
@@ -332,7 +366,8 @@ namespace LinqToStdf.Indexing {
         /// <summary>
         /// Super fast GetMir :)
         /// </summary>
-        public Mir GetMir(IRecordContext context) {
+        public Mir GetMir(IRecordContext context)
+        {
             context.StdfFile.GetRecordsEnumerable().Any();
             return _Mir;
         }
@@ -366,14 +401,16 @@ namespace LinqToStdf.Indexing {
                    select p;
         }
 
-        public Pcr GetSummaryPcr(IRecordContext record) {
+        public Pcr GetSummaryPcr(IRecordContext record)
+        {
             record.StdfFile.GetRecordsEnumerable().Any();
             return (from p in _Pcrs
                     where p.HeadNumber == 255
                     select p).FirstOrDefault();
         }
 
-        public IEnumerable<Prr> GetPrrs(Wrr wrr) {
+        public IEnumerable<Prr> GetPrrs(Wrr wrr)
+        {
             wrr.StdfFile.GetRecordsEnumerable().Any();
             //find the part extents within the wafer extent
             var waferExtent = _WafersMap.GetExtents(wrr);
@@ -384,21 +421,24 @@ namespace LinqToStdf.Indexing {
                    select prr;
         }
 
-        public Wir GetWir(IHeadIndexable record) {
+        public Wir GetWir(IHeadIndexable record)
+        {
             record.StdfFile.GetRecordsEnumerable().Any();
             var waferExtent = _WafersMap.GetExtents((StdfRecord)record);
             if (waferExtent == null) return null;
             return _AllRecords[waferExtent.StartIndex] as Wir;
         }
 
-        public Wrr GetWrr(IHeadIndexable record) {
+        public Wrr GetWrr(IHeadIndexable record)
+        {
             record.StdfFile.GetRecordsEnumerable().Any();
             var waferExtents = _WafersMap.GetExtents((StdfRecord)record);
             if (waferExtents == null) return null;
             return _AllRecords[waferExtents.EndIndex] as Wrr;
         }
 
-        public Prr GetPrr(IHeadSiteIndexable record) {
+        public Prr GetPrr(IHeadSiteIndexable record)
+        {
             record.StdfFile.GetRecordsEnumerable().Any();
             var partExtents = _PartsMap.GetExtents((StdfRecord)record);
             if (partExtents == null) return null;
@@ -410,7 +450,8 @@ namespace LinqToStdf.Indexing {
                     select p).FirstOrDefault();
         }
 
-        public Pir GetPir(IHeadSiteIndexable record) {
+        public Pir GetPir(IHeadSiteIndexable record)
+        {
             record.StdfFile.GetRecordsEnumerable().Any();
             var partExtents = _PartsMap.GetExtents((StdfRecord)record);
             if (partExtents == null) return null;
@@ -422,7 +463,8 @@ namespace LinqToStdf.Indexing {
                     select p).FirstOrDefault();
         }
 
-        public Prr GetMatchingPrr(Pir pir) {
+        public Prr GetMatchingPrr(Pir pir)
+        {
             pir.StdfFile.GetRecordsEnumerable().Any();
             var partExtents = _PartsMap.GetExtents(pir);
             if (partExtents == null) return null;
@@ -434,7 +476,8 @@ namespace LinqToStdf.Indexing {
                     select p).FirstOrDefault();
         }
 
-        public Pir GetMatchingPir(Prr prr) {
+        public Pir GetMatchingPir(Prr prr)
+        {
             prr.StdfFile.GetRecordsEnumerable().Any();
             var partExtents = _PartsMap.GetExtents(prr);
             if (partExtents == null) return null;
@@ -446,7 +489,8 @@ namespace LinqToStdf.Indexing {
                     select p).FirstOrDefault();
         }
 
-        public IEnumerable<StdfRecord> GetChildRecords(Pir pir) {
+        public IEnumerable<StdfRecord> GetChildRecords(Pir pir)
+        {
             pir.StdfFile.GetRecordsEnumerable().Any();
             var partExtents = _PartsMap.GetExtents(pir);
             return GetRecordsInExtents(partExtents)
@@ -456,7 +500,8 @@ namespace LinqToStdf.Indexing {
                 .Cast<StdfRecord>();
         }
 
-        public IEnumerable<StdfRecord> GetChildRecords(Prr prr) {
+        public IEnumerable<StdfRecord> GetChildRecords(Prr prr)
+        {
             prr.StdfFile.GetRecordsEnumerable().Any();
             var partExtents = _PartsMap.GetExtents(prr);
             return GetRecordsInExtents(partExtents)

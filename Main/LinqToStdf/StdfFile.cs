@@ -15,11 +15,8 @@ using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
 
-#if SILVERLIGHT
-using System.Windows.Controls;
-#endif
-
-namespace LinqToStdf {
+namespace LinqToStdf
+{
 
     /// <summary>
     /// The delegate type for methods that add filtering capability to an StdfRecord stream.
@@ -44,7 +41,8 @@ namespace LinqToStdf {
     /// suitable for parsing STDF V4 files.
     /// </para>
     /// </remarks>
-    public sealed partial class StdfFile : IRecordContext {
+    public sealed partial class StdfFile : IRecordContext
+    {
         readonly IStdfStreamManager _StreamManager;
         RewindableByteStream _Stream;
         readonly static internal RecordConverterFactory _V4ConverterFactory = new RecordConverterFactory();
@@ -53,7 +51,8 @@ namespace LinqToStdf {
         /// Exposes the ConverterFactory in use for parsing.
         /// This allows record un/converters to be registered.
         /// </summary>
-        public RecordConverterFactory ConverterFactory {
+        public RecordConverterFactory ConverterFactory
+        {
             get { return _ConverterFactory; }
         }
 
@@ -120,12 +119,14 @@ namespace LinqToStdf {
         /// handles issues.
         /// </para>
         /// </remarks>
-        public bool ThrowOnFormatError {
+        public bool ThrowOnFormatError
+        {
             get { return _ThrowOnFormatError; }
             set { EnsureFiltersUnlocked(); _ThrowOnFormatError = value; }
         }
 
-        private void EnsureFiltersUnlocked() {
+        private void EnsureFiltersUnlocked()
+        {
             if (_FiltersLocked) throw new InvalidOperationException(Resources.ErrorFiltersLocked);
         }
 
@@ -133,7 +134,8 @@ namespace LinqToStdf {
         /// Static constructor that will prepare a converter factory
         /// suitable for parsing STDF V4 records.
         /// </summary>
-        static StdfFile() {
+        static StdfFile()
+        {
             StdfV4Specification.RegisterRecords(_V4ConverterFactory);
         }
 
@@ -170,22 +172,27 @@ namespace LinqToStdf {
         public StdfFile(IStdfStreamManager streamManager, bool debug) : this(streamManager, debug, null) { }
 
         internal StdfFile(IStdfStreamManager streamManager, bool debug, RecordsAndFields recordsAndFields)
-            : this(streamManager, PrivateImpl.None) {
-            if (debug || recordsAndFields != null) {
+            : this(streamManager, PrivateImpl.None)
+        {
+            if (debug || recordsAndFields != null)
+            {
                 _ConverterFactory = new RecordConverterFactory(recordsAndFields) { Debug = debug };
                 StdfV4Specification.RegisterRecords(_ConverterFactory);
             }
-            else {
+            else
+            {
                 _ConverterFactory = new RecordConverterFactory(_V4ConverterFactory);
             }
         }
 
         internal StdfFile(IStdfStreamManager streamManager, RecordConverterFactory rcf)
-            : this(streamManager, PrivateImpl.None) {
+            : this(streamManager, PrivateImpl.None)
+        {
             _ConverterFactory = rcf;
         }
 
-        private StdfFile(IStdfStreamManager streamManager, PrivateImpl _) {
+        private StdfFile(IStdfStreamManager streamManager, PrivateImpl _)
+        {
             _StreamManager = streamManager;
             _RecordFilter = BuiltInFilters.IdentityFilter;
         }
@@ -199,24 +206,29 @@ namespace LinqToStdf {
         /// all the time, turn off caching, or apply the filter to the results
         /// of the call to <see cref="GetRecords"/>.
         /// </summary>
-        public void AddFilter(RecordFilter filter) {
+        public void AddFilter(RecordFilter filter)
+        {
             EnsureFiltersUnlocked();
             _RecordFilter = _RecordFilter.Chain(filter);
         }
 
-        IEnumerable<StdfRecord> SetStdfFile(IEnumerable<StdfRecord> records) {
-            foreach (var r in records) {
+        IEnumerable<StdfRecord> SetStdfFile(IEnumerable<StdfRecord> records)
+        {
+            foreach (var r in records)
+            {
                 r.StdfFile = this;
                 yield return r;
             }
         }
 
-        private RecordFilter GetBaseRecordFilter() {
+        private RecordFilter GetBaseRecordFilter()
+        {
             RecordFilter filter = SetStdfFile;
             return _ThrowOnFormatError ? filter.Chain(BuiltInFilters.ThrowOnFormatError) : filter;
         }
 
-        private RecordFilter GetTopRecordFilter() {
+        private RecordFilter GetTopRecordFilter()
+        {
             return IndexingStrategy.CacheRecords;
         }
 
@@ -377,13 +389,17 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets all the records in the file as a "stream" of StdfRecord object
         /// </summary>
-        public IEnumerable<StdfRecord> GetRecordsEnumerable() {
+        public IEnumerable<StdfRecord> GetRecordsEnumerable()
+        {
             _FiltersLocked = true;
-            foreach (var record in GetTopRecordFilter()(_RecordFilter(GetBaseRecordFilter()(InternalGetAllRecords())))) {
-                if (record.GetType() == typeof(StartOfStreamRecord)) {
+            foreach (var record in GetTopRecordFilter()(_RecordFilter(GetBaseRecordFilter()(InternalGetAllRecords()))))
+            {
+                if (record.GetType() == typeof(StartOfStreamRecord))
+                {
                     var sosRecord = (StartOfStreamRecord)record;
                     sosRecord.FileName = _StreamManager.Name;
-                    if (_Endian == Endian.Unknown) {
+                    if (_Endian == Endian.Unknown)
+                    {
                         _Endian = sosRecord.Endian;
                     }
                     _ExpectedLength = sosRecord.ExpectedLength;
@@ -400,13 +416,15 @@ namespace LinqToStdf {
         /// through the records themselves at the end of the chain.
         /// </remarks>
         /// <returns>The count of records consumed at the end of the chain.</returns>
-        public int Consume() {
+        public int Consume()
+        {
             return this.GetRecords().Count();
         }
 
         #region Rewind and Seek APIs
 
-        void EnterSeekMode() {
+        void EnterSeekMode()
+        {
             _InSeekMode = true;
         }
 
@@ -419,7 +437,8 @@ namespace LinqToStdf {
         /// the newly-aquired record stream.
         /// Must be called within the context of live record reading.
         /// </summary>
-        public void RewindAndSeek() {
+        public void RewindAndSeek()
+        {
             EnterSeekMode();
         }
 
@@ -429,7 +448,8 @@ namespace LinqToStdf {
         /// Adds a <see cref="SeekAlgorithm"/> to be used if <see cref="RewindAndSeek()"/> is called.
         /// </summary>
         /// <param name="algorithm"></param>
-        public void AddSeekAlgorithm(SeekAlgorithm algorithm) {
+        public void AddSeekAlgorithm(SeekAlgorithm algorithm)
+        {
             _SeekAlgorithm = _SeekAlgorithm.Chain(algorithm);
         }
 
@@ -438,168 +458,193 @@ namespace LinqToStdf {
         //indicates we are in seek mode
         bool _InSeekMode;
 
-        IEnumerable<StdfRecord> InternalGetAllRecords() {
+        IEnumerable<StdfRecord> InternalGetAllRecords()
+        {
             //set this in case the last time we ended in seek mode
             _InSeekMode = false;
-            using (IStdfStreamScope streamScope = _StreamManager.GetScope()) {
-                try {
-                    _Stream = new RewindableByteStream(streamScope.Stream);
-                    //read the FAR to get endianness
-                    var endian = Endian.Little;
-                    var far = new byte[6];
-                    if (_Stream.Read(far, 6) < 6) {
-                        yield return new StartOfStreamRecord { Endian = Endian.Unknown, ExpectedLength = _Stream.Length };
-                        yield return new FormatErrorRecord {
-                            Message = Resources.FarReadError,
-                            Recoverable = false
-                        };
-                        yield return new EndOfStreamRecord();
-                        yield break;
-                    }
-                    endian = far[4] < 2 ? Endian.Big : Endian.Little;
-                    var stdfVersion = far[5];
-                    var length = (endian == Endian.Little ? far[0] : far[1]);
-                    if (length != 2) {
-                        yield return new StartOfStreamRecord { Endian = endian, ExpectedLength = _Stream.Length };
-                        yield return new FormatErrorRecord {
-                            Message = Resources.FarLengthError,
-                            Recoverable = false
-                        };
-                        yield return new EndOfStreamRecord { Offset = 2 };
-                        yield break;
-                    }
-                    //validate record type
-                    if (far[2] != 0) {
-                        yield return new StartOfStreamRecord { Endian = endian, ExpectedLength = _Stream.Length };
-                        yield return new FormatErrorRecord {
-                            Offset = 2,
-                            Message = Resources.FarRecordTypeError,
-                            Recoverable = false
-                        };
-                        yield return new EndOfStreamRecord { Offset = 6 };
-                        yield break;
-                    }
-                    //validate record type
-                    if (far[3] != 10) {
-                        yield return new StartOfStreamRecord { Endian = endian, ExpectedLength = _Stream.Length };
-                        yield return new FormatErrorRecord {
-                            Offset = 3,
-                            Message = Resources.FarRecordSubTypeError,
-                            Recoverable = false
-                        };
-                        yield return new EndOfStreamRecord { Offset = 3 };
-                        yield break;
-                    }
-                    //OK we're satisfied, let's go
-                    yield return new StartOfStreamRecord() { Endian = endian, ExpectedLength = _Stream.Length };
-                    yield return new LinqToStdf.Records.V4.Far() { CpuType = far[4], StdfVersion = far[5] };
+            using IStdfStreamScope streamScope = _StreamManager.GetScope();
+            try
+            {
+                _Stream = new RewindableByteStream(streamScope.Stream);
+                //read the FAR to get endianness
+                var endian = Endian.Little;
+                var far = new byte[6];
+                if (_Stream.Read(far, 6) < 6)
+                {
+                    yield return new StartOfStreamRecord { Endian = Endian.Unknown, ExpectedLength = _Stream.Length };
+                    yield return new FormatErrorRecord
+                    {
+                        Message = Resources.FarReadError,
+                        Recoverable = false
+                    };
+                    yield return new EndOfStreamRecord();
+                    yield break;
+                }
+                endian = far[4] < 2 ? Endian.Big : Endian.Little;
+                var stdfVersion = far[5];
+                var length = (endian == Endian.Little ? far[0] : far[1]);
+                if (length != 2)
+                {
+                    yield return new StartOfStreamRecord { Endian = endian, ExpectedLength = _Stream.Length };
+                    yield return new FormatErrorRecord
+                    {
+                        Message = Resources.FarLengthError,
+                        Recoverable = false
+                    };
+                    yield return new EndOfStreamRecord { Offset = 2 };
+                    yield break;
+                }
+                //validate record type
+                if (far[2] != 0)
+                {
+                    yield return new StartOfStreamRecord { Endian = endian, ExpectedLength = _Stream.Length };
+                    yield return new FormatErrorRecord
+                    {
+                        Offset = 2,
+                        Message = Resources.FarRecordTypeError,
+                        Recoverable = false
+                    };
+                    yield return new EndOfStreamRecord { Offset = 6 };
+                    yield break;
+                }
+                //validate record type
+                if (far[3] != 10)
+                {
+                    yield return new StartOfStreamRecord { Endian = endian, ExpectedLength = _Stream.Length };
+                    yield return new FormatErrorRecord
+                    {
+                        Offset = 3,
+                        Message = Resources.FarRecordSubTypeError,
+                        Recoverable = false
+                    };
+                    yield return new EndOfStreamRecord { Offset = 3 };
+                    yield break;
+                }
+                //OK we're satisfied, let's go
+                yield return new StartOfStreamRecord() { Endian = endian, ExpectedLength = _Stream.Length };
+                yield return new LinqToStdf.Records.V4.Far() { CpuType = far[4], StdfVersion = far[5] };
 
-                    //flush the memory
-                    _Stream.Flush();
+                //flush the memory
+                _Stream.Flush();
 
-                    //now we have the FAR out of the way, and we can blow through the rest.
-                    while (true) {
-                        if (_InSeekMode) {
-                            _Stream.RewindAll();
-                            int backup = -1;
-                            //create the callback algorithms use to indicate the found something
-                            void BackupCallback(int bytes) { backup = bytes; }
-                            var corruptOffset = _Stream.Offset;
-                            //set up the seek algorithms and consume the sequence.
-                            var algorithm = _SeekAlgorithm(_Stream.ReadAsByteSequence(), endian, BackupCallback);
-                            algorithm.Count();
-                            //when we get here, one of the algorithms has found the record stream,
-                            //or we went to the end of the stream
+                //now we have the FAR out of the way, and we can blow through the rest.
+                while (true)
+                {
+                    if (_InSeekMode)
+                    {
+                        _Stream.RewindAll();
+                        int backup = -1;
+                        //create the callback algorithms use to indicate the found something
+                        void BackupCallback(int bytes) { backup = bytes; }
+                        var corruptOffset = _Stream.Offset;
+                        //set up the seek algorithms and consume the sequence.
+                        var algorithm = _SeekAlgorithm(_Stream.ReadAsByteSequence(), endian, BackupCallback);
+                        algorithm.Count();
+                        //when we get here, one of the algorithms has found the record stream,
+                        //or we went to the end of the stream
 
-                            var recoverable = false;
-                            if (backup != -1) {
-                                //someone found where we need to be, backup the number of bytes they suggest
-                                _Stream.Rewind(backup);
-                                recoverable = true;
-                            }
-                            //spit out the corrupt data
-                            yield return new CorruptDataRecord() {
-                                CorruptData = _Stream.DumpDataToCurrentOffset(),
-                                Offset = corruptOffset,
-                                Recoverable = recoverable
-                            };
-                            //the data's gone out the door, so flush it
-                            _Stream.Flush();
-                            if (!recoverable) {
-                                //we got to the end without finding anything
-                                //spit out a format error
-                                yield return new FormatErrorRecord() {
-                                    Message = Resources.EOFInSeekMode,
-                                    Recoverable = false,
-                                    Offset = _Stream.Offset
-                                };
-                                yield return new EndOfStreamRecord() { Offset = _Stream.Offset };
-                                yield break;
-                            }
-                            _InSeekMode = false;
+                        var recoverable = false;
+                        if (backup != -1)
+                        {
+                            //someone found where we need to be, backup the number of bytes they suggest
+                            _Stream.Rewind(backup);
+                            recoverable = true;
                         }
-                        var position = _Stream.Offset;
-                        //read a record header
-                        RecordHeader? header = _Stream.ReadHeader(endian);
-                        //null means we hit EOS
-                        if (header == null) {
-                            if (!_Stream.PastEndOfStream) {
-                                //Something's wrong. We know the offset is rewound
-                                //to the begining of the header.  If there's still
-                                //data, we're corrupt
-                                yield return new CorruptDataRecord() {
-                                    Offset = position,
-                                    //TODO: leverage the data in the stream.
-                                    //we know we've hit the end, so we can just dump
-                                    //the remaining memoized data
-                                    CorruptData = _Stream.DumpRemainingData(),
-                                    Recoverable = false
-                                };
-                                yield return new FormatErrorRecord() {
-                                    Message = Resources.EOFInHeader,
-                                    Recoverable = false,
-                                    Offset = position
-                                };
-                            }
+                        //spit out the corrupt data
+                        yield return new CorruptDataRecord()
+                        {
+                            CorruptData = _Stream.DumpDataToCurrentOffset(),
+                            Offset = corruptOffset,
+                            Recoverable = recoverable
+                        };
+                        //the data's gone out the door, so flush it
+                        _Stream.Flush();
+                        if (!recoverable)
+                        {
+                            //we got to the end without finding anything
+                            //spit out a format error
+                            yield return new FormatErrorRecord()
+                            {
+                                Message = Resources.EOFInSeekMode,
+                                Recoverable = false,
+                                Offset = _Stream.Offset
+                            };
                             yield return new EndOfStreamRecord() { Offset = _Stream.Offset };
                             yield break;
                         }
-                        var contents = new byte[header.Value.Length];
-                        int read = _Stream.Read(contents, contents.Length);
-                        if (read < contents.Length) {
-                            //rewind to the beginning of the record (read bytes + the header)
-                            _Stream.Rewind(_Stream.Offset - position);
-                            yield return new CorruptDataRecord() {
+                        _InSeekMode = false;
+                    }
+                    var position = _Stream.Offset;
+                    //read a record header
+                    RecordHeader? header = _Stream.ReadHeader(endian);
+                    //null means we hit EOS
+                    if (header == null)
+                    {
+                        if (!_Stream.PastEndOfStream)
+                        {
+                            //Something's wrong. We know the offset is rewound
+                            //to the begining of the header.  If there's still
+                            //data, we're corrupt
+                            yield return new CorruptDataRecord()
+                            {
                                 Offset = position,
+                                //TODO: leverage the data in the stream.
+                                //we know we've hit the end, so we can just dump
+                                //the remaining memoized data
                                 CorruptData = _Stream.DumpRemainingData(),
                                 Recoverable = false
                             };
-                            yield return new FormatErrorRecord() {
-                                Message = Resources.EOFInRecordContent,
+                            yield return new FormatErrorRecord()
+                            {
+                                Message = Resources.EOFInHeader,
                                 Recoverable = false,
                                 Offset = position
                             };
                         }
-                        else {
-                            var ur = new UnknownRecord(header.Value.RecordType, contents, endian) { Offset = position };
-                            StdfRecord r = _ConverterFactory.Convert(ur);
-                            if (r.GetType() != typeof(UnknownRecord)) {
-                                //it converted, so update our last known position
-                                //TODO: We should think about:
-                                //* how to indicate corruption within the record boundaries
-                                //* enabling filteres to set the last known offset (to allow valid unknown records to pass through)
-                                //  * This could possible be done by allowing filters access to Flush or the dump functionality.
-                                _Stream.Flush();
-                            }
-                            r.Offset = position;
-                            yield return r;
+                        yield return new EndOfStreamRecord() { Offset = _Stream.Offset };
+                        yield break;
+                    }
+                    var contents = new byte[header.Value.Length];
+                    int read = _Stream.Read(contents, contents.Length);
+                    if (read < contents.Length)
+                    {
+                        //rewind to the beginning of the record (read bytes + the header)
+                        _Stream.Rewind(_Stream.Offset - position);
+                        yield return new CorruptDataRecord()
+                        {
+                            Offset = position,
+                            CorruptData = _Stream.DumpRemainingData(),
+                            Recoverable = false
+                        };
+                        yield return new FormatErrorRecord()
+                        {
+                            Message = Resources.EOFInRecordContent,
+                            Recoverable = false,
+                            Offset = position
+                        };
+                    }
+                    else
+                    {
+                        var ur = new UnknownRecord(header.Value.RecordType, contents, endian) { Offset = position };
+                        StdfRecord r = _ConverterFactory.Convert(ur);
+                        if (r.GetType() != typeof(UnknownRecord))
+                        {
+                            //it converted, so update our last known position
+                            //TODO: We should think about:
+                            //* how to indicate corruption within the record boundaries
+                            //* enabling filteres to set the last known offset (to allow valid unknown records to pass through)
+                            //  * This could possible be done by allowing filters access to Flush or the dump functionality.
+                            _Stream.Flush();
                         }
+                        r.Offset = position;
+                        yield return r;
                     }
                 }
-                finally {
-                    //set stream to null so we're not holding onto it
-                    _Stream = null;
-                }
+            }
+            finally
+            {
+                //set stream to null so we're not holding onto it
+                _Stream = null;
             }
         }
 
@@ -609,7 +654,8 @@ namespace LinqToStdf {
         /// Implementation of <see cref="IRecordContext.StdfFile"/> to enable
         /// the extension methods. (returns this)
         /// </summary>
-        StdfFile IRecordContext.StdfFile {
+        StdfFile IRecordContext.StdfFile
+        {
             get { return this; }
         }
 

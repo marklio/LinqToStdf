@@ -112,13 +112,16 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ArraysMustBeAssignable" xml:space="preserve">
     <value>Arrays must be assignable.</value>
+  </data>
+  <data name="ArrayTooLong" xml:space="preserve">
+    <value>STDF only supports arrays up to {0} in length for field index {1} of {2}.</value>
   </data>
   <data name="CachingReEntrancy" xml:space="preserve">
     <value>Nested iterations cannot be triggered inside RecordFilter implementations when caching is enabled.</value>
@@ -192,9 +195,6 @@
   <data name="NoBitArrayArrays" xml:space="preserve">
     <value>BitArray fields do not support array layout attributes.</value>
   </data>
-  <data name="NoDebugInSilverlight" xml:space="preserve">
-    <value>Silverlight doesn't support debug mode.</value>
-  </data>
   <data name="NonConsecutiveFieldIndexDefault" xml:space="preserve">
     <value>The stdf field indexes for type {0} are not consecutive and/or unique.</value>
   </data>
@@ -210,20 +210,26 @@
   <data name="OffsetTooLarge" xml:space="preserve">
     <value>The offset is to large to be stored in an StdfRecord.</value>
   </data>
+  <data name="RecordTooLong" xml:space="preserve">
+    <value>STDF only supports records up to 65535 bytes long.</value>
+  </data>
   <data name="SharedLengthViolation" xml:space="preserve">
     <value>Shared length arrays have differing lengths (length field index {0}).</value>
   </data>
   <data name="SOFBeforeEOF" xml:space="preserve">
     <value>Cannot start a new file before ending the current one.</value>
   </data>
-  <data name="StringFieldLayoutNonString" xml:space="preserve">
-    <value>StringFieldLayoutAttribute can only define fields of type String.</value>
-  </data>
   <data name="StdfStringLessThanOne" xml:space="preserve">
     <value>Stdf strings must be at least 1 character long.</value>
   </data>
+  <data name="StringFieldLayoutNonString" xml:space="preserve">
+    <value>StringFieldLayoutAttribute can only define fields of type String.</value>
+  </data>
   <data name="StringTooLong" xml:space="preserve">
     <value>STDF only supports strings up to 255 characters long.</value>
+  </data>
+  <data name="TimeFieldLayoutNonDateTime" xml:space="preserve">
+    <value>TimeFieldLayoutAttribute can only define fields of type DateTime.</value>
   </data>
   <data name="UnconvertEndianMismatch" xml:space="preserve">
     <value>Can't unconvert unknown records with the wrong Endianness.</value>
@@ -278,14 +284,5 @@
   </data>
   <data name="WriteOutsideSOSEOS" xml:space="preserve">
     <value>Attempting to write outside of a StartOfStreamRecord/EndOfStreamRecord pair.</value>
-  </data>
-  <data name="RecordTooLong" xml:space="preserve">
-    <value>STDF only supports records up to 65535 bytes long.</value>
-  </data>
-  <data name="ArrayTooLong" xml:space="preserve">
-    <value>STDF only supports arrays up to {0} in length for field index {1} of {2}.</value>
-  </data>
-  <data name="TimeFieldLayoutNonDateTime" xml:space="preserve">
-    <value>TimeFieldLayoutAttribute can only define fields of type DateTime.</value>
   </data>
 </root>

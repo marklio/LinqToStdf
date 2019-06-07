@@ -7,20 +7,23 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Records {
+namespace LinqToStdf.Records
+{
 
     /// <summary>
     /// Indicates that the end of the stream of records has been reached.
     /// Can be used most notably to trigger the generation of a missing Mrr.
     /// </summary>
-    public class EndOfStreamRecord : StdfRecord {
+    public class EndOfStreamRecord : StdfRecord
+    {
 
         public EndOfStreamRecord()
         {
             Synthesized = true;
         }
 
-        public override RecordType RecordType {
+        public override RecordType RecordType
+        {
             get { throw new NotSupportedException(); }
         }
 

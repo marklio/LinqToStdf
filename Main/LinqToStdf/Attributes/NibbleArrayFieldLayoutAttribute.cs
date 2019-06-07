@@ -6,7 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Attributes {
+namespace LinqToStdf.Attributes
+{
 
     /// <summary>
     /// This indicates that the field to be parsed is a nibble array.
@@ -14,12 +15,14 @@ namespace LinqToStdf.Attributes {
     /// is represented by a separate byte.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    public class NibbleArrayFieldLayoutAttribute : ArrayFieldLayoutAttribute {
+    public class NibbleArrayFieldLayoutAttribute : ArrayFieldLayoutAttribute
+    {
 
         /// <summary>
         /// Overridden to be hard-coded to byte.  Setting will throw.
         /// </summary>
-        public override Type FieldType {
+        public override Type FieldType
+        {
             get { return typeof(byte); }
             set { throw new NotSupportedException(); }
         }

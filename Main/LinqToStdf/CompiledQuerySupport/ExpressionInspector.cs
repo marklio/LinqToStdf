@@ -9,13 +9,15 @@ using System.Linq;
 using System.Text;
 using System.Linq.Expressions;
 
-namespace LinqToStdf.CompiledQuerySupport {
+namespace LinqToStdf.CompiledQuerySupport
+{
 
     /// <summary>
     /// This is the class that inspects precompile queries and determines
     /// which records and fields should be parsed.
     /// </summary>
-    static class ExpressionInspector {
+    static class ExpressionInspector
+    {
 
         /// <summary>
         /// This visitor processes a query (in the form of a LambdaExpression) and
@@ -103,7 +105,8 @@ namespace LinqToStdf.CompiledQuerySupport {
             /// <summary>
             /// helper that will ensure collections don't leak
             /// </summary>
-            void EnsureTypesWontLeakRecords(IEnumerable<Type> types) {
+            void EnsureTypesWontLeakRecords(IEnumerable<Type> types)
+            {
                 foreach (var type in types)
                 {
                     EnsureTypeWontLeakRecords(type);

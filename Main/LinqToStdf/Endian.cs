@@ -6,12 +6,14 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf {
+namespace LinqToStdf
+{
 
-	/// <summary>
-	/// Used to indicate endian-ness
-	/// </summary>
-	public enum Endian {
+    /// <summary>
+    /// Used to indicate endian-ness
+    /// </summary>
+    public enum Endian
+    {
         /// <summary>
         /// Unknown
         /// </summary>
@@ -24,5 +26,5 @@ namespace LinqToStdf {
         /// Little Endian
         /// </summary>
 		Little,
-	}
+    }
 }

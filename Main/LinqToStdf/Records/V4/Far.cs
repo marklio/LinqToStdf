@@ -6,18 +6,21 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Records.V4 {
-	using Attributes;
+namespace LinqToStdf.Records.V4
+{
+    using Attributes;
 
-	[FieldLayout(FieldIndex = 0, FieldType = typeof(byte), RecordProperty = "CpuType"),
+    [FieldLayout(FieldIndex = 0, FieldType = typeof(byte), RecordProperty = "CpuType"),
     FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = (byte)4, RecordProperty = "StdfVersion")]
-	public class Far : StdfRecord {
+    public class Far : StdfRecord
+    {
 
-		public override RecordType RecordType {
-			get { return new RecordType(0, 10); }
-		}
+        public override RecordType RecordType
+        {
+            get { return new RecordType(0, 10); }
+        }
 
         public byte CpuType { get; set; }
         public byte StdfVersion { get; set; }
-	}
+    }
 }

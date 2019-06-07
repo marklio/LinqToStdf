@@ -6,8 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Records.V4 {
-	using Attributes;
+namespace LinqToStdf.Records.V4
+{
+    using Attributes;
 
     [FieldLayout(FieldIndex = 0, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "HeadNumber"),
     FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "SiteNumber"),
@@ -26,9 +27,11 @@ namespace LinqToStdf.Records.V4 {
     DependencyProperty(FieldIndex = 14, DependentOnIndex = 2, RecordProperty = "SupersedesCoords"),
     DependencyProperty(FieldIndex = 15, DependentOnIndex = 2, RecordProperty = "AbnormalTest"),
     DependencyProperty(FieldIndex = 16, DependentOnIndex = 2, RecordProperty = "Failed")]
-    public class Prr : StdfRecord, IHeadSiteIndexable {
+    public class Prr : StdfRecord, IHeadSiteIndexable
+    {
 
-        public override RecordType RecordType {
+        public override RecordType RecordType
+        {
             get { return new RecordType(5, 20); }
         }
 
@@ -57,38 +60,48 @@ namespace LinqToStdf.Records.V4 {
         static readonly byte _FailedMask = 0x08;
         static readonly byte _FailFlagInvalidMask = 0x10;
 
-        public bool SupersedesPartId {
+        public bool SupersedesPartId
+        {
             get { return (PartFlag & _SupersedesPartIdMask) != 0; }
-            set {
+            set
+            {
                 if (value) PartFlag |= _SupersedesPartIdMask;
                 else PartFlag &= (byte)~_SupersedesPartIdMask;
             }
         }
 
-        public bool SupersedesCoords {
+        public bool SupersedesCoords
+        {
             get { return (PartFlag & _SupersedesCoordsMask) != 0; }
-            set {
+            set
+            {
                 if (value) PartFlag |= _SupersedesCoordsMask;
                 else PartFlag &= (byte)~_SupersedesCoordsMask;
             }
         }
 
-        public bool AbnormalTest {
+        public bool AbnormalTest
+        {
             get { return (PartFlag & _AbnormalTestMask) != 0; }
-            set {
+            set
+            {
                 if (value) PartFlag |= _AbnormalTestMask;
                 else PartFlag &= (byte)~_AbnormalTestMask;
             }
         }
 
-        public bool? Failed {
+        public bool? Failed
+        {
             get { return (PartFlag & _FailFlagInvalidMask) != 0 ? (bool?)null : (PartFlag & _FailedMask) != 0; }
-            set {
-                if (value == null) {
+            set
+            {
+                if (value == null)
+                {
                     PartFlag &= (byte)~_FailedMask;
                     PartFlag |= _FailFlagInvalidMask;
                 }
-                else {
+                else
+                {
                     PartFlag &= (byte)~_FailFlagInvalidMask;
                     if ((bool)value) PartFlag |= _FailedMask;
                     else PartFlag &= (byte)~_FailedMask;

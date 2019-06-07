@@ -6,8 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Records.V4 {
-	using Attributes;
+namespace LinqToStdf.Records.V4
+{
+    using Attributes;
 
     [FieldLayout(FieldIndex = 0, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "HeadNumber"),
     FieldLayout(FieldIndex = 1, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "SiteNumber"),
@@ -25,9 +26,11 @@ namespace LinqToStdf.Records.V4 {
     FlaggedFieldLayout(FieldIndex = 13, FieldType = typeof(float), IsOptional = true, FlagIndex = 10, FlagMask = (byte)0x02, RecordProperty = "TestMax"),
     FlaggedFieldLayout(FieldIndex = 14, FieldType = typeof(float), IsOptional = true, FlagIndex = 10, FlagMask = (byte)0x10, RecordProperty = "TestSum"),
     FlaggedFieldLayout(FieldIndex = 15, FieldType = typeof(float), IsOptional = true, FlagIndex = 10, FlagMask = (byte)0x20, RecordProperty = "TestSumOfSquares")]
-    public class Tsr : StdfRecord, IHeadSiteIndexable {
+    public class Tsr : StdfRecord, IHeadSiteIndexable
+    {
 
-        public override RecordType RecordType {
+        public override RecordType RecordType
+        {
             get { return new RecordType(10, 30); }
         }
 

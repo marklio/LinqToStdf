@@ -6,15 +6,18 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Attributes {
+namespace LinqToStdf.Attributes
+{
 
     /// <summary>
     /// Defines an STDF field whose "null" state is set by an external bitfield byte
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    public class FlaggedFieldLayoutAttribute : FieldLayoutAttribute {
+    public class FlaggedFieldLayoutAttribute : FieldLayoutAttribute
+    {
 
-        public FlaggedFieldLayoutAttribute() {
+        public FlaggedFieldLayoutAttribute()
+        {
             base.IsOptional = true;
             base.PersistMissingValue = true;
         }

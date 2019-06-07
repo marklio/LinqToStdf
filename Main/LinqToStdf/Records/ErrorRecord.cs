@@ -7,7 +7,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Records {
+namespace LinqToStdf.Records
+{
 
     /// <summary>
     /// Root of a hierarchy of records that represent error conditions in an STDF.
@@ -23,20 +24,24 @@ namespace LinqToStdf.Records {
     /// records for programs that do not wish to be tolerant of error conditions.
     /// </para>
     /// </remarks>
-    public abstract class ErrorRecord : StdfRecord {
+    public abstract class ErrorRecord : StdfRecord
+    {
 
-        protected ErrorRecord() {
+        protected ErrorRecord()
+        {
             Synthesized = true;
         }
 
-        public override RecordType RecordType {
+        public override RecordType RecordType
+        {
             get { return new RecordType(); }
         }
 
         public virtual string Message { get; set; }
 
 
-        public virtual StdfException ToException() {
+        public virtual StdfException ToException()
+        {
             return new StdfException(this.Message) { ErrorRecord = this };
         }
 

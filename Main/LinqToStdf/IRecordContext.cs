@@ -7,7 +7,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf {
+namespace LinqToStdf
+{
 
     /// <summary>
     /// Base interface for things that provide access to an StdfFile.
@@ -16,7 +17,8 @@ namespace LinqToStdf {
     /// This allows extension methods to exploit the StdfFile to
     /// provide lots of shortcuts.
     /// </remarks>
-    public interface IRecordContext {
+    public interface IRecordContext
+    {
         /// <summary>
         /// The StdfFile associated with the context.
         /// </summary>

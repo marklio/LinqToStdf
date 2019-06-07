@@ -6,7 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Records.V4 {
+namespace LinqToStdf.Records.V4
+{
     using Attributes;
 
     [FieldLayout(FieldIndex = 0, FieldType = typeof(byte), MissingValue = (byte)1, PersistMissingValue = true, RecordProperty = "HeadNumber"),
@@ -15,7 +16,8 @@ namespace LinqToStdf.Records.V4 {
     FieldLayout(FieldIndex = 3, FieldType = typeof(uint), RecordProperty = "BinCount"),
     StringFieldLayout(FieldIndex = 4, IsOptional = true, Length = 1, MissingValue = " ", RecordProperty = "BinPassFail"),
     StringFieldLayout(FieldIndex = 5, IsOptional = true, RecordProperty = "BinName")]
-    public abstract class BinSummaryRecord : StdfRecord, IHeadSiteIndexable {
+    public abstract class BinSummaryRecord : StdfRecord, IHeadSiteIndexable
+    {
         public abstract BinType BinType { get; }
         public byte? HeadNumber { get; set; }
         public byte? SiteNumber { get; set; }

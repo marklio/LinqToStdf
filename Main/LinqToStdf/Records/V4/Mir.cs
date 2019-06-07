@@ -6,7 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf.Records.V4 {
+namespace LinqToStdf.Records.V4
+{
     using Attributes;
 
     [TimeFieldLayout(FieldIndex = 0, RecordProperty = "SetupTime"),
@@ -47,9 +48,11 @@ namespace LinqToStdf.Records.V4 {
     StringFieldLayout(FieldIndex = 35, IsOptional = true, RecordProperty = "RomCode"),
     StringFieldLayout(FieldIndex = 36, IsOptional = true, RecordProperty = "SerialNumber"),
     StringFieldLayout(FieldIndex = 37, IsOptional = true, RecordProperty = "SupervisorName")]
-    public class Mir : StdfRecord {
+    public class Mir : StdfRecord
+    {
 
-        public override RecordType RecordType {
+        public override RecordType RecordType
+        {
             get { return new RecordType(1, 10); }
         }
 

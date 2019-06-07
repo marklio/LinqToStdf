@@ -6,20 +6,23 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToStdf {
+namespace LinqToStdf
+{
 
-	/// <summary>
-	/// Encapsulates an STDF record header
-	/// </summary>
-	public struct RecordHeader {
+    /// <summary>
+    /// Encapsulates an STDF record header
+    /// </summary>
+    public struct RecordHeader
+    {
 
-		/// <summary>
-		/// Constructs a new record header
-		/// </summary>
-		public RecordHeader(ushort length, RecordType recordType) {
-			this.Length = length;
-			this.RecordType = recordType;
-		}
+        /// <summary>
+        /// Constructs a new record header
+        /// </summary>
+        public RecordHeader(ushort length, RecordType recordType)
+        {
+            this.Length = length;
+            this.RecordType = recordType;
+        }
 
         /// <summary>
         /// The length of the record

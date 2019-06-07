@@ -7,7 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LinqToStdf {
+namespace LinqToStdf
+{
 
     /// <summary>
     /// This is the signature used as part of the rewind and seek implementation.
@@ -69,30 +70,38 @@ namespace LinqToStdf {
     /// <summary>
     /// Provides some "built-in" <see cref="SeekAlgorithm"/>s
     /// </summary>
-    public static class SeekAlgorithms {
+    public static class SeekAlgorithms
+    {
 
         #region LookForPirs implementation
 
-        static IEnumerable<byte> LookForPirsImpl(IEnumerable<byte> bytes, Endian endian, BackUpCallback backupCallback) {
+        static IEnumerable<byte> LookForPirsImpl(IEnumerable<byte> bytes, Endian endian, BackUpCallback backupCallback)
+        {
             //the state machine can be simplified since the searching sequence
             //doesn't contain the same byte twice.
             var pirHeader = new byte[] { 0, 0, 5, 10 };
             //TODO: did I get this right?
             pirHeader[endian == Endian.Little ? 0 : 1] = 2;
             int testIndex = 0;
-            foreach (var b in bytes) {
-                if (b == pirHeader[testIndex]) {
+            foreach (var b in bytes)
+            {
+                if (b == pirHeader[testIndex])
+                {
                     testIndex++;
                 }
-                else {
-                    if (b == pirHeader[0]) {
+                else
+                {
+                    if (b == pirHeader[0])
+                    {
                         testIndex = 1;
                     }
-                    else {
+                    else
+                    {
                         testIndex = 0;
                     }
                 }
-                if (testIndex >= pirHeader.Length) {
+                if (testIndex >= pirHeader.Length)
+                {
                     //we're back on!
                     backupCallback(4);
                     yield break;
@@ -106,8 +115,10 @@ namespace LinqToStdf {
         /// <summary>
         /// finds PIR records in the stream of bytes
         /// </summary>
-        public static SeekAlgorithm LookForPirs {
-            get {
+        public static SeekAlgorithm LookForPirs
+        {
+            get
+            {
                 return LookForPirsImpl;
             }
         }
@@ -115,7 +126,8 @@ namespace LinqToStdf {
         /// <summary>
         /// Does nothing
         /// </summary>
-        public static SeekAlgorithm Identity {
+        public static SeekAlgorithm Identity
+        {
             get { return (a, endian, callback) => a; }
         }
     }

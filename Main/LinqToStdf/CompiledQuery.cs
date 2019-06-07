@@ -10,7 +10,8 @@ using System.Linq.Expressions;
 using LinqToStdf.CompiledQuerySupport;
 using LinqToStdf.Indexing;
 
-namespace LinqToStdf {
+namespace LinqToStdf
+{
     /// <summary>
     /// This class allows you to generate "compiled queries".  These are queries that have been 
     /// analyzed and optimized by skipping unused records, and even unused fields if possible.
@@ -32,7 +33,8 @@ namespace LinqToStdf {
     /// </list>
     /// </para>
     /// </remarks>
-    public static class CompiledQuery {
+    public static class CompiledQuery
+    {
 
         /// <summary>
         /// Compiles an argument-less query
@@ -40,7 +42,8 @@ namespace LinqToStdf {
         /// <typeparam name="TResult">The type of the result (in most cases, this can be inferred)</typeparam>
         /// <param name="query">The expression tree representing the query.</param>
         /// <returns>The results of the query</returns>
-        public static Func<string, TResult> Compile<TResult>(Expression<Func<StdfFile, TResult>> query) {
+        public static Func<string, TResult> Compile<TResult>(Expression<Func<StdfFile, TResult>> query)
+        {
             return Compile(null, query);
         }
 
@@ -52,17 +55,21 @@ namespace LinqToStdf {
         /// <param name="stdfFileInit">An action that will initialize the <see cref="StdfFile"/>.</param>
         /// <param name="query">The expression tree representing the query.</param>
         /// <returns>The results of the query</returns>
-        public static Func<string, TResult> Compile<TResult>(Action<StdfFile> stdfFileInit, Expression<Func<StdfFile, TResult>> query) {
+        public static Func<string, TResult> Compile<TResult>(Action<StdfFile> stdfFileInit, Expression<Func<StdfFile, TResult>> query)
+        {
             var rnf = ExpressionInspector.Inspect(query);
             var compiled = query.Compile();
             RecordConverterFactory factory = null;
-            return (path) => {
+            return (path) =>
+            {
                 StdfFile stdf;
-                if (factory == null) {
+                if (factory == null)
+                {
                     stdf = new StdfFile(new StdfFileStreamManager(path), false, rnf) { IndexingStrategy = new NonCachingStrategy() };
                     factory = stdf.ConverterFactory;
                 }
-                else {
+                else
+                {
                     stdf = new StdfFile(new StdfFileStreamManager(path), factory) { IndexingStrategy = new NonCachingStrategy() };
                 }
                 stdfFileInit?.Invoke(stdf);
@@ -70,21 +77,26 @@ namespace LinqToStdf {
             };
         }
 
-        public static Func<string, T1, TResult> Compile<T1, TResult>(Expression<Func<StdfFile, T1, TResult>> query) {
+        public static Func<string, T1, TResult> Compile<T1, TResult>(Expression<Func<StdfFile, T1, TResult>> query)
+        {
             return Compile(null, query);
         }
 
-        public static Func<string, T1, TResult> Compile<T1, TResult>(Action<StdfFile> stdfFileInit, Expression<Func<StdfFile, T1, TResult>> query) {
+        public static Func<string, T1, TResult> Compile<T1, TResult>(Action<StdfFile> stdfFileInit, Expression<Func<StdfFile, T1, TResult>> query)
+        {
             var rnf = ExpressionInspector.Inspect(query);
             var compiled = query.Compile();
             RecordConverterFactory factory = null;
-            return (path, t1) => {
+            return (path, t1) =>
+            {
                 StdfFile stdf;
-                if (factory == null) {
+                if (factory == null)
+                {
                     stdf = new StdfFile(new StdfFileStreamManager(path), false, rnf) { IndexingStrategy = new NonCachingStrategy() };
                     factory = stdf.ConverterFactory;
                 }
-                else {
+                else
+                {
                     stdf = new StdfFile(new StdfFileStreamManager(path), factory) { IndexingStrategy = new NonCachingStrategy() };
                 }
                 stdfFileInit?.Invoke(stdf);
@@ -92,21 +104,26 @@ namespace LinqToStdf {
             };
         }
 
-        public static Func<string, T1, T2, TResult> Compile<T1, T2, TResult>(Expression<Func<StdfFile, T1, T2, TResult>> query) {
+        public static Func<string, T1, T2, TResult> Compile<T1, T2, TResult>(Expression<Func<StdfFile, T1, T2, TResult>> query)
+        {
             return Compile(null, query);
         }
 
-        public static Func<string, T1, T2, TResult> Compile<T1, T2, TResult>(Action<StdfFile> stdfFileInit, Expression<Func<StdfFile, T1, T2, TResult>> query) {
+        public static Func<string, T1, T2, TResult> Compile<T1, T2, TResult>(Action<StdfFile> stdfFileInit, Expression<Func<StdfFile, T1, T2, TResult>> query)
+        {
             var rnf = ExpressionInspector.Inspect(query);
             var compiled = query.Compile();
             RecordConverterFactory factory = null;
-            return (path, t1, t2) => {
+            return (path, t1, t2) =>
+            {
                 StdfFile stdf;
-                if (factory == null) {
+                if (factory == null)
+                {
                     stdf = new StdfFile(new StdfFileStreamManager(path), false, rnf) { IndexingStrategy = new NonCachingStrategy() };
                     factory = stdf.ConverterFactory;
                 }
-                else {
+                else
+                {
                     stdf = new StdfFile(new StdfFileStreamManager(path), factory) { IndexingStrategy = new NonCachingStrategy() };
                 }
                 stdfFileInit?.Invoke(stdf);
@@ -114,21 +131,26 @@ namespace LinqToStdf {
             };
         }
 
-        public static Func<string, T1, T2, T3, TResult> Compile<T1, T2, T3, TResult>(Expression<Func<StdfFile, T1, T2, T3, TResult>> query) {
+        public static Func<string, T1, T2, T3, TResult> Compile<T1, T2, T3, TResult>(Expression<Func<StdfFile, T1, T2, T3, TResult>> query)
+        {
             return Compile(null, query);
         }
 
-        public static Func<string, T1, T2, T3, TResult> Compile<T1, T2, T3, TResult>(Action<StdfFile> stdfFileInit, Expression<Func<StdfFile, T1, T2, T3, TResult>> query) {
+        public static Func<string, T1, T2, T3, TResult> Compile<T1, T2, T3, TResult>(Action<StdfFile> stdfFileInit, Expression<Func<StdfFile, T1, T2, T3, TResult>> query)
+        {
             var rnf = ExpressionInspector.Inspect(query);
             var compiled = query.Compile();
             RecordConverterFactory factory = null;
-            return (path, t1, t2, t3) => {
+            return (path, t1, t2, t3) =>
+            {
                 StdfFile stdf;
-                if (factory == null) {
+                if (factory == null)
+                {
                     stdf = new StdfFile(new StdfFileStreamManager(path), false, rnf) { IndexingStrategy = new NonCachingStrategy() };
                     factory = stdf.ConverterFactory;
                 }
-                else {
+                else
+                {
                     stdf = new StdfFile(new StdfFileStreamManager(path), factory) { IndexingStrategy = new NonCachingStrategy() };
                 }
                 stdfFileInit?.Invoke(stdf);

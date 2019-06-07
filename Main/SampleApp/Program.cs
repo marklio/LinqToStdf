@@ -10,10 +10,14 @@ using System.Text;
 using LinqToStdf;
 using LinqToStdf.Records.V4;
 
-namespace SampleApp {
-    class Program {
-        static void Main(string[] args) {
-            if ((args.Length < 1) || (args.Length > 2)) {
+namespace SampleApp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            if ((args.Length < 1) || (args.Length > 2))
+            {
                 Usage();
                 return;
             }
@@ -42,15 +46,18 @@ namespace SampleApp {
                           group result.Value by ptr.TestNumber into g
                           select new { TestNumber = g.Key, Results = g };
 
-            foreach (var test in results) {
+            foreach (var test in results)
+            {
                 Console.WriteLine("Test {0}:", test.TestNumber);
-                foreach (var result in test.Results) {
+                foreach (var result in test.Results)
+                {
                     Console.WriteLine("\t{0}", result);
                 }
             }
 
             // Output STDF to a new file
-            if (args.Length == 2) {
+            if (args.Length == 2)
+            {
                 Console.WriteLine("Writing to {0}...", args[1]);
                 using (StdfFileWriter writer = new StdfFileWriter(args[1]))
                 {
@@ -59,7 +66,8 @@ namespace SampleApp {
             }
         }
 
-        private static void Usage() {
+        private static void Usage()
+        {
             Console.WriteLine(@"SampleApp <path to STDF> <optional path to STDF output>");
         }
     }
