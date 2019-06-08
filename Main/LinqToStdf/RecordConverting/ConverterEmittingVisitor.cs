@@ -38,6 +38,11 @@ namespace LinqToStdf.RecordConverting
         public override CodeNode VisitInitializeRecord(InitializeRecordNode node)
         {
             Log($"Initializing {ConcreteType}");
+
+            //getting the STDF file from the unknown record
+            ILGen.Ldarg_0();
+            ILGen.Callvirt(typeof(StdfRecord).GetProperty("StdfFile").GetGetMethod());
+
             _ConcreteRecordLocal = ILGen.DeclareLocal(ConcreteType);
             ILGen.Newobj(ConcreteType, typeof(StdfFile));
             ILGen.Stloc(_ConcreteRecordLocal);

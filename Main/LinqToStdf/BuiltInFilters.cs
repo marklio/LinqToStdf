@@ -189,35 +189,41 @@ namespace LinqToStdf
         {
             public IEnumerable<StdfRecord> Filter(IEnumerable<StdfRecord> input)
             {
-                Pcr summary = null;
+                uint? abortCount = null;
+                uint? functionalCount = null;
+                uint? goodCount = null;
+                uint? retestCount = null;
+                uint partCount = 0;
+                var needsSummary = true;
                 foreach (var r in input)
                 {
-                    if (summary == null)
-                    {
-                        summary = new Pcr(r.StdfFile)
-                        {
-                            Synthesized = true,
-                            HeadNumber = 255,
-                            SiteNumber = 0
-                        };
-                    }
-                    if (r.GetType() == typeof(Pcr) && _Summary != null)
+                    if (r.GetType() == typeof(Pcr) && needsSummary)
                     {
                         Pcr p = (Pcr)r;
-                        if (p.HeadNumber == 255) _Summary = null;
+                        if (p.HeadNumber == 255) needsSummary = false;
                         else
                         {
-                            _Summary.AbortCount = _Summary.AbortCount.Combine(p.AbortCount);
-                            _Summary.FunctionalCount = _Summary.FunctionalCount.Combine(p.FunctionalCount);
-                            _Summary.GoodCount = _Summary.GoodCount.Combine(p.GoodCount);
-                            _Summary.RetestCount = _Summary.RetestCount.Combine(p.RetestCount);
-                            _Summary.PartCount += p.PartCount;
+                            abortCount = abortCount.Combine(p.AbortCount);
+                            functionalCount = functionalCount.Combine(p.FunctionalCount);
+                            goodCount = goodCount.Combine(p.GoodCount);
+                            retestCount = retestCount.Combine(p.RetestCount);
+                            partCount += p.PartCount;
                         }
                     }
-                    else if (r.GetType() == typeof(Mrr) && _Summary != null)
+                    else if (r.GetType() == typeof(Mrr) && needsSummary)
                     {
-                        _Summary.Offset = r.Offset;
-                        yield return _Summary;
+                        yield return new Pcr(r.StdfFile)
+                        {
+                            Synthesized = true,
+                            Offset = r.Offset,
+                            HeadNumber = 255,
+                            SiteNumber = 0,
+                            AbortCount = abortCount,
+                            FunctionalCount = functionalCount,
+                            GoodCount = goodCount,
+                            RetestCount = retestCount,
+                            PartCount = partCount,
+                        };
                     }
                     yield return r;
                 }
@@ -265,7 +271,7 @@ namespace LinqToStdf
             {
                 var q = from t in _Tsrs
                         group t by t.TestNumber into g
-                        select new Tsr()
+                        select new Tsr(g.First().StdfFile)
                         {
                             Synthesized = true,
                             Offset = offset,
@@ -438,7 +444,7 @@ namespace LinqToStdf
                 //TODO: does IsWritable prevent informational and error records from violating the content spec (we want that)?
                 if (!transitioned && r.IsWritable)
                 {
-                    yield return new V4ContentErrorRecord() { Offset = r.Offset, Message = string.Format(Resources.InitialSequenceError, r.GetType().Name, currentState.Message) };
+                    yield return new V4ContentErrorRecord(r.StdfFile) { Offset = r.Offset, Message = string.Format(Resources.InitialSequenceError, r.GetType().Name, currentState.Message) };
                 }
                 yield return r;
             }
@@ -479,7 +485,7 @@ namespace LinqToStdf
                 if (r.GetType() == typeof(Mrr)) mrr = (Mrr)r;
                 else if (r.GetType() == typeof(EndOfStreamRecord) && (mrr == null))
                 {
-                    yield return new Mrr() { Synthesized = true, Offset = r.Offset };
+                    yield return new Mrr(r.StdfFile) { Synthesized = true, Offset = r.Offset };
                 }
                 yield return r;
             }

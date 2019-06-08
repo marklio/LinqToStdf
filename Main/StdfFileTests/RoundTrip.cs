@@ -70,7 +70,7 @@ namespace StdfFileTests
         [Fact]
         public void TestFar()
         {
-            var far = new Far();
+            var far = new Far(new StdfFile("dummy.stdf"));
             TestRoundTripEquality(far);
 
             far.CpuType = 1;
@@ -87,7 +87,7 @@ namespace StdfFileTests
         [Fact]
         public void TestAtr()
         {
-            var atr = new Atr();
+            var atr = new Atr(new StdfFile("dummy.stdf"));
             TestRoundTripEquality(atr);
             atr.CommandLine = "This is a test";
             TestRoundTripEquality(atr);
@@ -101,7 +101,7 @@ namespace StdfFileTests
         [Fact]
         public void TestMir()
         {
-            var mir = new Mir();
+            var mir = new Mir(new StdfFile("dummy.stdf"));
             TestRoundTripEquality(mir);
             mir.SupervisorName = "Mark";
             TestRoundTripEquality(mir);
@@ -110,7 +110,7 @@ namespace StdfFileTests
         [Fact]
         public void TestMrr()
         {
-            var mrr = new Mrr();
+            var mrr = new Mrr(new StdfFile("dummy.stdf"));
             TestRoundTripEquality(mrr);
             mrr.ExecDescription = "Super Cool";
             TestRoundTripEquality(mrr);
@@ -119,7 +119,7 @@ namespace StdfFileTests
         [Fact]
         public void TestPcr()
         {
-            var pcr = new Pcr
+            var pcr = new Pcr(new StdfFile("dummy.stdf"))
             {
                 HeadNumber = 1,
                 SiteNumber = 1,
@@ -132,7 +132,7 @@ namespace StdfFileTests
         [Fact]
         public void TestHbr()
         {
-            var hbr = new Hbr
+            var hbr = new Hbr(new StdfFile("dummy.stdf"))
             {
                 HeadNumber = 1,
                 SiteNumber = 1,
@@ -145,7 +145,7 @@ namespace StdfFileTests
         [Fact]
         public void TestSbr()
         {
-            var sbr = new Sbr
+            var sbr = new Sbr(new StdfFile("dummy.stdf"))
             {
                 HeadNumber = 1,
                 SiteNumber = 1,
@@ -158,7 +158,7 @@ namespace StdfFileTests
         [Fact]
         public void TestPmr()
         {
-            var pmr = new Pmr
+            var pmr = new Pmr(new StdfFile("dummy.stdf"))
             {
                 HeadNumber = 1,
                 SiteNumber = 1,
@@ -171,7 +171,7 @@ namespace StdfFileTests
         [Fact]
         public void TestPgr()
         {
-            var pgr = new Pgr();
+            var pgr = new Pgr(new StdfFile("dummy.stdf"));
             TestRoundTripEquality(pgr);
             pgr.PinIndexes = new ushort[] { 0, 1 };
             TestRoundTripEquality(pgr);
@@ -180,7 +180,7 @@ namespace StdfFileTests
         [Fact]
         public void TestPlr()
         {
-            var plr = new Plr
+            var plr = new Plr(new StdfFile("dummy.stdf"))
             {
                 GroupIndexes = new ushort[] { 0 }
             };
@@ -190,7 +190,7 @@ namespace StdfFileTests
         [Fact]
         public void TestRdr()
         {
-            var rdr = new Rdr();
+            var rdr = new Rdr(new StdfFile("dummy.stdf"));
             TestRoundTripEquality(rdr);
             rdr.RetestBins = new ushort[] { 1, 2, 3, 4 };
             TestRoundTripEquality(rdr);
@@ -199,7 +199,7 @@ namespace StdfFileTests
         [Fact]
         public void TestSdr()
         {
-            var sdr = new Sdr
+            var sdr = new Sdr(new StdfFile("dummy.stdf"))
             {
                 HeadNumber = 1,
             };
@@ -211,7 +211,7 @@ namespace StdfFileTests
         [Fact]
         public void TestWir()
         {
-            var wir = new Wir
+            var wir = new Wir(new StdfFile("dummy.stdf"))
             {
                 HeadNumber = 1,
             };
@@ -223,7 +223,7 @@ namespace StdfFileTests
         [Fact]
         public void TestWrr()
         {
-            var wrr = new Wrr
+            var wrr = new Wrr(new StdfFile("dummy.stdf"))
             {
                 HeadNumber = 1,
             };
@@ -235,7 +235,7 @@ namespace StdfFileTests
         [Fact]
         public void TestWcr()
         {
-            var wcr = new Wcr();
+            var wcr = new Wcr(new StdfFile("dummy.stdf"));
             TestRoundTripEquality(wcr);
             wcr.PositiveY = "U";
             TestRoundTripEquality(wcr);
@@ -244,7 +244,7 @@ namespace StdfFileTests
         [Fact]
         public void TestPir()
         {
-            var pir = new Pir();
+            var pir = new Pir(new StdfFile("dummy.stdf"));
             //we must skip head number since we persist the missing value 1
             TestRoundTripEquality(pir, skipProps: new[] { "HeadNumber" });
             pir.SiteNumber = 1;
@@ -256,7 +256,7 @@ namespace StdfFileTests
         [Fact]
         public void TestPrr()
         {
-            var prr = new Prr
+            var prr = new Prr(new StdfFile("dummy.stdf"))
             {
                 HeadNumber = 1,
                 SiteNumber = 1,
@@ -269,7 +269,7 @@ namespace StdfFileTests
         [Fact]
         public void TestTsr()
         {
-            var tsr = new Tsr
+            var tsr = new Tsr(new StdfFile("dummy.stdf"))
             {
                 HeadNumber = 1,
                 SiteNumber = 1,
@@ -282,7 +282,7 @@ namespace StdfFileTests
         [Fact]
         public void TestPtr()
         {
-            var ptr = new Ptr
+            var ptr = new Ptr(new StdfFile("dummy.stdf"))
             {
                 HeadNumber = 1,
                 SiteNumber = 1,
@@ -297,7 +297,7 @@ namespace StdfFileTests
         [Fact]
         public void TestMpr()
         {
-            var mpr = new Mpr
+            var mpr = new Mpr(new StdfFile("dummy.stdf"))
             {
                 HeadNumber = 1,
                 SiteNumber = 1,
@@ -312,7 +312,7 @@ namespace StdfFileTests
         [Fact]
         public void TestFtr()
         {
-            var ftr = new Ftr
+            var ftr = new Ftr(new StdfFile("dummy.stdf"))
             {
                 HeadNumber = 1,
                 SiteNumber = 1,
@@ -323,28 +323,28 @@ namespace StdfFileTests
         [Fact]
         public void TestBps()
         {
-            var bps = new Bps();
+            var bps = new Bps(new StdfFile("dummy.stdf"));
             TestRoundTripEquality(bps);
         }
 
         [Fact]
         public void TestEps()
         {
-            var eps = new Eps();
+            var eps = new Eps(new StdfFile("dummy.stdf"));
             TestRoundTripEquality(eps);
         }
 
         [Fact]
         public void TestGdr()
         {
-            var gdr = new Gdr();
+            var gdr = new Gdr(new StdfFile("dummy.stdf"));
             TestRoundTripEquality(gdr);
         }
 
         [Fact]
         public void TestDtr()
         {
-            var dtr = new Dtr();
+            var dtr = new Dtr(new StdfFile("dummy.stdf"));
             TestRoundTripEquality(dtr);
         }
 
@@ -389,7 +389,7 @@ namespace StdfFileTests
             {
                 if (typeof(TRecord) != typeof(Far))
                 {
-                    writer.WriteRecord(new Far
+                    writer.WriteRecord(new Far(record.StdfFile)
                     {
                         CpuType = endian == Endian.Big ? (byte)1 : (byte)2,
                         StdfVersion = 4,

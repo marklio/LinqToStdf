@@ -39,7 +39,7 @@ namespace LinqToStdf
         /// <param name="recordType">The <see cref="RecordType"/> for the record</param>
         /// <param name="content">The original byte content of the record</param>
         /// <param name="endian">The endian-ness of <paramref name="content"/></param>
-        public UnknownRecord(RecordType recordType, byte[] content, Endian endian)
+        public UnknownRecord(StdfFile stdfFile, RecordType recordType, byte[] content, Endian endian) : base(stdfFile)
         {
             this._RecordType = recordType;
             this._Content = content;

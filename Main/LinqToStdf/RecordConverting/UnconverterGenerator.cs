@@ -40,12 +40,7 @@ namespace LinqToStdf.RecordConverting
                         //we're just binding to the generic GenerateAssignment method for the field's type
                         select GenerateAssignment(pair)));
 
-            new UnconverterEmittingVisitor
-            {
-                ConcreteType = _Type,
-                ILGen = _ILGen,
-                EnableLog = ConverterLog.IsLogging,
-            }.Visit(node);
+            new UnconverterEmittingVisitor(_Type, _ILGen, ConverterLog.IsLogging).Visit(node);
         }
 
         //TODO: refactor this so we're not duplicated with ConverterFactory
@@ -152,12 +147,12 @@ namespace LinqToStdf.RecordConverting
             CodeNode writeNode;
             if (stringLayout != null && stringLayout.Length > 0)
             {
-                noValueWriteContingency = noValueWriteContingency ?? new WriteFixedStringNode(stringLayout.Length, noValueWriteContingencySource);
+                noValueWriteContingency ??= new WriteFixedStringNode(stringLayout.Length, noValueWriteContingencySource);
                 writeNode = new WriteFixedStringNode(stringLayout.Length, new LoadFieldLocalNode(pair.Key.FieldIndex));
             }
             else
             {
-                noValueWriteContingency = noValueWriteContingency ?? new WriteTypeNode(fieldType, noValueWriteContingencySource);
+                noValueWriteContingency ??= new WriteTypeNode(fieldType, noValueWriteContingencySource);
                 writeNode = new WriteTypeNode(fieldType, new LoadFieldLocalNode(pair.Key.FieldIndex));
             }
             //return the crazy node

@@ -15,9 +15,15 @@ namespace LinqToStdf.RecordConverting
 {
     class UnconverterEmittingVisitor : CodeNodeVisitor
     {
-        public ILGenerator ILGen;
-        public Type ConcreteType;
-        public bool EnableLog = false;
+        public UnconverterEmittingVisitor(Type concreteType, ILGenerator ilGen, bool enableLog)
+        {
+            ILGen = ilGen;
+            ConcreteType = concreteType;
+            EnableLog = enableLog;
+        }
+        public readonly ILGenerator ILGen;
+        public readonly Type ConcreteType;
+        public readonly bool EnableLog = false;
 
         LocalBuilder _ConcreteRecordLocal;
         LocalBuilder _StartedWriting;
@@ -85,6 +91,10 @@ namespace LinqToStdf.RecordConverting
             ILGen.Callvirt(typeof(Stream).GetMethod("Dispose"));
             ILGen.EndExceptionBlock();
 
+            //get the StdfFile
+            ILGen.Ldarg_0();
+            ILGen.Callvirt(typeof(StdfRecord).GetProperty("StdfFile").GetGetMethod());
+
             //get the record type
             ILGen.Ldarg_0();
             ILGen.Callvirt(typeof(StdfRecord).GetProperty("RecordType").GetGetMethod());
@@ -97,7 +107,7 @@ namespace LinqToStdf.RecordConverting
 
             //new up a new UnknownRecord!
             Log($"returning the populated UnknownRecord");
-            ILGen.Newobj<UnknownRecord>(typeof(RecordType), typeof(byte[]), typeof(Endian));
+            ILGen.Newobj<UnknownRecord>(typeof(StdfFile), typeof(RecordType), typeof(byte[]), typeof(Endian));
 
             ILGen.Ret();
 

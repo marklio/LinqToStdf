@@ -48,22 +48,18 @@ namespace LinqToStdf
         readonly IStdfStreamManager _StreamManager;
         RewindableByteStream _Stream;
         readonly static internal RecordConverterFactory _V4ConverterFactory = new RecordConverterFactory();
-        readonly RecordConverterFactory _ConverterFactory;
+
         /// <summary>
         /// Exposes the ConverterFactory in use for parsing.
         /// This allows record un/converters to be registered.
         /// </summary>
-        public RecordConverterFactory ConverterFactory
-        {
-            get { return _ConverterFactory; }
-        }
+        public RecordConverterFactory ConverterFactory { get; }
 
-        Endian _Endian = Endian.Unknown;
         /// <summary>
         /// Exposes the Endianness of the file.  Will be "uknown" until
         /// after parsing has begun.
         /// </summary>
-        public Endian Endian { get { return _Endian; } }
+        public Endian Endian { get; private set; } = Endian.Unknown;
 
         long? _ExpectedLength = null;
         public long? ExpectedLength { get { return _ExpectedLength; } }
@@ -178,19 +174,19 @@ namespace LinqToStdf
         {
             if (debug || recordsAndFields != null)
             {
-                _ConverterFactory = new RecordConverterFactory(recordsAndFields) { Debug = debug };
-                StdfV4Specification.RegisterRecords(_ConverterFactory);
+                ConverterFactory = new RecordConverterFactory(recordsAndFields) { Debug = debug };
+                StdfV4Specification.RegisterRecords(ConverterFactory);
             }
             else
             {
-                _ConverterFactory = new RecordConverterFactory(_V4ConverterFactory);
+                ConverterFactory = new RecordConverterFactory(_V4ConverterFactory);
             }
         }
 
         internal StdfFile(IStdfStreamManager streamManager, RecordConverterFactory rcf)
             : this(streamManager, PrivateImpl.None)
         {
-            _ConverterFactory = rcf;
+            ConverterFactory = rcf;
         }
 
         private StdfFile(IStdfStreamManager streamManager, PrivateImpl _)
@@ -214,18 +210,9 @@ namespace LinqToStdf
             _RecordFilter = _RecordFilter.Chain(filter);
         }
 
-        IEnumerable<StdfRecord> SetStdfFile(IEnumerable<StdfRecord> records)
-        {
-            foreach (var r in records)
-            {
-                r.StdfFile = this;
-                yield return r;
-            }
-        }
-
         private RecordFilter GetBaseRecordFilter()
         {
-            RecordFilter filter = SetStdfFile;
+            RecordFilter filter = BuiltInFilters.IdentityFilter;
             return _ThrowOnFormatError ? filter.Chain(BuiltInFilters.ThrowOnFormatError) : filter;
         }
 
@@ -400,9 +387,9 @@ namespace LinqToStdf
                 {
                     var sosRecord = (StartOfStreamRecord)record;
                     sosRecord.FileName = _StreamManager.Name;
-                    if (_Endian == Endian.Unknown)
+                    if (Endian == Endian.Unknown)
                     {
-                        _Endian = sosRecord.Endian;
+                        Endian = sosRecord.Endian;
                     }
                     _ExpectedLength = sosRecord.ExpectedLength;
                 }
@@ -473,13 +460,13 @@ namespace LinqToStdf
                 var far = new byte[6];
                 if (_Stream.Read(far, 6) < 6)
                 {
-                    yield return new StartOfStreamRecord { Endian = Endian.Unknown, ExpectedLength = _Stream.Length };
-                    yield return new FormatErrorRecord
+                    yield return new StartOfStreamRecord(this) { Endian = Endian.Unknown, ExpectedLength = _Stream.Length };
+                    yield return new FormatErrorRecord(this)
                     {
                         Message = Resources.FarReadError,
                         Recoverable = false
                     };
-                    yield return new EndOfStreamRecord();
+                    yield return new EndOfStreamRecord(this);
                     yield break;
                 }
                 endian = far[4] < 2 ? Endian.Big : Endian.Little;
@@ -487,26 +474,26 @@ namespace LinqToStdf
                 var length = (endian == Endian.Little ? far[0] : far[1]);
                 if (length != 2)
                 {
-                    yield return new StartOfStreamRecord { Endian = endian, ExpectedLength = _Stream.Length };
-                    yield return new FormatErrorRecord
+                    yield return new StartOfStreamRecord(this) { Endian = endian, ExpectedLength = _Stream.Length };
+                    yield return new FormatErrorRecord(this)
                     {
                         Message = Resources.FarLengthError,
                         Recoverable = false
                     };
-                    yield return new EndOfStreamRecord { Offset = 2 };
+                    yield return new EndOfStreamRecord(this) { Offset = 2 };
                     yield break;
                 }
                 //validate record type
                 if (far[2] != 0)
                 {
-                    yield return new StartOfStreamRecord { Endian = endian, ExpectedLength = _Stream.Length };
-                    yield return new FormatErrorRecord
+                    yield return new StartOfStreamRecord(this) { Endian = endian, ExpectedLength = _Stream.Length };
+                    yield return new FormatErrorRecord(this)
                     {
                         Offset = 2,
                         Message = Resources.FarRecordTypeError,
                         Recoverable = false
                     };
-                    yield return new EndOfStreamRecord { Offset = 6 };
+                    yield return new EndOfStreamRecord(this) { Offset = 6 };
                     yield break;
                 }
                 //validate record type
@@ -627,8 +614,8 @@ namespace LinqToStdf
                     }
                     else
                     {
-                        var ur = new UnknownRecord(header.Value.RecordType, contents, endian) { Offset = position };
-                        StdfRecord r = _ConverterFactory.Convert(ur);
+                        var ur = new UnknownRecord(this, header.Value.RecordType, contents, endian) { Offset = position };
+                        StdfRecord r = ConverterFactory.Convert(ur);
                         if (r.GetType() != typeof(UnknownRecord))
                         {
                             //it converted, so update our last known position
