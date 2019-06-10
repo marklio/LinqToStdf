@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Buffers;
 
 #nullable enable
 
@@ -30,20 +31,22 @@ namespace LinqToStdf
     /// Under the covers, a record reader reads the STDF file and produces <see cref="UnknownRecord">UnknownRecords</see>.
     /// These records are then converted to concrete record types via a <see cref="RecordConverterFactory"/>.
     /// </remarks>
-    public class UnknownRecord : StdfRecord
+    public class UnknownRecord : StdfRecord, IDisposable
     {
 
+        IMemoryOwner<byte>? _MemoryOwner = null;
         /// <summary>
         /// Constructs an unknown record
         /// </summary>
         /// <param name="recordType">The <see cref="RecordType"/> for the record</param>
         /// <param name="content">The original byte content of the record</param>
         /// <param name="endian">The endian-ness of <paramref name="content"/></param>
-        public UnknownRecord(StdfFile stdfFile, RecordType recordType, byte[] content, Endian endian) : base(stdfFile)
+        public UnknownRecord(StdfFile stdfFile, RecordType recordType, ReadOnlySequence<byte> content, Endian endian, IMemoryOwner<byte> memoryOwner) : base(stdfFile)
         {
-            this._RecordType = recordType;
-            this._Content = content;
-            this._Endian = endian;
+            _RecordType = recordType;
+            _Content = content;
+            _Endian = endian;
+            _MemoryOwner = memoryOwner;
         }
 
         private readonly RecordType _RecordType;
@@ -64,11 +67,11 @@ namespace LinqToStdf
             get { return _Endian; }
         }
 
-        private readonly byte[] _Content;
+        private readonly ReadOnlySequence<byte> _Content;
         /// <summary>
         /// The original byte content of the record
         /// </summary>
-        public byte[] Content
+        public ReadOnlySequence<byte> Content
         {
             get { return _Content; }
         }
@@ -101,6 +104,11 @@ namespace LinqToStdf
         public BinaryReader GetBinaryReaderForContent()
         {
             return new BinaryReader(new MemoryStream(_Content, writable: false), _Endian, ownsStream: true);
+        }
+
+        public void Dispose()
+        {
+            _MemoryOwner?.Dispose();
         }
     }
 }

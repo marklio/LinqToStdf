@@ -59,7 +59,7 @@ namespace LinqToStdf.RecordConverting
             return node;
         }
 
-        static readonly MethodInfo _GetBinaryReaderForContentMethod = typeof(UnknownRecord).GetMethod("GetBinaryReaderForContent", BindingFlags.Instance | BindingFlags.Public);
+        static readonly MethodInfo _GetBinaryReaderForContentMethod = typeof(UnknownRecord).GetMethod(nameof(UnknownRecord.GetBinaryReaderForContent), BindingFlags.Instance | BindingFlags.Public);
         public override CodeNode VisitInitReaderNode(InitReaderNode node)
         {
             Log($"Initializing reader");
