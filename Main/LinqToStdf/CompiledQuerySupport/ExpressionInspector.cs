@@ -27,7 +27,7 @@ namespace LinqToStdf.CompiledQuerySupport {
             /// <summary>
             /// The records and fields used in the query
             /// </summary>
-            RecordsAndFields _RecordsAndFields = null;
+            RecordsAndFields? _RecordsAndFields = null;
 
             /// <summary>
             /// Inspects a query, ensuring it won't leak records and calculating the
@@ -48,8 +48,9 @@ namespace LinqToStdf.CompiledQuerySupport {
             /// </summary>
             protected override Expression VisitMember(MemberExpression node)
             {
+                if (_RecordsAndFields is null) throw new InvalidOperationException("Must be called in the context of an expression inspection");
                 //Get the type that declares the member
-                var type = node.Member.DeclaringType;
+                Type type = node.Member.DeclaringType ?? throw new InvalidOperationException("Can't get DeclaringType of member");
                 //if it is an StdfRecord, track the field
                 if (typeof(StdfRecord).IsAssignableFrom(type))
                 {
@@ -91,7 +92,7 @@ namespace LinqToStdf.CompiledQuerySupport {
                 //check any element type (for arrays, pointers, etc.)
                 if (type.HasElementType)
                 {
-                    EnsureTypeWontLeakRecords(type.GetElementType());
+                    EnsureTypeWontLeakRecords(type.GetElementType() ?? throw new InvalidOperationException("Could not get ElementType"));
                 }
                 //check public fields/properties/methods
                 EnsureTypesWontLeakRecords(from f in type.GetFields() select f.FieldType);

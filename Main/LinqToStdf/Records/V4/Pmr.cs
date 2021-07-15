@@ -27,9 +27,9 @@ namespace LinqToStdf.Records.V4 {
         /// </summary>
         public ushort PinIndex { get; set; }
         public ushort? ChannelType { get; set; }
-        public string ChannelName { get; set; }
-        public string PhysicalName { get; set; }
-        public string LogicalName { get; set; }
+        public string? ChannelName { get; set; }
+        public string? PhysicalName { get; set; }
+        public string? LogicalName { get; set; }
         public byte? HeadNumber { get; set; }
         public byte? SiteNumber { get; set; }
 

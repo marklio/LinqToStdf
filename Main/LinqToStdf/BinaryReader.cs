@@ -38,7 +38,6 @@ namespace LinqToStdf {
         /// <param name="streamEndian">The endian-ness of the stream</param>
         /// <param name="ownsStream">Indicates whether or not the stream should be disposed of with the reader.</param>
         public BinaryReader(Stream stream, Endian streamEndian, bool ownsStream) {
-            Debug.Assert(stream != null, "The provided stream was null");
             _Stream = stream;
             _StreamEndian = streamEndian;
             _OwnsStream = ownsStream;
@@ -46,7 +45,7 @@ namespace LinqToStdf {
 
         private readonly Stream _Stream;
         private readonly Endian _StreamEndian;
-        private byte[] _Buffer;
+        private byte[] _Buffer = new byte[256]; //TODO:rent buffer space?
         private readonly bool _OwnsStream;
 
         /// <summary>
@@ -78,9 +77,8 @@ namespace LinqToStdf {
         /// <param name="readFunc">The function that will read a single element</param>
         /// <param name="throwOnEndOfStream">The function that will read a single element</param>
         /// <returns>The array that was read</returns>
-        private T[] ReadArray<T>(int length, Func<T> readFunc, bool throwOnEndOfStream) {
+        private T[]? ReadArray<T>(int length, Func<T> readFunc, bool throwOnEndOfStream) {
             // TODO: Consider combining with 2-param ReadArray (problem is ReadArray is static and potential performance hit)
-            Debug.Assert(readFunc != null, "The readFunc delegate is null.");
             var value = new T[length];
             for (var i = 0; i < value.Length; i++) {
                 if (throwOnEndOfStream || !AtEndOfStream) {
@@ -110,14 +108,14 @@ namespace LinqToStdf {
         /// <summary>
         /// Reads a byte array
         /// </summary>
-        public byte[] ReadByteArray(int length) {
+        public byte[]? ReadByteArray(int length) {
             return ReadByteArray(length, true);
         }
 
         /// <summary>
         /// Reads a byte array
         /// </summary>
-        public byte[] ReadByteArray(int length, bool throwOnEndOfStream) {
+        public byte[]? ReadByteArray(int length, bool throwOnEndOfStream) {
             return ReadArray<byte>(length, ReadByte, throwOnEndOfStream);
         }
 
@@ -153,15 +151,16 @@ namespace LinqToStdf {
         /// <summary>
         /// Reads a bit array
         /// </summary>
-        public BitArray ReadBitArray() {
+        public BitArray? ReadBitArray() {
             int length = ReadUInt16();
             if (length == 0) return null;
             var realLength = (length + 7) / 8;
-            var bitArray = new BitArray(ReadByteArray(realLength))
+            var bytes = ReadByteArray(realLength);
+            if (bytes == null) return null;
+            return new BitArray(bytes)
             {
                 Length = length
             };
-            return bitArray;
         }
 
         /// <summary>
@@ -174,14 +173,14 @@ namespace LinqToStdf {
         /// <summary>
         /// Reads an SByte array
         /// </summary>
-        public sbyte[] ReadSByteArray(int length) {
+        public sbyte[]? ReadSByteArray(int length) {
             return ReadSByteArray(length, true);
         }
 
         /// <summary>
         /// Reads an SByte array
         /// </summary>
-        public sbyte[] ReadSByteArray(int length, bool throwOnEndOfStream) {
+        public sbyte[]? ReadSByteArray(int length, bool throwOnEndOfStream) {
             return ReadArray<sbyte>(length, ReadSByte, throwOnEndOfStream);
         }
 
@@ -196,14 +195,14 @@ namespace LinqToStdf {
         /// <summary>
         /// Reads a Uint16 array
         /// </summary>
-        public ushort[] ReadUInt16Array(int length) {
+        public ushort[]? ReadUInt16Array(int length) {
             return ReadUInt16Array(length, true);
         }
 
         /// <summary>
         /// Reads a Uint16 array
         /// </summary>
-        public ushort[] ReadUInt16Array(int length, bool throwOnEndOfStream) {
+        public ushort[]? ReadUInt16Array(int length, bool throwOnEndOfStream) {
             return ReadArray<ushort>(length, ReadUInt16, throwOnEndOfStream);
         }
 
@@ -218,14 +217,14 @@ namespace LinqToStdf {
         /// <summary>
         /// Reads an Int16 array
         /// </summary>
-        public short[] ReadInt16Array(int length) {
+        public short[]? ReadInt16Array(int length) {
             return ReadInt16Array(length, true);
         }
 
         /// <summary>
         /// Reads an Int16 array
         /// </summary>
-        public short[] ReadInt16Array(int length, bool throwOnEndOfStream) {
+        public short[]? ReadInt16Array(int length, bool throwOnEndOfStream) {
             return ReadArray<short>(length, ReadInt16, throwOnEndOfStream);
         }
 
@@ -240,14 +239,14 @@ namespace LinqToStdf {
         /// <summary>
         /// Reads a UInt32 array
         /// </summary>
-        public uint[] ReadUInt32Array(int length) {
+        public uint[]? ReadUInt32Array(int length) {
             return ReadUInt32Array(length, true);
         }
 
         /// <summary>
         /// Reads a UInt32 array
         /// </summary>
-        public uint[] ReadUInt32Array(int length, bool throwOnEndOfStream) {
+        public uint[]? ReadUInt32Array(int length, bool throwOnEndOfStream) {
             return ReadArray<uint>(length, ReadUInt32, throwOnEndOfStream);
         }
 
@@ -262,14 +261,14 @@ namespace LinqToStdf {
         /// <summary>
         /// Reads an Int32 array
         /// </summary>
-        public int[] ReadInt32Array(int length) {
+        public int[]? ReadInt32Array(int length) {
             return ReadInt32Array(length, true);
         }
 
         /// <summary>
         /// Reads an Int32 array
         /// </summary>
-        public int[] ReadInt32Array(int length, bool throwOnEndOfStream) {
+        public int[]? ReadInt32Array(int length, bool throwOnEndOfStream) {
             return ReadArray<int>(length, ReadInt32, throwOnEndOfStream);
         }
 
@@ -284,14 +283,14 @@ namespace LinqToStdf {
         /// <summary>
         /// Reads a UInt64 array
         /// </summary>
-        public ulong[] ReadUInt64Array(int length) {
+        public ulong[]? ReadUInt64Array(int length) {
             return ReadUInt64Array(length, true);
         }
 
         /// <summary>
         /// Reads a UInt64 array
         /// </summary>
-        public ulong[] ReadUInt64Array(int length, bool throwOnEndOfStream) {
+        public ulong[]? ReadUInt64Array(int length, bool throwOnEndOfStream) {
             return ReadArray<ulong>(length, ReadUInt64, throwOnEndOfStream);
         }
 
@@ -306,14 +305,14 @@ namespace LinqToStdf {
         /// <summary>
         /// Reads an Int64 array
         /// </summary>
-        public long[] ReadInt64Array(int length) {
+        public long[]? ReadInt64Array(int length) {
             return ReadInt64Array(length, true);
         }
 
         /// <summary>
         /// Reads an Int64 array
         /// </summary>
-        public long[] ReadInt64Array(int length, bool throwOnEndOfStream) {
+        public long[]? ReadInt64Array(int length, bool throwOnEndOfStream) {
             return ReadArray<long>(length, ReadInt64, throwOnEndOfStream);
         }
 
@@ -328,14 +327,14 @@ namespace LinqToStdf {
         /// <summary>
         /// Reads an array of 4-byte IEEE floating point numbers
         /// </summary>
-        public float[] ReadSingleArray(int length) {
+        public float[]? ReadSingleArray(int length) {
             return ReadSingleArray(length, true);
         }
 
         /// <summary>
         /// Reads an array of 4-byte IEEE floating point numbers
         /// </summary>
-        public float[] ReadSingleArray(int length, bool throwOnEndOfStream) {
+        public float[]? ReadSingleArray(int length, bool throwOnEndOfStream) {
             return ReadArray<float>(length, ReadSingle, throwOnEndOfStream);
         }
 
@@ -350,14 +349,14 @@ namespace LinqToStdf {
         /// <summary>
         /// Reads an array of 8-byte IEEE floating point numbers
         /// </summary>
-        public double[] ReadDoubleArray(int length) {
+        public double[]? ReadDoubleArray(int length) {
             return ReadDoubleArray(length, true);
         }
 
         /// <summary>
         /// Reads an array of 8-byte IEEE floating point numbers
         /// </summary>
-        public double[] ReadDoubleArray(int length, bool throwOnEndOfStream) {
+        public double[]? ReadDoubleArray(int length, bool throwOnEndOfStream) {
             return ReadArray<double>(length, ReadDouble, throwOnEndOfStream);
         }
 
@@ -372,7 +371,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Reads an array of characters
         /// </summary>
-        public char[] ReadCharacterArray(int length, bool throwOnEndOfStream) {
+        public char[]? ReadCharacterArray(int length, bool throwOnEndOfStream) {
             return ReadArray<char>(length, ReadCharacter, throwOnEndOfStream);
         }
 
@@ -402,14 +401,14 @@ namespace LinqToStdf {
         /// <summary>
         /// Reads an array of strings where the first byte of each string indicates the length
         /// </summary>
-        public string[] ReadStringArray(int arrayLength) {
+        public string[]? ReadStringArray(int arrayLength) {
             return ReadStringArray(arrayLength, true);
         }
 
         /// <summary>
         /// Reads an array of strings where the first byte of each string indicates the length
         /// </summary>
-        public string[] ReadStringArray(int arrayLength, bool throwOnEndOfStream) {
+        public string[]? ReadStringArray(int arrayLength, bool throwOnEndOfStream) {
             return ReadArray<string>(arrayLength, ReadString, throwOnEndOfStream);
         }
 

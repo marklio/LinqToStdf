@@ -70,7 +70,7 @@ namespace LinqToStdf.Attributes {
         /// <summary>
         /// Indicates the type of the field to be parsed.
         /// </summary>
-        public virtual Type FieldType { get; set; }
+        public virtual Type? FieldType { get; set; }
 
         /// <summary>
         /// The property of the record that corresponds to this field.
@@ -83,7 +83,7 @@ namespace LinqToStdf.Attributes {
         /// fields.  However, if you want the record to be writeable, it must be recoverable at write time
         /// via an optional field layout or an array layout.
         /// </remarks>
-        public string RecordProperty { get; set; }
+        public string? RecordProperty { get; set; }
 
         /// <summary>
         /// Indicates whether the field’s presence in the STDF file is optional.
@@ -122,7 +122,7 @@ namespace LinqToStdf.Attributes {
         /// is null, the value written for the field will either be that defined here, or the field
         /// will be left off of the end of the record if possible.</para>
         /// </remarks>
-        public object MissingValue { get; set; }
+        public object? MissingValue { get; set; }
 
         /// <summary>
         /// Indicates the value that indicates a missing or invalid field is also potentially valid, and should

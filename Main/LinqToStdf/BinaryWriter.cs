@@ -60,7 +60,6 @@ namespace LinqToStdf {
         /// <param name="streamEndian">The endian-ness of the stream</param>
         /// <param name="writeBackwards">Whether to write to the stream "backwards"</param>
         public BinaryWriter(Stream stream, Endian streamEndian, bool writeBackwards) {
-            Debug.Assert(stream != null, "The provided stream is null");
             _Stream = stream;
             _StreamEndian = streamEndian;
             _WriteBackwards = writeBackwards;
@@ -68,7 +67,7 @@ namespace LinqToStdf {
 
         private readonly Stream _Stream;
         private readonly Endian _StreamEndian;
-        private byte[] _Buffer;
+        private byte[] _Buffer = new byte[256];
         private readonly bool _WriteBackwards;
 
         /// <summary>
@@ -108,7 +107,6 @@ namespace LinqToStdf {
         /// <param name="arr">The array to write</param>
         /// <param name="writeFunc">The function that will write a single element</param>
         void WriteArray<T>(T[] arr, Action<T> writeFunc) {
-            Debug.Assert(writeFunc != null, "The provided writeFunc delegate is null");
             if (arr == null || arr.Length == 0) return;
             if (_WriteBackwards) {
                 arr = (T[])arr.Clone();
@@ -398,7 +396,6 @@ namespace LinqToStdf {
         /// </summary>
         /// <param name="value">the bytes</param>
         void FillBuffer(byte[] value) {
-            Debug.Assert(value != null, "value was null");
             if (value.Length > 0) {
                 EnsureBufferLength(value.Length);
                 value.CopyTo(_Buffer, 0);

@@ -37,20 +37,20 @@ namespace LinqToStdf.RecordConverting
     {
         public int FieldIndex { get; private set; }
         public Type FieldType { get; private set; }
-        public CodeNode Initialization { get; private set; }
-        public PropertyInfo Property { get; private set; }
-        public CodeNode WriteOperation { get; private set; }
-        public CodeNode NoValueWriteContingency { get; private set; }
+        public CodeNode? Initialization { get; private set; }
+        public PropertyInfo? Property { get; private set; }
+        public CodeNode? WriteOperation { get; private set; }
+        public CodeNode? NoValueWriteContingency { get; private set; }
         public int? OptionalFieldIndex { get; private set; }
         public byte OptionaFieldMask { get; private set; }
 
         public WriteFieldNode(
             int fieldIndex,
             Type fieldType,
-            CodeNode initialization = null,
-            PropertyInfo sourceProperty = null,
-            CodeNode writeOperation = null,
-            CodeNode noValueWriteContingency = null,
+            CodeNode? initialization = null,
+            PropertyInfo? sourceProperty = null,
+            CodeNode? writeOperation = null,
+            CodeNode? noValueWriteContingency = null,
             int? optionalFieldIndex = null,
             byte optionalFieldMask = 0)
         {

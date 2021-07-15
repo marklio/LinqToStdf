@@ -33,11 +33,11 @@ namespace LinqToStdf.Records {
             get { return new RecordType(); }
         }
 
-        public virtual string Message { get; set; }
+        public virtual string? Message { get; set; }
 
 
         public virtual StdfException ToException() {
-            return new StdfException(this.Message) { ErrorRecord = this };
+            return new StdfException(this.Message ?? "Unknown Error") { ErrorRecord = this };
         }
 
         public override bool IsWritable { get { return false; } }

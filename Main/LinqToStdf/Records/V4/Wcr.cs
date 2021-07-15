@@ -34,16 +34,16 @@ namespace LinqToStdf.Records.V4 {
         /// <summary>
         /// Known values are: U, D, L, R
         /// </summary>
-        public string Flat { get; set; }
+        public string? Flat { get; set; }
         public short? CenterX { get; set; }
         public short? CenterY { get; set; }
         /// <summary>
         /// Known values are: L, R
         /// </summary>
-        public string PositiveX { get; set; }
+        public string? PositiveX { get; set; }
         /// <summary>
         /// Known values are: U, D
         /// </summary>
-        public string PositiveY { get; set; }
+        public string? PositiveY { get; set; }
     }
 }

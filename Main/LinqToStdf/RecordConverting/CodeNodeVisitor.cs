@@ -67,9 +67,21 @@ namespace LinqToStdf.RecordConverting
         public virtual CodeNode VisitFieldAssignment(FieldAssignmentNode node)
         {
             var visitedReadNode = Visit(node.ReadNode);
-            var visitedConditionalsBlock = Visit(node.AssignmentBlock);
+            CodeNode? visitedConditionalsBlock = null;
+            if (node.AssignmentBlock is not null)
+            {
+                visitedConditionalsBlock = Visit(node.AssignmentBlock);
+            }
             if (visitedReadNode == node.ReadNode && visitedConditionalsBlock == node.AssignmentBlock) return node;
-            else return new FieldAssignmentNode(node.Type, node.FieldIndex, visitedReadNode, visitedConditionalsBlock as BlockNode ?? new BlockNode(visitedConditionalsBlock));
+            else
+            {
+                return new FieldAssignmentNode(node.Type, node.FieldIndex, visitedReadNode, visitedConditionalsBlock switch
+                {
+                    null => null,
+                    BlockNode blockNode => blockNode,
+                    _ => new BlockNode(visitedConditionalsBlock),
+                });
+            }
         }
         public virtual CodeNode VisitSkipAssignmentIfFlagSet(SkipAssignmentIfFlagSetNode node)
         {

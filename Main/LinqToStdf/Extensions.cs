@@ -10,8 +10,36 @@ using LinqToStdf.Records.V4;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace LinqToStdf {
+namespace System.Runtime.CompilerServices
+{
+    using global::System.ComponentModel;
+    /// <summary>
+    /// Reserved to be used by the compiler for tracking metadata.
+    /// This class should not be used by developers in source code.
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    internal static class IsExternalInit
+    {
+    }
+}
+namespace System.Diagnostics.CodeAnalysis
+{
+    [System.AttributeUsage(System.AttributeTargets.Method | System.AttributeTargets.Property, AllowMultiple = true, Inherited = false)]
+    public sealed class MemberNotNullAttribute : Attribute
+    {
+        public string[] Members { get; }
+        public MemberNotNullAttribute(string member)
+        {
+            Members = new[] { member };
+        }
+        public MemberNotNullAttribute(string[] members)
+        {
+            Members = members;
+        }
+    }
+}
 
+namespace LinqToStdf {
     /// <summary>
     /// Provides convenient shortcuts to query the structure of STDF as extension methods.
     /// </summary>
@@ -33,7 +61,7 @@ namespace LinqToStdf {
         {
             return source.Provider.CreateQuery<TRecord>(
                 Expression.Call(
-                    ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TRecord)),
+                    ((MethodInfo)MethodBase.GetCurrentMethod()!).MakeGenericMethod(typeof(TRecord)),
                     source.Expression));
         }
 
@@ -43,7 +71,8 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets the <see cref="Mir"/> for the record context.
         /// </summary>
-        public static Mir GetMir(this IRecordContext record) {
+        public static Mir? GetMir(this IRecordContext record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to get Mir.");
             return (from mir in record.StdfFile.GetRecords().OfExactType<Mir>()
                     select mir).FirstOrDefault();
         }
@@ -51,7 +80,8 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets the <see cref="Mrr"/> for the record context.
         /// </summary>
-        public static Mrr GetMrr(this IRecordContext record) {
+        public static Mrr? GetMrr(this IRecordContext record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to get Mrr.");
             return (from mrr in record.StdfFile.GetRecords().OfExactType<Mrr>()
                     select mrr).FirstOrDefault();
         }
@@ -60,6 +90,7 @@ namespace LinqToStdf {
         /// Gets the <see cref="Pcr">Pcrs</see> for the record context.
         /// </summary>
         public static IEnumerable<Pcr> GetPcrs(this IRecordContext record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to get Pcrs.");
             return record.StdfFile.GetRecords().OfExactType<Pcr>();
         }
 
@@ -68,6 +99,7 @@ namespace LinqToStdf {
         /// with the given head and site.
         /// </summary>
         public static IEnumerable<Pcr> GetPcrs(this IRecordContext record, byte headNumber, byte siteNumber) {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to get Pcrs.");
             return from r in record.StdfFile.GetRecords().OfExactType<Pcr>()
                    where r.HeadNumber == headNumber && r.SiteNumber == siteNumber
                    select r;
@@ -76,7 +108,8 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets the summary (head 255) <see cref="Pcr"/> for the record context.
         /// </summary>
-        public static Pcr GetSummaryPcr(this IRecordContext record) {
+        public static Pcr? GetSummaryPcr(this IRecordContext record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to get summary Pcr.");
             return (from r in record.StdfFile.GetRecords().OfExactType<Pcr>()
                     where r.HeadNumber == 255
                     select r).FirstOrDefault();
@@ -88,6 +121,7 @@ namespace LinqToStdf {
         /// <param name="record">The record context</param>
         /// <returns>All the <see cref="Hbr">Hbrs</see>.</returns>
         public static IEnumerable<Hbr> GetHbrs(this IRecordContext record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to get Hbrs.");
             return record.StdfFile.GetRecords().OfExactType<Hbr>();
         }
 
@@ -103,6 +137,7 @@ namespace LinqToStdf {
         /// Gets the summary (head 255) <see cref="Hbr">Hbrs</see> for the record context.
         /// </summary>
         public static IEnumerable<Hbr> GetSummaryHbrs(this IRecordContext record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to get summary Hbrs.");
             return from r in record.StdfFile.GetRecords().OfExactType<Hbr>()
                    where r.HeadNumber == 255
                    select r;
@@ -112,6 +147,7 @@ namespace LinqToStdf {
         /// Gets the <see cref="Sbr">Sbrs</see> for the record context.
         /// </summary>
         public static IEnumerable<Sbr> GetSbrs(this IRecordContext record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to get Sbrs.");
             return record.StdfFile.GetRecords().OfExactType<Sbr>();
         }
 
@@ -127,6 +163,7 @@ namespace LinqToStdf {
         /// Gets the summary (head 255) <see cref="Sbr">Sbrs</see> for the record context.
         /// </summary>
         public static IEnumerable<Sbr> GetSummarySbrs(this IRecordContext record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to get Sbrs.");
             return from r in record.StdfFile.GetRecords().OfExactType<Sbr>()
                    where r.HeadNumber == 255
                    select r;
@@ -136,6 +173,7 @@ namespace LinqToStdf {
         /// Gets the <see cref="Tsr">Tsrs</see> for the record context.
         /// </summary>
         public static IEnumerable<Tsr> GetTsrs(this IRecordContext record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to get Tsrs.");
             return record.StdfFile.GetRecords().OfExactType<Tsr>();
         }
 
@@ -144,6 +182,7 @@ namespace LinqToStdf {
         /// with the given head and site.
         /// </summary>
         public static IEnumerable<Tsr> GetTsrs(this IRecordContext record, byte headNumber, byte siteNumber) {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to get Tsrs.");
             return from r in record.StdfFile.GetRecords().OfExactType<Tsr>()
                    where r.HeadNumber == headNumber && r.SiteNumber == siteNumber
                    select r;
@@ -153,6 +192,7 @@ namespace LinqToStdf {
         /// Gets the summary (head 255) <see cref="Tsr">Tsrs</see> for the record context.
         /// </summary>
         public static IEnumerable<Tsr> GetSummaryTsrs(IRecordContext record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to get summary Tsrs.");
             return from r in record.StdfFile.GetRecords().OfExactType<Tsr>()
                    where r.HeadNumber == 255
                    select r;
@@ -161,6 +201,7 @@ namespace LinqToStdf {
         #region Helpers
 
         static IEnumerable<T> GetBinRecords<T>(IRecordContext record, byte head, byte site) where T : BinSummaryRecord {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to get bin records.");
             return from r in record.StdfFile.GetRecords().OfExactType<T>()
                    where r.HeadNumber == head && r.SiteNumber == site
                    select r;
@@ -178,6 +219,7 @@ namespace LinqToStdf {
         /// <param name="record">The "marker" record</param>
         /// <returns>All the records before the marker record</returns>
         static public IEnumerable<StdfRecord> Before(this StdfRecord record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to navigate.");
             return record.StdfFile.GetRecords().TakeWhile(r => r.Offset < record.Offset);
         }
 
@@ -187,6 +229,7 @@ namespace LinqToStdf {
         /// <param name="record">The "marker" record</param>
         /// <returns>All the records after the marker record</returns>
         static public IEnumerable<StdfRecord> After(this StdfRecord record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to navigate.");
             return record.StdfFile.GetRecords().SkipWhile(r => r.Offset <= record.Offset);
         }
 
@@ -198,6 +241,7 @@ namespace LinqToStdf {
         /// Gets the <see cref="Prr">Prrs</see> for this wafer.
         /// </summary>
         static public IEnumerable<Prr> GetPrrs(this Wrr wrr) {
+            if (wrr.StdfFile is null) throw new InvalidOperationException("No StdfFile available to get Prrs.");
             return from prr in wrr.StdfFile.GetRecords().OfExactType<Prr>()
                    where prr.HeadNumber == wrr.HeadNumber
                    select prr;
@@ -210,7 +254,8 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets the <see cref="Wir"/> for the current head
         /// </summary>
-        public static Wir GetWir(this IHeadIndexable record) {
+        public static Wir? GetWir(this IHeadIndexable record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to get Wir.");
             return (from wir in record.StdfFile.GetRecords().OfExactType<Wir>()
                     where wir.HeadNumber == record.HeadNumber
                     select wir).FirstOrDefault();
@@ -219,7 +264,8 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets the <see cref="Wrr"/> for the current head
         /// </summary>
-        public static Wrr GetWrr(this IHeadIndexable record) {
+        public static Wrr? GetWrr(this IHeadIndexable record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to get Wrr.");
             return (from wrr in record.StdfFile.GetRecords().OfExactType<Wrr>()
                     where wrr.HeadNumber == record.HeadNumber
                     select wrr).FirstOrDefault();
@@ -232,7 +278,8 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets the current Prr associated with the head/site
         /// </summary>
-        public static Prr GetPrr(this IHeadSiteIndexable record) {
+        public static Prr? GetPrr(this IHeadSiteIndexable record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to get Prr.");
             return (from prr in record.StdfFile.GetRecords().OfExactType<Prr>()
                     where prr.HeadNumber == record.HeadNumber && prr.SiteNumber == record.SiteNumber
                     select prr).FirstOrDefault();
@@ -241,7 +288,8 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets the current Pir associated with the head/site
         /// </summary>
-        public static Pir GetPir(this IHeadSiteIndexable record) {
+        public static Pir? GetPir(this IHeadSiteIndexable record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("No StdfFile available to get Pir.");
             return (from pir in record.StdfFile.GetRecords().OfExactType<Pir>()
                     where pir.HeadNumber == record.HeadNumber && pir.SiteNumber == record.SiteNumber
                     select pir).FirstOrDefault();
@@ -251,14 +299,14 @@ namespace LinqToStdf {
 
         #region extending PIR/PRR
 
-        public static Prr GetMatchingPrr(this Pir pir) {
+        public static Prr? GetMatchingPrr(this Pir pir) {
             return pir.After()
                 .OfExactType<Prr>()
                 .Where(r => r.HeadNumber == pir.HeadNumber && r.SiteNumber == pir.SiteNumber)
                 .FirstOrDefault();
         }
 
-        public static Pir GetMatchingPir(this Prr prr) {
+        public static Pir? GetMatchingPir(this Prr prr) {
             return prr.Before()
                 .OfExactType<Pir>()
                 .Where(r => r.HeadNumber == prr.HeadNumber && r.SiteNumber == prr.SiteNumber)
@@ -286,7 +334,7 @@ namespace LinqToStdf {
         /// <returns>The records associated with the part (between the <see cref="Pir"/>
         /// and <see cref="Prr"/> and sharing the same head/site information.</returns>
         public static IEnumerable<StdfRecord> GetChildRecords(this Prr prr) {
-            return prr.GetMatchingPir().GetChildRecords();
+            return prr.GetMatchingPir()?.GetChildRecords() ?? Enumerable.Empty<StdfRecord>();
         }
 
         #endregion

@@ -20,8 +20,8 @@ namespace LinqToStdf.Records.V4 {
         }
 
         public DateTime? FinishTime { get; set; }
-        public string DispositionCode { get; set; }
-        public string UserDescription { get; set; }
-        public string ExecDescription { get; set; }
+        public string? DispositionCode { get; set; }
+        public string? UserDescription { get; set; }
+        public string? ExecDescription { get; set; }
     }
 }

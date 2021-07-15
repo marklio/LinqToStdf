@@ -20,9 +20,9 @@ namespace LinqToStdf.Indexing {
         /// <param name="definition">The open generic definition we're looking for.</param>
         /// <param name="type">The type we're inspecting</param>
         /// <returns></returns>
-        internal static Type FindGenericType(Type definition, Type type) {
+        internal static Type? FindGenericType(Type definition, Type? type) {
             //while the type isn't null and not object, keep looking up the type hierarchy
-            while ((type != null) && (type != typeof(object))) {
+            while ((type is not null) && (type != typeof(object))) {
                 //If the type's generic definition is the one we're looking for, we found it
                 if (type.IsGenericType && (type.GetGenericTypeDefinition() == definition)) {
                     return type;
@@ -31,8 +31,8 @@ namespace LinqToStdf.Indexing {
                 if (definition.IsInterface) {
                     foreach (Type type2 in type.GetInterfaces()) {
                         //recurse into the interfaces
-                        Type innerType = FindGenericType(definition, type2);
-                        if (innerType != null) {
+                        var innerType = FindGenericType(definition, type2);
+                        if (innerType is not null) {
                             return innerType;
                         }
                     }
@@ -47,9 +47,9 @@ namespace LinqToStdf.Indexing {
         /// </summary>
         internal static Type GetElementType(Type enumerableType) {
             //Find the IEnumerable
-            Type type = FindGenericType(typeof(IEnumerable<>), enumerableType);
+            var type = FindGenericType(typeof(IEnumerable<>), enumerableType);
             //if we found it, return the first generic argument
-            if (type != null) {
+            if (type is not null) {
                 return type.GetGenericArguments()[0];
             }
             //otherwise, assume the type itself is the element type

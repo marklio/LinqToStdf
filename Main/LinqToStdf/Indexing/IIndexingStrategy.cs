@@ -54,14 +54,13 @@ namespace LinqToStdf.Indexing {
     }
 
     public class SimpleIndexingStrategy : CachingIndexingStrategy {
-        List<StdfRecord> _Records;
+        readonly List<StdfRecord> _Records = new();
 
         public override Expression TransformQuery(Expression query) {
             return query;
         }
 
         public override void IndexRecords(IEnumerable<StdfRecord> records) {
-            _Records = new List<StdfRecord>();
             foreach (var r in records) {
                 _Records.Add(r);
             }

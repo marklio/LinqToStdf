@@ -38,7 +38,7 @@ namespace LinqToStdf.CompiledQuerySupport {
             return _Fields.ContainsKey(type);
         }
 
-        public HashSet<string> GetFieldsForType(Type type)
+        public HashSet<string>? GetFieldsForType(Type type)
         {
             if (_Fields.TryGetValue(type, out var fields))
             {

@@ -19,7 +19,7 @@ namespace LinqToStdf.Attributes {
         /// <summary>
         /// Overridden to be hard-coded to byte.  Setting will throw.
         /// </summary>
-        public override Type FieldType {
+        public override Type? FieldType {
             get { return typeof(byte); }
             set { throw new NotSupportedException(); }
         }

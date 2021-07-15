@@ -41,8 +41,8 @@ namespace LinqToStdf.Records.V4 {
         public byte TestFlags { get; set; }
         public byte ParametricFlags { get; set; }
         public float? Result { get; set; }
-        public string TestText { get; set; }
-        public string AlarmId { get; set; }
+        public string? TestText { get; set; }
+        public string? AlarmId { get; set; }
         public byte? OptionalFlags { get; set; }
         /// <summary>
         /// Known values are: 15, 12, 9, 6, 3, 2, 0, -3, -6, -9, -12
@@ -58,10 +58,10 @@ namespace LinqToStdf.Records.V4 {
         public sbyte? HighLimitScalingExponent { get; set; }
         public float? LowLimit { get; set; }
         public float? HighLimit { get; set; }
-        public string Units { get; set; }
-        public string ResultFormatString { get; set; }
-        public string LowLimitFormatString { get; set; }
-        public string HighLimitFormatString { get; set; }
+        public string? Units { get; set; }
+        public string? ResultFormatString { get; set; }
+        public string? LowLimitFormatString { get; set; }
+        public string? HighLimitFormatString { get; set; }
         public float? LowSpecLimit { get; set; }
         public float? HighSpecLimit { get; set; }
     }

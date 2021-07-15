@@ -13,13 +13,22 @@ namespace LinqToStdf.RecordConverting
 {
     class UnconverterEmittingVisitor : CodeNodeVisitor
     {
-        public ILGenerator ILGen;
-        public Type ConcreteType;
-        public bool EnableLog = false;
+        public UnconverterEmittingVisitor(ILGenerator ilGen, Type concreteType, bool enableLog=false)
+        {
+            ILGen = ilGen;
+            ConcreteType = concreteType;
+            EnableLog = enableLog;
+            _ConcreteRecordLocal = ILGen.DeclareLocal(ConcreteType);
+            _StartedWriting = ILGen.DeclareLocal<bool>();
+            _Writer = ILGen.DeclareLocal<BinaryWriter>();
+        }
+        public ILGenerator ILGen { get; }
+        public Type ConcreteType { get; }
+        public bool EnableLog { get; }
 
-        LocalBuilder _ConcreteRecordLocal;
-        LocalBuilder _StartedWriting;
-        LocalBuilder _Writer;
+        readonly LocalBuilder _ConcreteRecordLocal;
+        readonly LocalBuilder _StartedWriting;
+        readonly LocalBuilder _Writer;
         readonly Dictionary<int, LocalBuilder> _FieldLocals = new Dictionary<int, LocalBuilder>();
 
         void Log(string msg)
@@ -35,13 +44,11 @@ namespace LinqToStdf.RecordConverting
             Log($"Unconverter for {ConcreteType}");
             //initialize the concrete record and cast the arg to it
             Log($"Creating instance");
-            _ConcreteRecordLocal = ILGen.DeclareLocal(ConcreteType);
             ILGen.Ldarg_0();
             ILGen.Castclass(ConcreteType);
             ILGen.Stloc(_ConcreteRecordLocal);
 
             //initialize _StartedWriting
-            _StartedWriting = ILGen.DeclareLocal<bool>();
             ILGen.Ldc_I4_0();
             ILGen.Stloc(_StartedWriting);
 
@@ -52,8 +59,6 @@ namespace LinqToStdf.RecordConverting
             ILGen.Stloc(memoryStream);
             ILGen.BeginExceptionBlock();
 
-            //create a binary writer
-            _Writer = ILGen.DeclareLocal<BinaryWriter>();
             //load args for binary writer .ctor
             ILGen.Ldloc(memoryStream);
             ILGen.Ldarg_1(); //the endianness
@@ -70,22 +75,22 @@ namespace LinqToStdf.RecordConverting
             //get the content
             Log($"Getting data and reversing");
             ILGen.Ldloc(memoryStream);
-            ILGen.Callvirt(typeof(MemoryStream).GetMethod("ToArray"));
+            ILGen.Callvirt(typeof(MemoryStream).GetMethodOrThrow("ToArray"));
             var content = ILGen.DeclareLocal<byte[]>();
             ILGen.Stloc(content);
             ILGen.Ldloc(content);
-            ILGen.Call(typeof(Array).GetMethod("Reverse", typeof(Array)));
+            ILGen.Call(typeof(Array).GetMethodOrThrow("Reverse", typeof(Array)));
 
             ILGen.BeginFinallyBlock();
             //dispose the memorystream
             Log($"Cleaning up");
             ILGen.Ldloc(memoryStream);
-            ILGen.Callvirt(typeof(Stream).GetMethod("Dispose"));
+            ILGen.Callvirt(typeof(Stream).GetMethodOrThrow("Dispose"));
             ILGen.EndExceptionBlock();
 
             //get the record type
             ILGen.Ldarg_0();
-            ILGen.Callvirt(typeof(StdfRecord).GetProperty("RecordType").GetGetMethod());
+            ILGen.Callvirt(typeof(StdfRecord).GetProperty("RecordType")?.GetGetMethod() ?? throw new InvalidOperationException("Can't get the getter for RecordType."));
 
             //load the content
             ILGen.Ldloc(content);
@@ -132,7 +137,7 @@ namespace LinqToStdf.RecordConverting
             //TODO: do the right kind of checks for the optional node properties
 
             //do any initialization (this is typically creating field locals)
-            Visit(node.Initialization);
+            if (node.Initialization is not null) Visit (node.Initialization);
 
             //initialize the local that indicates whether we have a local value to write
             var hasValueLocal = ILGen.DeclareLocal<bool>();
@@ -154,7 +159,7 @@ namespace LinqToStdf.RecordConverting
                 Log($"Reading {node.Property.Name} for field {node.FieldIndex}");
                 //get the value of the property
                 ILGen.Ldloc(_ConcreteRecordLocal);
-                ILGen.Callvirt(node.Property.GetGetMethod());
+                ILGen.Callvirt(node.Property.GetGetMethod() ?? throw new InvalidOperationException("Cannot get property getter"));
 
                 //generate the check for whether we have a value to write
                 if (node.Property.PropertyType.IsValueType)
@@ -171,7 +176,7 @@ namespace LinqToStdf.RecordConverting
                         ILGen.Stloc(nullableLocal);
                         //call .HasValue
                         ILGen.Ldloca(nullableLocal); //load address so we can call methods
-                        ILGen.Callvirt(nullable.GetProperty("HasValue").GetGetMethod());
+                        ILGen.Callvirt(nullable.GetProperty("HasValue")?.GetGetMethod() ?? throw new InvalidOperationException("Cannot get getter for HasValue"));
                         //dup and store hasValue
                         ILGen.Dup();
                         ILGen.Stloc(hasValueLocal);
@@ -182,7 +187,7 @@ namespace LinqToStdf.RecordConverting
                         //otherwise, get the value 
                         Log($"Getting Value");
                         ILGen.Ldloca(nullableLocal);
-                        ILGen.Callvirt(nullable.GetProperty("Value").GetGetMethod());
+                        ILGen.Callvirt(nullable.GetProperty("Value")?.GetGetMethod()  ?? throw new InvalidOperationException("Cannot get getter for Value"));
                     }
                     //BUG: if we have a field that we persist AND represents the state of another field,
                     // then there should be a merge operation here (or a consistency check should fail earlier).
@@ -240,7 +245,7 @@ namespace LinqToStdf.RecordConverting
             ILGen.Ldc_I4_1();
             ILGen.Stloc(_StartedWriting);
 
-            Visit(node.WriteOperation);
+            if (node.WriteOperation is not null) Visit (node.WriteOperation);
 
             ILGen.MarkLabel(skipWritingLabel);
             Log($"Done writing.");
@@ -273,14 +278,14 @@ namespace LinqToStdf.RecordConverting
             ILGen.Ldloc(_Writer);
             Visit(node.ValueSource);
             ILGen.Ldc_I4(node.StringLength);
-            ILGen.Callvirt(typeof(BinaryWriter).GetMethod("WriteString", typeof(string), typeof(int)));
+            ILGen.Callvirt(typeof(BinaryWriter).GetMethodOrThrow("WriteString", typeof(string), typeof(int)));
             return node;
         }
         static readonly Dictionary<Type, MethodInfo> _WriteMethods = new Dictionary<Type, MethodInfo>();
         public override CodeNode VisitWriteType(WriteTypeNode node)
         {
-            MethodInfo writeMethod;
-            if (node.IsNibble) writeMethod = typeof(BinaryWriter).GetMethod(nameof(BinaryWriter.WriteNibbleArray), node.Type);
+            MethodInfo? writeMethod;
+            if (node.IsNibble) writeMethod = typeof(BinaryWriter).GetMethodOrThrow(nameof(BinaryWriter.WriteNibbleArray), node.Type);
             else if (!_WriteMethods.TryGetValue(node.Type, out writeMethod))
             {
                 string writeMethodName;
@@ -312,7 +317,7 @@ namespace LinqToStdf.RecordConverting
                 {
                     throw new NotSupportedException(string.Format(Resources.UnsupportedWriterType, node.Type));
                 }
-                writeMethod = typeof(BinaryWriter).GetMethod(writeMethodName, node.Type);
+                writeMethod = typeof(BinaryWriter).GetMethodOrThrow(writeMethodName, node.Type);
                 _WriteMethods[node.Type] = writeMethod;
             }
 

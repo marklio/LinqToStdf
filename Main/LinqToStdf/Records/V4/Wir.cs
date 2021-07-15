@@ -22,6 +22,6 @@ namespace LinqToStdf.Records.V4 {
         public byte? HeadNumber { get; set; }
         public byte? SiteGroup { get; set; }
         public DateTime? StartTime { get; set; }
-        public string WaferId { get; set; }
+        public string? WaferId { get; set; }
     }
 }

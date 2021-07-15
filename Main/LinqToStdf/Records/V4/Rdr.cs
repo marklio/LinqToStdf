@@ -17,6 +17,6 @@ namespace LinqToStdf.Records.V4 {
             get { return new RecordType(1, 70); }
         }
 
-        public ushort[] RetestBins { get; set; }
+        public ushort[]? RetestBins { get; set; }
     }
 }

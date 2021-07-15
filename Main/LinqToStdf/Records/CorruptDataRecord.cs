@@ -20,6 +20,6 @@ namespace LinqToStdf.Records {
             }
         }
 
-        public byte[] CorruptData { get; set; }
+        public byte[]? CorruptData { get; set; }
     }
 }

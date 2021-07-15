@@ -17,17 +17,17 @@ namespace LinqToStdf.RecordConverting
         readonly ILGenerator _ILGen;
         readonly Type _Type;
         readonly HashSet<int> _FieldLocalsTouched = new HashSet<int>();
-        List<KeyValuePair<FieldLayoutAttribute, PropertyInfo>> _Fields;
+        readonly List<KeyValuePair<FieldLayoutAttribute, PropertyInfo>> _Fields;
 
         public UnconverterGenerator(ILGenerator ilgen, Type type)
         {
             _ILGen = ilgen ?? throw new ArgumentNullException("ilgen");
             _Type = type ?? throw new ArgumentNullException("type");
+            _Fields = GetFieldLayoutsAndAssignmentsForType(_Type);
         }
 
         public void GenerateUnconverter()
         {
-            _Fields = GetFieldLayoutsAndAssignments();
 
             var node = new UnconverterShellNode(
                     new BlockNode(
@@ -38,39 +38,34 @@ namespace LinqToStdf.RecordConverting
                         //we're just binding to the generic GenerateAssignment method for the field's type
                         select GenerateAssignment(pair)));
 
-            new UnconverterEmittingVisitor
-            {
-                ConcreteType = _Type,
-                ILGen = _ILGen,
-                EnableLog = ConverterLog.IsLogging,
-            }.Visit(node);
+            new UnconverterEmittingVisitor(_ILGen, _Type, ConverterLog.IsLogging).Visit(node);
         }
 
         //TODO: refactor this so we're not duplicated with ConverterFactory
-        private List<KeyValuePair<FieldLayoutAttribute, PropertyInfo>> GetFieldLayoutsAndAssignments()
+        static List<KeyValuePair<FieldLayoutAttribute, PropertyInfo>> GetFieldLayoutsAndAssignmentsForType(Type type)
         {
             //get the list
-            var attributes = from a in _Type.GetCustomAttributes(typeof(FieldLayoutAttribute), true).Cast<FieldLayoutAttribute>()
+            var attributes = from a in type.GetCustomAttributes(typeof(FieldLayoutAttribute), true).Cast<FieldLayoutAttribute>()
                              orderby a.FieldIndex
                              select a;
-            var list = new List<FieldLayoutAttribute>(attributes);
+            List<FieldLayoutAttribute> list = new(attributes);
             //make sure they are consecutive
             for (int i = 0; i < list.Count; i++)
             {
-                if (list[i].FieldIndex != i) throw new NonconsecutiveFieldIndexException(_Type);
+                if (list[i].FieldIndex != i) throw new NonconsecutiveFieldIndexException(type);
             }
             var withPropInfo = from l in list
-                               select new KeyValuePair<FieldLayoutAttribute, PropertyInfo>(
+                               select new KeyValuePair<FieldLayoutAttribute, PropertyInfo?>(
                                           l,
-                                          (l.RecordProperty == null) ? null : _Type.GetProperty(l.RecordProperty));
+                                          (l.RecordProperty == null) ? null : type.GetProperty(l.RecordProperty) ?? throw new InvalidOperationException($"Could not find property {l.RecordProperty}"));
 
             return new List<KeyValuePair<FieldLayoutAttribute, PropertyInfo>>(withPropInfo);
         }
 
         CodeNode GenerateAssignment(KeyValuePair<FieldLayoutAttribute, PropertyInfo> pair)
         {
-            var fieldType = pair.Key.FieldType;
-            StringFieldLayoutAttribute stringLayout = pair.Key as StringFieldLayoutAttribute;
+            var fieldType = pair.Key.FieldType ?? throw new InvalidOperationException("Field type unspecified");
+            var stringLayout = pair.Key as StringFieldLayoutAttribute;
             //if it is an array, defer to GenerateArrayAssignment
             if (pair.Key is ArrayFieldLayoutAttribute)
             {
@@ -99,21 +94,20 @@ namespace LinqToStdf.RecordConverting
             }
 
             //find out if there is an optional field flag that we need to manage
-            FieldLayoutAttribute optionalFieldLayout = null;
-            FlaggedFieldLayoutAttribute currentAsOptionalFieldLayout = pair.Key as FlaggedFieldLayoutAttribute;
-            if (currentAsOptionalFieldLayout != null)
+            FieldLayoutAttribute? optionalFieldLayout = null;
+            if (pair.Key is FlaggedFieldLayoutAttribute currentAsFlaggedFieldLayout)
             {
-                optionalFieldLayout = _Fields[currentAsOptionalFieldLayout.FlagIndex].Key;
-                if (_FieldLocalsTouched.Add(currentAsOptionalFieldLayout.FlagIndex))
+                optionalFieldLayout = _Fields[currentAsFlaggedFieldLayout.FlagIndex].Key;
+                if (_FieldLocalsTouched.Add(currentAsFlaggedFieldLayout.FlagIndex))
                 {
-                    initNodes.Add(new CreateFieldLocalForWritingNode(currentAsOptionalFieldLayout.FlagIndex, optionalFieldLayout.FieldType));
+                    initNodes.Add(new CreateFieldLocalForWritingNode(currentAsFlaggedFieldLayout.FlagIndex, optionalFieldLayout.FieldType ?? throw new InvalidOperationException("The field type for the optional field is not specified.")));
                 }
             }
 
             //this will hold a node that will write in the case we have no value to write
-            CodeNode noValueWriteContingency = null;
+            CodeNode? noValueWriteContingency = null;
             //this will hold the source of the write that will happen above
-            CodeNode noValueWriteContingencySource = null;
+            CodeNode noValueWriteContingencySource;
 
             //Decide what to do if we don't have a value to write.
             //This will happen if we don't store the value in a property, it is "missing" from the property source, or something else
@@ -134,6 +128,8 @@ namespace LinqToStdf.RecordConverting
                 //if T is a value type, we're up a creek with nothing to write.
                 //this is obviously not a good place, so throw in the converter
                 noValueWriteContingency = new ThrowInvalidOperationNode(string.Format(Resources.NonNullableField, pair.Key.FieldIndex, _Type));
+                //make the source throw as well to keep the compiler happy.
+                noValueWriteContingencySource = new ThrowInvalidOperationNode(string.Format(Resources.NonNullableField, pair.Key.FieldIndex, _Type));
             }
             else
             {
@@ -166,12 +162,12 @@ namespace LinqToStdf.RecordConverting
                 writeOperation: writeNode,
                 noValueWriteContingency: noValueWriteContingency,
                 optionalFieldIndex: optionalFieldLayout == null ? null : (int?)optionalFieldLayout.FieldIndex,
-                optionalFieldMask: optionalFieldLayout == null ? (byte)0 : currentAsOptionalFieldLayout.FlagMask);
+                optionalFieldMask: pair.Key is FlaggedFieldLayoutAttribute flaggedFieldLayout ? flaggedFieldLayout.FlagMask : (byte)0);
         }
 
         CodeNode GenerateArrayAssignment(KeyValuePair<FieldLayoutAttribute, PropertyInfo> pair)
         {
-            var fieldType = pair.Key.FieldType;
+            var fieldType = pair.Key.FieldType ?? throw new InvalidOperationException("Field type unspecified");
             ArrayFieldLayoutAttribute arrayLayout = (ArrayFieldLayoutAttribute)pair.Key;
             var isNibbleArray = arrayLayout is NibbleArrayFieldLayoutAttribute;
 
@@ -196,7 +192,7 @@ namespace LinqToStdf.RecordConverting
             if (_FieldLocalsTouched.Add(arrayLayout.ArrayLengthFieldIndex))
             {
                 writeNode = new BlockNode(
-                    new CreateFieldLocalForWritingNode(arrayLayout.ArrayLengthFieldIndex, _Fields[arrayLayout.ArrayLengthFieldIndex].Key.FieldType),
+                    new CreateFieldLocalForWritingNode(arrayLayout.ArrayLengthFieldIndex, _Fields[arrayLayout.ArrayLengthFieldIndex].Key.FieldType ?? throw new InvalidOperationException("The field type is null.")),
                     new SetLengthLocalNode(arrayLayout.FieldIndex, arrayLayout.ArrayLengthFieldIndex));
             }
             else

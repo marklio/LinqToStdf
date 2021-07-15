@@ -26,7 +26,7 @@ namespace LinqToStdf.Records {
         public bool Recoverable { get; set; }
 
         public override StdfException ToException() {
-            return new StdfFormatException(Message) { ErrorRecord = this };
+            return new StdfFormatException(Message ?? "Unknown Format Error") { ErrorRecord = this };
         }
     }
 }

@@ -16,6 +16,6 @@ namespace LinqToStdf.Records.V4 {
 			get { return new RecordType(50, 30); }
 		}
 
-        public string Text { get; set; }
+        public string? Text { get; set; }
 	}
 }

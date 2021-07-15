@@ -15,6 +15,6 @@ namespace LinqToStdf.Records.V4 {
 		public override RecordType RecordType {
 			get { return new RecordType(20, 10); }
 		}
-        public string Name { get; set; }
+        public string? Name { get; set; }
 	}
 }

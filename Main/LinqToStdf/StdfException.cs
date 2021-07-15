@@ -28,6 +28,6 @@ namespace LinqToStdf {
         /// <summary>
         /// If applicable, the <see cref="ErrorRecord"/> associated with the record.
         /// </summary>
-        public ErrorRecord ErrorRecord { get; set; }
+        public ErrorRecord? ErrorRecord { get; set; }
     }
 }

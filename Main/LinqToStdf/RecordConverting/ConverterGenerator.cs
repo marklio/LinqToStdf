@@ -19,7 +19,7 @@ namespace LinqToStdf.RecordConverting
     {
         readonly ILGenerator _ILGen;
         readonly Type _Type;
-        readonly HashSet<string> _Fields;
+        readonly HashSet<string>? _Fields;
 
         /// <summary>
         /// Constructs a converter using the supplied il generator and the type we're converting to.
@@ -27,7 +27,7 @@ namespace LinqToStdf.RecordConverting
         /// <param name="ilgen">The il generator to use</param>
         /// <param name="type">The type we're converting to</param>
         /// <param name="fields">The fields we should parse (null if we should parse everything, empty if we shouldn't parse at all)</param>
-        public ConverterGenerator(ILGenerator ilgen, Type type, HashSet<string> fields)
+        public ConverterGenerator(ILGenerator ilgen, Type type, HashSet<string>? fields)
         {
             _ILGen = ilgen ?? throw new ArgumentNullException("ilgen");
             _Type = type ?? throw new ArgumentNullException("type");
@@ -99,12 +99,7 @@ namespace LinqToStdf.RecordConverting
                 new ReturnRecordNode());
 
             //visit the block with an emitting visitor
-            new ConverterEmittingVisitor()
-            {
-                ILGen = _ILGen,
-                ConcreteType = _Type,
-                EnableLog = ConverterLog.IsLogging,
-            }.Visit(block);
+            new ConverterEmittingVisitor(_ILGen,_Type,ConverterLog.IsLogging).Visit(block);
         }
 
         static List<KeyValuePair<FieldLayoutAttribute, PropertyInfo>> GetFieldLayoutsAndAssignments(Type recordType)
@@ -120,7 +115,7 @@ namespace LinqToStdf.RecordConverting
                 if (list[i].FieldIndex != i) throw new NonconsecutiveFieldIndexException(recordType);
             }
             var withPropInfo = from l in list
-                               select new KeyValuePair<FieldLayoutAttribute, PropertyInfo>(
+                               select new KeyValuePair<FieldLayoutAttribute, PropertyInfo?>(
                                           l,
                                           (l.RecordProperty == null) ? null : ((Type)recordType).GetProperty(l.RecordProperty));
 
@@ -129,7 +124,7 @@ namespace LinqToStdf.RecordConverting
 
         CodeNode GenerateAssignment(KeyValuePair<FieldLayoutAttribute, PropertyInfo> pair)
         {
-            var fieldType = pair.Key.FieldType;
+            var fieldType = pair.Key.FieldType ?? throw new InvalidOperationException("The field type for assignment is null");
             //if this is an array, defer to GenerateArrayAssignment
             if (pair.Key is ArrayFieldLayoutAttribute)
             {
@@ -177,7 +172,7 @@ namespace LinqToStdf.RecordConverting
                 readerNode = new ReadTypeNode(fieldType);
             }
 
-            BlockNode assignmentBlock = null;
+            BlockNode? assignmentBlock = null;
             //if we have a property to assign to, generate the appropriate assignment statements
             if (pair.Value != null)
             {
@@ -203,7 +198,7 @@ namespace LinqToStdf.RecordConverting
 
         CodeNode GenerateArrayAssignment(KeyValuePair<FieldLayoutAttribute, PropertyInfo> pair)
         {
-            var fieldType = pair.Key.FieldType;
+            var fieldType = pair.Key.FieldType ?? throw new InvalidOperationException("The field type for assignment is null");
             bool isNibbleArray = pair.Key is NibbleArrayFieldLayoutAttribute;
             int lengthIndex = ((ArrayFieldLayoutAttribute)pair.Key).ArrayLengthFieldIndex;
 
@@ -220,8 +215,8 @@ namespace LinqToStdf.RecordConverting
             else
             {
                 var readNode = new ReadTypeNode(fieldType.MakeArrayType(), lengthIndex, isNibble: isNibbleArray);
-                BlockNode assignmentBlock = null;
-                if (pair.Value != null)
+                BlockNode? assignmentBlock = null;
+                if (pair.Value is not null)
                 {
                     assignmentBlock = new BlockNode(new AssignFieldToPropertyNode(fieldType.MakeArrayType(), pair.Value));
                 }

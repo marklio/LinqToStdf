@@ -20,6 +20,6 @@ namespace LinqToStdf {
         /// <summary>
         /// The StdfFile associated with the context.
         /// </summary>
-        StdfFile StdfFile { get; }
+        StdfFile? StdfFile { get; }
     }
 }

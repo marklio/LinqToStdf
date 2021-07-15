@@ -18,6 +18,6 @@ namespace LinqToStdf.Records.V4 {
 		}
 
         public DateTime? ModifiedTime { get; set; }
-        public string CommandLine { get; set; }
+        public string? CommandLine { get; set; }
 	}
 }

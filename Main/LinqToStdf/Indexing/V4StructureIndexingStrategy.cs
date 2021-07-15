@@ -52,7 +52,7 @@ namespace LinqToStdf.Indexing {
             /// <summary>
             /// Gets the extents containing the specified record
             /// </summary>
-            public Extents GetExtents(StdfRecord record) {
+            public Extents? GetExtents(StdfRecord record) {
                 //TODO: optimized search (binary?)
                 var candidate = _ExtentsList.TakeWhile(e => e.StartOffset <= record.Offset)
                     .LastOrDefault();
@@ -83,10 +83,10 @@ namespace LinqToStdf.Indexing {
         }
 
         //we keep track of the structural scopes
-        Mir _Mir;
-        Mrr _Mrr;
+        Mir? _Mir;
+        Mrr? _Mrr;
         readonly List<Pcr> _Pcrs = new List<Pcr>();
-        List<StdfRecord> _AllRecords = null;
+        readonly List<StdfRecord> _AllRecords = new();
         readonly ParentMap _PartsMap = new ParentMap();
         readonly ParentMap _WafersMap = new ParentMap();
 
@@ -114,16 +114,16 @@ namespace LinqToStdf.Indexing {
         /// This is the method that is used to index a stream of records
         /// </summary>
         public override void IndexRecords(IEnumerable<StdfRecord> records) {
-            _AllRecords = new List<StdfRecord>();
             //extents for the current wafer and part
-            Extents currentWaferExtents = null;
-            Extents currentPartExtents = null;
+            Extents? currentWaferExtents = null;
+            Extents? currentPartExtents = null;
             //tells us we're looking for something to confirm the extents are complete (helps us deal with multi-site testing)
             bool waferEnding = false;
             bool partsEnding = false;
             //ends the current wafer extents at the specified index
             void EndWafer(int endIndex)
             {
+                if (currentWaferExtents is null) throw new InvalidOperationException("Can't end wafer if there is no current wafer extents");
                 currentWaferExtents.EndIndex = endIndex;
                 currentWaferExtents.EndOffset = _AllRecords[endIndex].Offset;
                 _WafersMap.AddExtents(currentWaferExtents);
@@ -133,6 +133,7 @@ namespace LinqToStdf.Indexing {
             //ends the current part extents at the specified index
             void EndParts(int endIndex)
             {
+                if (currentPartExtents is null) throw new InvalidOperationException("Can't end part if there is no current part extents");
                 currentPartExtents.EndIndex = endIndex;
                 currentPartExtents.EndOffset = _AllRecords[endIndex].Offset;
                 _PartsMap.AddExtents(currentPartExtents);
@@ -218,44 +219,44 @@ namespace LinqToStdf.Indexing {
             /// This map stores information for how we optimize queries for this strategy
             /// </summary>
             static readonly Dictionary<MethodInfo, MethodInfo> OptimizingMap = new Dictionary<MethodInfo, MethodInfo> {
-                { typeof(Extensions).GetMethod("GetMir"), typeof(V4StructureIndexingStrategy).GetMethod("GetMir")},
-                { typeof(Extensions).GetMethod("GetMrr"), typeof(V4StructureIndexingStrategy).GetMethod("GetMrr")},
+                { typeof(Extensions).GetMethodOrThrow("GetMir"), typeof(V4StructureIndexingStrategy).GetMethodOrThrow("GetMir")},
+                { typeof(Extensions).GetMethodOrThrow("GetMrr"), typeof(V4StructureIndexingStrategy).GetMethodOrThrow("GetMrr")},
                 {
-                    typeof(Extensions).GetMethod("GetPcrs", new[] { typeof(IRecordContext) }),
-                    typeof(V4StructureIndexingStrategy).GetMethod("GetPcrs", new[] { typeof(IRecordContext) })
+                    typeof(Extensions).GetMethodOrThrow("GetPcrs", new[] { typeof(IRecordContext) }),
+                    typeof(V4StructureIndexingStrategy).GetMethodOrThrow("GetPcrs", new[] { typeof(IRecordContext) })
                 },
                 {
-                    typeof(Extensions).GetMethod("GetPcrs", new[] { typeof(IRecordContext), typeof(byte), typeof(byte) }),
-                    typeof(V4StructureIndexingStrategy).GetMethod("GetPcrs", new[] { typeof(IRecordContext), typeof(byte), typeof(byte) })
+                    typeof(Extensions).GetMethodOrThrow("GetPcrs", new[] { typeof(IRecordContext), typeof(byte), typeof(byte) }),
+                    typeof(V4StructureIndexingStrategy).GetMethodOrThrow("GetPcrs", new[] { typeof(IRecordContext), typeof(byte), typeof(byte) })
                 },
-                { typeof(Extensions).GetMethod("GetSummaryPcr"), typeof(V4StructureIndexingStrategy).GetMethod("GetSummaryPcr") },
-                { typeof(Extensions).GetMethod("GetPrrs"), typeof(V4StructureIndexingStrategy).GetMethod("GetPrrs") },
-                { typeof(Extensions).GetMethod("GetWir"), typeof(V4StructureIndexingStrategy).GetMethod("GetWir") },
-                { typeof(Extensions).GetMethod("GetWrr"), typeof(V4StructureIndexingStrategy).GetMethod("GetWrr") },
-                { typeof(Extensions).GetMethod("GetPrr"), typeof(V4StructureIndexingStrategy).GetMethod("GetPrr") },
-                { typeof(Extensions).GetMethod("GetPir"), typeof(V4StructureIndexingStrategy).GetMethod("GetPir") },
-                { typeof(Extensions).GetMethod("GetMatchingPir"), typeof(V4StructureIndexingStrategy).GetMethod("GetMatchingPir") },
-                { typeof(Extensions).GetMethod("GetMatchingPrr"), typeof(V4StructureIndexingStrategy).GetMethod("GetMatchingPrr") },
+                { typeof(Extensions).GetMethodOrThrow("GetSummaryPcr"), typeof(V4StructureIndexingStrategy).GetMethodOrThrow("GetSummaryPcr") },
+                { typeof(Extensions).GetMethodOrThrow("GetPrrs"), typeof(V4StructureIndexingStrategy).GetMethodOrThrow("GetPrrs") },
+                { typeof(Extensions).GetMethodOrThrow("GetWir"), typeof(V4StructureIndexingStrategy).GetMethodOrThrow("GetWir") },
+                { typeof(Extensions).GetMethodOrThrow("GetWrr"), typeof(V4StructureIndexingStrategy).GetMethodOrThrow("GetWrr") },
+                { typeof(Extensions).GetMethodOrThrow("GetPrr"), typeof(V4StructureIndexingStrategy).GetMethodOrThrow("GetPrr") },
+                { typeof(Extensions).GetMethodOrThrow("GetPir"), typeof(V4StructureIndexingStrategy).GetMethodOrThrow("GetPir") },
+                { typeof(Extensions).GetMethodOrThrow("GetMatchingPir"), typeof(V4StructureIndexingStrategy).GetMethodOrThrow("GetMatchingPir") },
+                { typeof(Extensions).GetMethodOrThrow("GetMatchingPrr"), typeof(V4StructureIndexingStrategy).GetMethodOrThrow("GetMatchingPrr") },
                 {
-                    typeof(Extensions).GetMethod("GetChildRecords", new[] { typeof(Pir) }),
-                    typeof(V4StructureIndexingStrategy).GetMethod("GetChildRecords", new[] { typeof(Pir) })
+                    typeof(Extensions).GetMethodOrThrow("GetChildRecords", new[] { typeof(Pir) }),
+                    typeof(V4StructureIndexingStrategy).GetMethodOrThrow("GetChildRecords", new[] { typeof(Pir) })
                 },
                 {
-                    typeof(Extensions).GetMethod("GetChildRecords", new[] { typeof(Prr) }),
-                    typeof(V4StructureIndexingStrategy).GetMethod("GetChildRecords", new[] { typeof(Prr) })
+                    typeof(Extensions).GetMethodOrThrow("GetChildRecords", new[] { typeof(Prr) }),
+                    typeof(V4StructureIndexingStrategy).GetMethodOrThrow("GetChildRecords", new[] { typeof(Prr) })
                 }
             };
 
             #endregion
 
             //some methodinfos we'll use for some tricky generic mappings
-            static readonly MethodInfo OfExactTypePir = typeof(Extensions).GetMethod("OfExactType", new[] { typeof(IQueryable<StdfRecord>) }).MakeGenericMethod(typeof(Pir));
-            static readonly MethodInfo OfExactTypePrr = typeof(Extensions).GetMethod("OfExactType", new[] { typeof(IQueryable<StdfRecord>) }).MakeGenericMethod(typeof(Prr));
+            static readonly MethodInfo OfExactTypePir = typeof(Extensions).GetMethodOrThrow("OfExactType", new[] { typeof(IQueryable<StdfRecord>) }).MakeGenericMethod(typeof(Pir));
+            static readonly MethodInfo OfExactTypePrr = typeof(Extensions).GetMethodOrThrow("OfExactType", new[] { typeof(IQueryable<StdfRecord>) }).MakeGenericMethod(typeof(Prr));
 
-            static readonly MethodInfo OptOfExactTypePir = typeof(V4StructureIndexingStrategy).GetMethod("OfExactTypePir", new[] { typeof(IQueryable<StdfRecord>) });
-            static readonly MethodInfo OptOfExactTypePrr = typeof(V4StructureIndexingStrategy).GetMethod("OfExactTypePrr", new[] { typeof(IQueryable<StdfRecord>) });
+            static readonly MethodInfo OptOfExactTypePir = typeof(V4StructureIndexingStrategy).GetMethodOrThrow("OfExactTypePir", new[] { typeof(IQueryable<StdfRecord>) });
+            static readonly MethodInfo OptOfExactTypePrr = typeof(V4StructureIndexingStrategy).GetMethodOrThrow("OfExactTypePrr", new[] { typeof(IQueryable<StdfRecord>) });
 
-            static readonly MethodInfo GetRecordsEnumerable = typeof(StdfFile).GetMethod("GetRecordsEnumerable");
+            static readonly MethodInfo GetRecordsEnumerable = typeof(StdfFile).GetMethodOrThrow("GetRecordsEnumerable");
 
             /// <summary>
             /// Lets us know the expression is a call to StdfFile.GetRecordsEnumerable
@@ -305,7 +306,7 @@ namespace LinqToStdf.Indexing {
         /// The IQueryable implementation of OfExactTypePrr
         /// </summary>
         public IQueryable<Prr> OfExactTypePrr(IQueryable<StdfRecord> records) {
-            return records.Provider.CreateQuery<Prr>(Expression.Call(Expression.Constant(this), (MethodInfo)MethodBase.GetCurrentMethod(), records.Expression));
+            return records.Provider.CreateQuery<Prr>(Expression.Call(Expression.Constant(this), (MethodInfo)(MethodBase.GetCurrentMethod() ?? throw new InvalidOperationException("Could not get current method")), records.Expression));
         }
 
         /// <summary>
@@ -326,13 +327,14 @@ namespace LinqToStdf.Indexing {
         /// </summary>
         public IQueryable<Pir> OfExactTypePir(IQueryable<StdfRecord> records)
         {
-            return records.Provider.CreateQuery<Pir>(Expression.Call(Expression.Constant(this), (MethodInfo)MethodBase.GetCurrentMethod(), records.Expression));
+            return records.Provider.CreateQuery<Pir>(Expression.Call(Expression.Constant(this), (MethodInfo)(MethodBase.GetCurrentMethod() ?? throw new InvalidOperationException("Could not get current method")), records.Expression));
         }
 
         /// <summary>
         /// Super fast GetMir :)
         /// </summary>
-        public Mir GetMir(IRecordContext context) {
+        public Mir? GetMir(IRecordContext context) {
+            if (context.StdfFile is null) throw new InvalidOperationException("There is not STDF file from which to get the Mir");
             context.StdfFile.GetRecordsEnumerable().Any();
             return _Mir;
         }
@@ -340,8 +342,9 @@ namespace LinqToStdf.Indexing {
         /// <summary>
         /// Super fast GetMrr :)
         /// </summary>
-        public Mrr GetMrr(IRecordContext context)
+        public Mrr? GetMrr(IRecordContext context)
         {
+            if (context.StdfFile is null) throw new InvalidOperationException("There is not STDF file from which to get the Mrr");
             context.StdfFile.GetRecordsEnumerable().Any();
             return _Mrr;
         }
@@ -350,6 +353,7 @@ namespace LinqToStdf.Indexing {
         /// </summary>
         public IEnumerable<Pcr> GetPcrs(IRecordContext context)
         {
+            if (context.StdfFile is null) throw new InvalidOperationException("There is not STDF file from which to get Pcrs");
             context.StdfFile.GetRecordsEnumerable().Any();
             return from p in _Pcrs select p;
         }
@@ -359,6 +363,7 @@ namespace LinqToStdf.Indexing {
         /// </summary>
         public IEnumerable<Pcr> GetPcrs(IRecordContext context, byte headNumber, byte siteNumber)
         {
+            if (context.StdfFile is null) throw new InvalidOperationException("There is not STDF file from which to get Pcrs");
             context.StdfFile.GetRecordsEnumerable().Any();
             return from p in _Pcrs
                    where p.HeadNumber == headNumber
@@ -366,7 +371,8 @@ namespace LinqToStdf.Indexing {
                    select p;
         }
 
-        public Pcr GetSummaryPcr(IRecordContext record) {
+        public Pcr? GetSummaryPcr(IRecordContext record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("There is not STDF file from which to get summary Pcr");
             record.StdfFile.GetRecordsEnumerable().Any();
             return (from p in _Pcrs
                     where p.HeadNumber == 255
@@ -374,9 +380,11 @@ namespace LinqToStdf.Indexing {
         }
 
         public IEnumerable<Prr> GetPrrs(Wrr wrr) {
+            if (wrr.StdfFile is null) throw new InvalidOperationException("There is not STDF file from which to get Prrs");
             wrr.StdfFile.GetRecordsEnumerable().Any();
             //find the part extents within the wafer extent
             var waferExtent = _WafersMap.GetExtents(wrr);
+            if (waferExtent is null) throw new InvalidOperationException("Could not get wafer extent for Wrr");
             return from pe in _PartsMap.GetExtentsListWithin(waferExtent)
                    from prr in GetRecordsInExtentsReverse(pe)
                    .TakeWhile(r => r.GetType() == typeof(Prr))
@@ -384,21 +392,24 @@ namespace LinqToStdf.Indexing {
                    select prr;
         }
 
-        public Wir GetWir(IHeadIndexable record) {
+        public Wir? GetWir(IHeadIndexable record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("There is not STDF file from which to get the Wir");
             record.StdfFile.GetRecordsEnumerable().Any();
             var waferExtent = _WafersMap.GetExtents((StdfRecord)record);
             if (waferExtent == null) return null;
             return _AllRecords[waferExtent.StartIndex] as Wir;
         }
 
-        public Wrr GetWrr(IHeadIndexable record) {
+        public Wrr? GetWrr(IHeadIndexable record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("There is not STDF file from which to get the Wrr");
             record.StdfFile.GetRecordsEnumerable().Any();
             var waferExtents = _WafersMap.GetExtents((StdfRecord)record);
             if (waferExtents == null) return null;
             return _AllRecords[waferExtents.EndIndex] as Wrr;
         }
 
-        public Prr GetPrr(IHeadSiteIndexable record) {
+        public Prr? GetPrr(IHeadSiteIndexable record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("There is not STDF file from which to get the Prr");
             record.StdfFile.GetRecordsEnumerable().Any();
             var partExtents = _PartsMap.GetExtents((StdfRecord)record);
             if (partExtents == null) return null;
@@ -410,7 +421,8 @@ namespace LinqToStdf.Indexing {
                     select p).FirstOrDefault();
         }
 
-        public Pir GetPir(IHeadSiteIndexable record) {
+        public Pir? GetPir(IHeadSiteIndexable record) {
+            if (record.StdfFile is null) throw new InvalidOperationException("There is not STDF file from which to get the Pir");
             record.StdfFile.GetRecordsEnumerable().Any();
             var partExtents = _PartsMap.GetExtents((StdfRecord)record);
             if (partExtents == null) return null;
@@ -422,7 +434,8 @@ namespace LinqToStdf.Indexing {
                     select p).FirstOrDefault();
         }
 
-        public Prr GetMatchingPrr(Pir pir) {
+        public Prr? GetMatchingPrr(Pir pir) {
+            if (pir.StdfFile is null) throw new InvalidOperationException("There is not STDF file from which to get the Prr");
             pir.StdfFile.GetRecordsEnumerable().Any();
             var partExtents = _PartsMap.GetExtents(pir);
             if (partExtents == null) return null;
@@ -434,7 +447,8 @@ namespace LinqToStdf.Indexing {
                     select p).FirstOrDefault();
         }
 
-        public Pir GetMatchingPir(Prr prr) {
+        public Pir? GetMatchingPir(Prr prr) {
+            if (prr.StdfFile is null) throw new InvalidOperationException("There is not STDF filee from which to get the matching Pir");
             prr.StdfFile.GetRecordsEnumerable().Any();
             var partExtents = _PartsMap.GetExtents(prr);
             if (partExtents == null) return null;
@@ -447,8 +461,10 @@ namespace LinqToStdf.Indexing {
         }
 
         public IEnumerable<StdfRecord> GetChildRecords(Pir pir) {
+            if (pir.StdfFile is null) throw new InvalidOperationException("There is not STDF file from which to get the child records");
             pir.StdfFile.GetRecordsEnumerable().Any();
             var partExtents = _PartsMap.GetExtents(pir);
+            if (partExtents is null) throw new InvalidOperationException("Could not get part extent for Pir");
             return GetRecordsInExtents(partExtents)
                 .OfType<IHeadSiteIndexable>()
                 .Where(r => r.HeadNumber == pir.HeadNumber && r.SiteNumber == pir.SiteNumber)
@@ -457,8 +473,10 @@ namespace LinqToStdf.Indexing {
         }
 
         public IEnumerable<StdfRecord> GetChildRecords(Prr prr) {
+            if (prr.StdfFile is null) throw new InvalidOperationException("There is not STDF file from which to get child records");
             prr.StdfFile.GetRecordsEnumerable().Any();
             var partExtents = _PartsMap.GetExtents(prr);
+            if (partExtents is null) throw new InvalidOperationException("Could not get part extent for Prr");
             return GetRecordsInExtents(partExtents)
                 .SkipWhile(r => r.GetType() == typeof(Pir))
                 .OfType<IHeadSiteIndexable>()

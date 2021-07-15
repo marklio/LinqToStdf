@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using LinqToStdf.Records;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToStdf {
 
@@ -38,32 +39,29 @@ namespace LinqToStdf {
         /// </summary>
         /// <param name="records">The records to write.</param>
         public void WriteRecords(IEnumerable<StdfRecord> records) {
-            StdfFileWriter writer = null;
+            StdfFileWriter? writer = null;
             foreach (var r in records) {
                 if (r.GetType() == typeof(StartOfStreamRecord)) {
 					var sos = (StartOfStreamRecord)r;
                     if (writer != null) {
                         throw new InvalidOperationException(Resources.SOFBeforeEOF);
                     }
-                    writer = new StdfFileWriter(Path.Combine(_Path, sos.FileName), sos.Endian);
+                    //TODO: need better strategy for null file name, or escaping file name
+                    writer = new StdfFileWriter(Path.Combine(_Path, sos.FileName ?? throw new InvalidOperationException("Cannot write file: Null filename")), sos.Endian);
                 }
                 else if (r.GetType() == typeof(EndOfStreamException)) {
-                    EnsureWriter(writer);
+                    if (writer == null) throw new InvalidOperationException(Resources.WriteOutsideSOSEOS);
                     writer.Dispose();
                     writer = null;
                 }
                 else {
-                    EnsureWriter(writer);
+                    if (writer == null) throw new InvalidOperationException(Resources.WriteOutsideSOSEOS);
                     writer.WriteRecord(r);
                 }
             }
             if (writer != null) {
                 throw new InvalidOperationException(Resources.EndWithoutEOS);
             }
-        }
-
-        static void EnsureWriter(StdfFileWriter writer) {
-            if (writer == null) throw new InvalidOperationException(Resources.WriteOutsideSOSEOS);
         }
     }
 }

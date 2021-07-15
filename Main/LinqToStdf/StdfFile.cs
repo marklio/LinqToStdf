@@ -14,6 +14,7 @@ using LinqToStdf.Indexing;
 using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Diagnostics.CodeAnalysis;
 
 #if SILVERLIGHT
 using System.Windows.Controls;
@@ -46,7 +47,7 @@ namespace LinqToStdf {
     /// </remarks>
     public sealed partial class StdfFile : IRecordContext {
         readonly IStdfStreamManager _StreamManager;
-        RewindableByteStream _Stream;
+        RewindableByteStream? _Stream;
         readonly static internal RecordConverterFactory _V4ConverterFactory = new RecordConverterFactory();
         readonly RecordConverterFactory _ConverterFactory;
         /// <summary>
@@ -67,10 +68,10 @@ namespace LinqToStdf {
         long? _ExpectedLength = null;
         public long? ExpectedLength { get { return _ExpectedLength; } }
 
-        RecordFilter _RecordFilter = null;
+        RecordFilter _RecordFilter;
         bool _FiltersLocked;
         readonly object _ISLock = new object();
-        private IIndexingStrategy _IndexingStrategy = null;
+        private IIndexingStrategy? _IndexingStrategy = null;
 
         public IIndexingStrategy IndexingStrategy
         {
@@ -169,25 +170,30 @@ namespace LinqToStdf {
         /// to emit to a dynamic assembly suitable for debugging IL generation.</param>
         public StdfFile(IStdfStreamManager streamManager, bool debug) : this(streamManager, debug, null) { }
 
-        internal StdfFile(IStdfStreamManager streamManager, bool debug, RecordsAndFields recordsAndFields)
-            : this(streamManager, PrivateImpl.None) {
-            if (debug || recordsAndFields != null) {
-                _ConverterFactory = new RecordConverterFactory(recordsAndFields) { Debug = debug };
-                StdfV4Specification.RegisterRecords(_ConverterFactory);
+        internal StdfFile(IStdfStreamManager streamManager, bool debug, RecordsAndFields? recordsAndFields)
+            : this(streamManager, MakeAppropriateFactory(debug, recordsAndFields), PrivateImpl.None) { }
+
+        static RecordConverterFactory MakeAppropriateFactory(bool debug, RecordsAndFields? recordsAndFields)
+        {
+            if (debug || recordsAndFields != null)
+            {
+                var factory = new RecordConverterFactory(recordsAndFields) { Debug = debug };
+                StdfV4Specification.RegisterRecords(factory);
+                return factory;
             }
-            else {
-                _ConverterFactory = new RecordConverterFactory(_V4ConverterFactory);
+            else
+            {
+                return new RecordConverterFactory(_V4ConverterFactory);
             }
         }
-
         internal StdfFile(IStdfStreamManager streamManager, RecordConverterFactory rcf)
-            : this(streamManager, PrivateImpl.None) {
-            _ConverterFactory = rcf;
+            : this(streamManager, rcf, PrivateImpl.None) {
         }
 
-        private StdfFile(IStdfStreamManager streamManager, PrivateImpl _) {
+        private StdfFile(IStdfStreamManager streamManager, RecordConverterFactory rcf, PrivateImpl _) {
             _StreamManager = streamManager;
             _RecordFilter = BuiltInFilters.IdentityFilter;
+            _ConverterFactory = rcf;
         }
 
         enum PrivateImpl { None = 0 }
@@ -230,12 +236,12 @@ namespace LinqToStdf {
 
             internal static IQueryable Create(Type elementType, IEnumerable sequence, Func<Expression, Expression> transform)
             {
-                return (IQueryable)Activator.CreateInstance(typeof(Queryable<>).MakeGenericType(new Type[] { elementType }), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { sequence, transform }, null);
+                return (IQueryable)(Activator.CreateInstance(typeof(Queryable<>).MakeGenericType(new Type[] { elementType }) ?? throw new InvalidOperationException("Could not make generic type"), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { sequence, transform }, null) ?? throw new InvalidOperationException("Could not create instance"));
             }
 
             internal static IQueryable Create(Type elementType, Expression expression, Func<Expression, Expression> transform)
             {
-                return (IQueryable)Activator.CreateInstance(typeof(Queryable<>).MakeGenericType(new Type[] { elementType }), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { expression, transform }, null);
+                return (IQueryable)(Activator.CreateInstance(typeof(Queryable<>).MakeGenericType(new Type[] { elementType }) ?? throw new InvalidOperationException("Could not make generic type"), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { expression, transform }, null) ?? throw new InvalidOperationException("Could not create instance"));
             }
 
             public abstract IEnumerable Enumerable { get; }
@@ -244,34 +250,35 @@ namespace LinqToStdf {
 
         internal class Queryable<T> : Queryable, IOrderedQueryable<T>, IQueryProvider
         {
-            EnumerableQuery<T> _EnumerableQuery;
+            EnumerableQuery<T>? _EnumerableQuery;
             readonly Func<Expression, Expression> _ExpressionTransform;
             readonly Expression _Expression;
 
-            Queryable(Func<Expression, Expression> expressionTransform)
-            {
-                _ExpressionTransform = expressionTransform;
-            }
 
             public Queryable(IEnumerable<T> enumerable, Func<Expression, Expression> expressionTransform)
-                : this(expressionTransform)
             {
                 _EnumerableQuery = new EnumerableQuery<T>(enumerable);
                 _Expression = Expression.Constant(this);
+                _ExpressionTransform = expressionTransform;
             }
 
             public Queryable(Expression expression, Func<Expression, Expression> expressionTransform)
-                : this(expressionTransform)
             {
                 _Expression = expression;
+                _ExpressionTransform = expressionTransform;
             }
 
-            private IEnumerator<T> GetEnumeratorInternal()
+            [MemberNotNull(nameof(_EnumerableQuery))]
+            void EnsureQuery()
             {
-                if (_EnumerableQuery == null)
+                if (_EnumerableQuery is null)
                 {
                     _EnumerableQuery = new EnumerableQuery<T>(new QueryableRewriter().Visit(_ExpressionTransform(_Expression)));
                 }
+            }
+            private IEnumerator<T> GetEnumeratorInternal()
+            {
+                EnsureQuery();
                 return ((IEnumerable<T>)this._EnumerableQuery).GetEnumerator();
             }
 
@@ -307,7 +314,10 @@ namespace LinqToStdf {
 
             public override IEnumerable Enumerable
             {
-                get { return _EnumerableQuery; }
+                get {
+                    EnsureQuery();
+                    return _EnumerableQuery;
+                }
             }
 
             public IQueryProvider Provider
@@ -326,8 +336,8 @@ namespace LinqToStdf {
 
             public IQueryable CreateQuery(Expression expression)
             {
-                Type type = TypeHelper.FindGenericType(typeof(IQueryable<>), expression.Type);
-                if (type == null)
+                var type = TypeHelper.FindGenericType(typeof(IQueryable<>), expression.Type);
+                if (type is null)
                 {
                     throw new ArgumentException("Could not find type", "expression");
                 }
@@ -336,6 +346,7 @@ namespace LinqToStdf {
 
             public TResult Execute<TResult>(Expression expression)
             {
+                EnsureQuery();
                 EnumerableQuery<T> queryable = _EnumerableQuery;
                 if (queryable == null)
                 {
@@ -346,6 +357,7 @@ namespace LinqToStdf {
 
             public object Execute(Expression expression)
             {
+                EnsureQuery();
                 EnumerableQuery<T> queryable = _EnumerableQuery;
                 if (queryable == null)
                 {

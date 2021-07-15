@@ -169,17 +169,17 @@ namespace LinqToStdf.RecordConverting
     }
     class FieldAssignmentNode : CodeNode
     {
-        public FieldAssignmentNode(Type type, int index, CodeNode readNode, BlockNode assignmentBlock)
+        public FieldAssignmentNode(Type type, int index, CodeNode readNode, BlockNode? assignmentBlock)
         {
             Type = type;
             FieldIndex = index;
             ReadNode = readNode;
             AssignmentBlock = assignmentBlock;
         }
-        public Type Type { get; private set; }
-        public int FieldIndex { get; private set; }
-        public CodeNode ReadNode { get; private set; }
-        public BlockNode AssignmentBlock { get; private set; }
+        public Type Type { get; }
+        public int FieldIndex { get; }
+        public CodeNode ReadNode { get; }
+        public BlockNode? AssignmentBlock { get; }
         public override CodeNode Accept(CodeNodeVisitor visitor)
         {
             return visitor.VisitFieldAssignment(this);

@@ -32,7 +32,7 @@ namespace LinqToStdf.Records {
             get { throw new NotSupportedException(); }
         }
 
-        public string FileName { get; set; }
+        public string? FileName { get; set; }
         public Endian Endian { get; set; }
         public long? ExpectedLength { get; set; }
 

@@ -28,7 +28,7 @@ namespace LinqToStdf.Attributes {
         /// <summary>
         /// Overriden to be locked to string. setting is an invalid operation.
         /// </summary>
-        public override Type FieldType {
+        public override Type? FieldType {
             get { return base.FieldType; }
             set {
                 if (value != typeof(DateTime)) {

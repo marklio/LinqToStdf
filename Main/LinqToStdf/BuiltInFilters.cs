@@ -35,7 +35,7 @@ namespace LinqToStdf {
             /// <summary>
             /// The cached records
             /// </summary>
-            List<StdfRecord> _Records;
+            List<StdfRecord>? _Records;
             bool _Caching;
 
             /// <summary>
@@ -154,7 +154,7 @@ namespace LinqToStdf {
         #region MissingPcrSummaryFilter implementation
 
         class MissingPcrSummaryFilterImpl {
-            Pcr _Summary = new Pcr()
+            Pcr? _Summary = new Pcr()
             {
                 Synthesized = true,
                 HeadNumber = 255,
@@ -284,8 +284,8 @@ namespace LinqToStdf {
         /// </summary>
         class RecordState {
             public string Message = Resources.V4ContentState_Unknown;
-            public Func<StdfRecord, bool> ShouldTransition;
-            public List<RecordState> Routes;
+            public Func<StdfRecord, bool> ShouldTransition = r => throw new InvalidOperationException("Should never call this.");
+            public readonly List<RecordState> Routes = new();
         }
 
         /// <summary>
@@ -303,49 +303,51 @@ namespace LinqToStdf {
             var eofState = new RecordState() {
                                Message = Resources.V4ContentState_AtEOF,
                                ShouldTransition = (r) => r.GetType() == typeof(EndOfStreamRecord),
-                               Routes = new List<RecordState>() //we'd better never get here.
                            };
             var mrrState = new RecordState() {
                                Message = Resources.V4ContentState_AfterMrr,
                                ShouldTransition = (r) => r.GetType() == typeof(Mrr),
-                               Routes = new List<RecordState>() { eofState } //we only expect EOF from here
+                               Routes = { eofState } //we only expect EOF from here
                            };
             var bodyState = new RecordState() {
                                 Message = Resources.V4ContentState_StdfBody,
                                 //anything that's not in the initial sequence (or EOS)
                                 ShouldTransition = (r) => !_InitialSequenceSet.Contains(r.GetType().TypeHandle),
+                                Routes = {mrrState},
                             };
-            bodyState.Routes = new List<RecordState>() { mrrState, bodyState };
+            bodyState.Routes.Add(bodyState);
 
             var sdrState = new RecordState() {
                                Message = Resources.V4ContentState_AfterSdr,
-                               ShouldTransition = (r) => r.GetType() == typeof(Sdr),
+                               ShouldTransition = (r) => r.GetType() == typeof(Sdr)
                            };
-            sdrState.Routes = new List<RecordState>() { sdrState, bodyState };
+            sdrState.Routes.Add(sdrState);
+            sdrState.Routes.Add(bodyState);
             var rdrState = new RecordState() {
                                Message = Resources.V4ContentState_AfterRdr,
                                ShouldTransition = (r) => r.GetType() == typeof(Rdr),
-                               Routes = new List<RecordState>() { sdrState, bodyState }
+                               Routes = { sdrState, bodyState }
                            };
             var mirState = new RecordState() {
                                Message = Resources.V4ContentState_AfterMir,
                                ShouldTransition = (r) => r.GetType() == typeof(Mir),
-                               Routes = new List<RecordState>() { rdrState, sdrState, bodyState }
+                               Routes = { rdrState, sdrState, bodyState }
                            };
             var atrState = new RecordState() {
                                Message = Resources.V4ContentState_AfterAtr,
                                ShouldTransition = (r) => r.GetType() == typeof(Atr),
                            };
-            atrState.Routes = new List<RecordState>() { atrState, mirState };
+            atrState.Routes.Add(atrState);
+            atrState.Routes.Add(mirState);
             var farState = new RecordState() {
                                Message = Resources.V4ContentState_AfterFar,
                                ShouldTransition = (r) => r.GetType() == typeof(Far),
-                               Routes = new List<RecordState>() { atrState, mirState }
+                               Routes = { atrState, mirState }
                            };
             var sofState = new RecordState() {
                                Message = Resources.V4ContentState_AtSOF,
                                ShouldTransition = (r) => r.GetType() == typeof(StartOfStreamRecord),
-                               Routes = new List<RecordState>() { farState }
+                               Routes = { farState }
                            };
 
             #endregion
@@ -353,11 +355,11 @@ namespace LinqToStdf {
             //we'll start in a pre-far state
             var currentState = new RecordState() {
                                    Message = Resources.V4ContentState_BeforeSOF,
-                                   Routes = new List<RecordState>() { sofState }
+                                   Routes = { sofState }
                                };
             foreach (var r in input) {
                 bool transitioned = false;
-                foreach (var state in currentState.Routes) {
+                foreach (var state in currentState.Routes ?? throw new InvalidOperationException("No routes available in state machine")) {
                     if (state.ShouldTransition(r)) {
                         transitioned = true;
                         currentState = state;
@@ -397,11 +399,14 @@ namespace LinqToStdf {
         //TODO: decide whether this should react to a special ErrorRecord, or EndOfStream
         // This boils down to whether spec violations should be repaired before or after validation.
         // Up to this point, repairs have not been the result of violations, so this is the first case.
-        static IEnumerable<StdfRecord> RepairMissingMrrImpl(IEnumerable<StdfRecord> input) {
-            Mrr mrr = null;
-            foreach (var r in input) {
-                if (r.GetType() == typeof(Mrr)) mrr = (Mrr)r;
-                else if (r.GetType() == typeof(EndOfStreamRecord) && (mrr == null)) {
+        static IEnumerable<StdfRecord> RepairMissingMrrImpl(IEnumerable<StdfRecord> input)
+        {
+            var foundMrr = false;
+            foreach (var r in input)
+            {
+                if (r.GetType() == typeof(Mrr)) foundMrr = true;
+                else if (r.GetType() == typeof(EndOfStreamRecord) && !foundMrr)
+                {
                     yield return new Mrr() { Synthesized = true, Offset = r.Offset };
                 }
                 yield return r;
@@ -424,6 +429,10 @@ namespace LinqToStdf {
         static IEnumerable<StdfRecord> ExpectOnlyKnownRecordsImpl(IEnumerable<StdfRecord> records) {
             foreach (var r in records) {
                 if (r.GetType() == typeof(UnknownRecord)) {
+                    if (r.StdfFile is null)
+                    {
+                        throw new InvalidOperationException("UnknownRecord encountered, but no StdfFile is available to attempt recovery.");
+                    }
                     r.StdfFile.RewindAndSeek();
                 }
                 else {

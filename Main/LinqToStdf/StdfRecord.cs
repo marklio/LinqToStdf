@@ -21,7 +21,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Reference to the "owning" StdfFile.
         /// </summary>
-        public StdfFile StdfFile { get; set; }
+        public StdfFile? StdfFile { get; set; }
 
         /// <summary>
         /// Indicates whether this record should be considered for persisting to a file.
