@@ -296,6 +296,7 @@ namespace LinqToStdf {
         
         /// <summary>
         ///   Looks up a localized string similar to Silverlight doesn&apos;t support debug mode..
+        ///   TODO: Move away from Silverlight
         /// </summary>
         internal static string NoDebugInSilverlight {
             get {

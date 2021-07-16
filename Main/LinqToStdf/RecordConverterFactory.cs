@@ -249,6 +249,7 @@ namespace LinqToStdf {
             if (Debug)
             {
 #if NETCOREAPP
+                //TODO: Change Silverlight to CoreCLR
                 throw new NotSupportedException(Resources.NoDebugInSilverlight);
 #else
                 ilGenerator = CreateNewRefEmitMethod<Converter<UnknownRecord, StdfRecord>>(string.Format("{0}Converter", type.Name), string.Format("ConvertTo{0}", type.Name), out finalizeConverter);
@@ -295,6 +296,7 @@ namespace LinqToStdf {
             if (Debug)
             {
 #if NETCOREAPP
+                //TODO: change Silverlight to CoreCLR
                 throw new NotSupportedException(Resources.NoDebugInSilverlight);
 #else
                 ilGenerator = CreateNewRefEmitMethod<Func<StdfRecord, Endian, UnknownRecord>>(string.Format("{0}Unconverter", type.Name), string.Format("UnconvertFrom{0}", type.Name), out finalizeUnconverter);

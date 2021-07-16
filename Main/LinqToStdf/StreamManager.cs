@@ -3,10 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-
-#if !SILVERLIGHT
 using System.IO.Compression;
-#endif
 
 namespace LinqToStdf {
 
@@ -115,11 +112,7 @@ namespace LinqToStdf {
 
 		private IStdfStreamManager GetAppropriateManager(string path) {
 			if (path.EndsWith(".gz", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".gzip", StringComparison.OrdinalIgnoreCase)) {
-#if SILVERLIGHT
-				throw new NotSupportedException("GZip compression not supported in Silverlight");
-#else
 				return new GZipStdfFileStreamManager(path);
-#endif
 			}
 
 			if (path.EndsWith(".stdf", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".std", StringComparison.OrdinalIgnoreCase)) {
@@ -142,7 +135,6 @@ namespace LinqToStdf {
 		#endregion
 	}
 
-#if !SILVERLIGHT
 	/// <summary>
 	/// <see cref="IStdfStreamManager"/> implementation for a GZip compressed STDF <see cref="FileStream"/>
 	/// based on a path.
@@ -166,6 +158,4 @@ namespace LinqToStdf {
 
 		#endregion
 	}
-#endif
-
 }

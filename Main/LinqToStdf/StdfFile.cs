@@ -16,10 +16,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Diagnostics.CodeAnalysis;
 
-#if SILVERLIGHT
-using System.Windows.Controls;
-#endif
-
 namespace LinqToStdf {
 
     /// <summary>
