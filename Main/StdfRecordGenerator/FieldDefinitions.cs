@@ -38,7 +38,7 @@ namespace StdfRecordGenerator
     record FlaggedFieldLayoutDefinition(int? FieldIndex = null, string? FieldType = null, int? FlagIndex=null, byte? FlagMask=null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true)
         : FieldLayoutDefinition(FieldIndex, FieldType, RecordProperty, IsOptional, MissingValue, PersistMissingValue);
     record NibbleArrayFieldLayoutDefinition(int? FieldIndex = null, int? ArrayLengthFieldIndex=null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true, bool AllowTruncation = false)
-        : FieldLayoutDefinition(FieldIndex, "System.Byte", RecordProperty, IsOptional, MissingValue, PersistMissingValue);
+        : ArrayFieldLayoutDefinition(FieldIndex, "System.Byte", ArrayLengthFieldIndex, RecordProperty, IsOptional, MissingValue, PersistMissingValue, AllowTruncation);
     record StringFieldLayoutDefinition(int? FieldIndex = null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true, int? Length = null, char PadCharacter = ' ')
         : FieldLayoutDefinition(FieldIndex, "System.String", RecordProperty, IsOptional, MissingValue, PersistMissingValue);
     record TimeFieldLayoutDefinition(int? FieldIndex = null, string? RecordProperty = null, bool IsOptional = false, bool PersistMissingValue = true)

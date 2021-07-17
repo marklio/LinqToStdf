@@ -70,7 +70,7 @@ namespace StdfRecordGenerator
         {
             var fieldType = fieldDefinition.FieldType ?? throw new InvalidOperationException("The field type for assignment is null");
             //if this is an array, defer to GenerateArrayAssignment
-            if (fieldDefinition is ArrayFieldLayoutDefinition)
+            if (fieldDefinition is ArrayFieldLayoutDefinition arrayDefinition)
             {
                 // TODO: catch these in GenerateArrayAssignment
                 //TODO: how to do these checks?
@@ -83,7 +83,7 @@ namespace StdfRecordGenerator
                 {
                     throw new InvalidOperationException(Resources.NoBitArrayArrays);
                 }
-                return GenerateArrayAssignment(fieldDefinition);
+                return GenerateArrayAssignment(arrayDefinition);
             }
 
             //get the length if this is a fixed-length string
@@ -107,55 +107,49 @@ namespace StdfRecordGenerator
 
             BlockNode? assignmentBlock = null;
             //if we have a property to assign to, generate the appropriate assignment statements
-            if (pair.Value != null)
+            if (fieldDefinition.RecordProperty is not null)
             {
                 var assignmentNodes = new List<CodeNode>();
                 //if this is optional, set us up to skip if the missing flag is set
-                if (pair.Key is FlaggedFieldLayoutAttribute optionalLayout)
+                if (fieldDefinition is FlaggedFieldLayoutDefinition optionalLayout)
                 {
-                    assignmentNodes.Add(new SkipAssignmentIfFlagSetNode(optionalLayout.FlagIndex, optionalLayout.FlagMask));
+                    assignmentNodes.Add(new SkipAssignmentIfFlagSetNode(
+                        optionalLayout.FlagIndex ?? throw new InvalidOperationException("FlagIndex is null"),
+                        optionalLayout.FlagMask ?? throw new InvalidOperationException("FlagMask is null"));
                 }
                 //if we have a missing value, set us up to skip if the value matches the missing value
-                else if (pair.Key.MissingValue != null && !pair.Key.PersistMissingValue)
+                else if (fieldDefinition.MissingValue is not null && !fieldDefinition.PersistMissingValue)
                 {
+                    //TODO: let the compiler fix this?
                     if (!(fieldType.IsAssignableFrom(pair.Key.MissingValue.GetType())))
-                        throw new InvalidOperationException(string.Format("Missing value {0} is not assignable to {1}.", pair.Key.MissingValue, fieldType));
-                    assignmentNodes.Add(new SkipAssignmentIfMissingValueNode(pair.Key.MissingValue));
+                        throw new InvalidOperationException(string.Format("Missing value {0} is not assignable to {1}.", fieldDefinition.MissingValue, fieldType));
+                    assignmentNodes.Add(new SkipAssignmentIfMissingValueNode(fieldDefinition.MissingValue));
                 }
                 //set us up to assign to the property
                 assignmentNodes.Add(new AssignFieldToPropertyNode(fieldType, pair.Value));
                 assignmentBlock = new BlockNode(assignmentNodes);
             }
-            return new FieldAssignmentNode(fieldType, pair.Key.FieldIndex, readerNode, assignmentBlock);
+            return new FieldAssignmentNode(fieldType, fieldDefinition.FieldIndex ?? throw new InvalidOperationException("FieldIndex is null"), readerNode, assignmentBlock);
         }
 
-        CodeNode GenerateArrayAssignment(KeyValuePair<FieldLayoutAttribute, PropertyInfo> pair)
+        CodeNode GenerateArrayAssignment(ArrayFieldLayoutDefinition fieldDefinition)
         {
-            var fieldType = pair.Key.FieldType ?? throw new InvalidOperationException("The field type for assignment is null");
-            bool isNibbleArray = pair.Key is NibbleArrayFieldLayoutAttribute;
-            int lengthIndex = ((ArrayFieldLayoutAttribute)pair.Key).ArrayLengthFieldIndex;
+            var fieldType = fieldDefinition.FieldType ?? throw new InvalidOperationException("The field type for assignment is null");
+            bool isNibbleArray = fieldDefinition is NibbleArrayFieldLayoutDefinition;
+            int lengthIndex = fieldDefinition.ArrayLengthFieldIndex ?? throw new InvalidOperationException("The ArrayLengthFieldIndex is null");
 
             //we can skip entirely if the length field was zero
             //we'll combine this as part of the "reading" of the field
             var parseConditionNode = new SkipArrayAssignmentIfLengthIsZeroNode(lengthIndex);
 
-            //find out if we should even parse this field
-            if (pair.Value != null && !ShouldParseField(pair.Value.Name))
+            var readNode = new ReadTypeNode(fieldType.MakeArrayType(), lengthIndex, isNibble: isNibbleArray);
+            BlockNode? assignmentBlock = null;
+            if (pair.Value is not null)
             {
-                //we can simply return this skip node since it effectively encapsulates the length check as well
-                return new SkipTypeNode(fieldType.MakeArrayType(), lengthIndex);
+                assignmentBlock = new BlockNode(new AssignFieldToPropertyNode(fieldType.MakeArrayType(), pair.Value));
             }
-            else
-            {
-                var readNode = new ReadTypeNode(fieldType.MakeArrayType(), lengthIndex, isNibble: isNibbleArray);
-                BlockNode? assignmentBlock = null;
-                if (pair.Value is not null)
-                {
-                    assignmentBlock = new BlockNode(new AssignFieldToPropertyNode(fieldType.MakeArrayType(), pair.Value));
-                }
-                //return a FieldAssignmentNode.  Note we're combining the parseConditionNode and the readNode.
-                return new FieldAssignmentNode(fieldType.MakeArrayType(), pair.Key.FieldIndex, new BlockNode(parseConditionNode, readNode), assignmentBlock);
-            }
+            //return a FieldAssignmentNode.  Note we're combining the parseConditionNode and the readNode.
+            return new FieldAssignmentNode(fieldType.MakeArrayType(), fieldDefinition.FieldIndex ?? throw new InvalidOperationException("FieldIndex is null"), new BlockNode(parseConditionNode, readNode), assignmentBlock);
         }
     }
 }
