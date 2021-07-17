@@ -1,15 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31512.422
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToStdf", "LinqToStdf\LinqToStdf.csproj", "{E251DABB-78AF-4451-93EF-B8C3420BEBC5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToStdf", "LinqToStdf\LinqToStdf.csproj", "{E251DABB-78AF-4451-93EF-B8C3420BEBC5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StdfDump", "StdfDump\StdfDump.csproj", "{9D6155E6-6C9F-40B2-9346-5B4CBAAE1E18}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleApp", "SampleApp\SampleApp.csproj", "{215B69CF-07FB-4BF4-B63A-0529D52C1239}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StdfFileTests", "StdfFileTests\StdfFileTests.csproj", "{9537D244-9465-4C2D-A665-AF53035DE90F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StdfRecordGenerator", "StdfRecordGenerator\StdfRecordGenerator.csproj", "{AE5B29C5-0B8A-4B7B-9D8E-75FA8492B0CA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,8 +65,23 @@ Global
 		{9537D244-9465-4C2D-A665-AF53035DE90F}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{9537D244-9465-4C2D-A665-AF53035DE90F}.Release|x86.ActiveCfg = Release|Any CPU
 		{9537D244-9465-4C2D-A665-AF53035DE90F}.Release|x86.Build.0 = Release|Any CPU
+		{AE5B29C5-0B8A-4B7B-9D8E-75FA8492B0CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE5B29C5-0B8A-4B7B-9D8E-75FA8492B0CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE5B29C5-0B8A-4B7B-9D8E-75FA8492B0CA}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{AE5B29C5-0B8A-4B7B-9D8E-75FA8492B0CA}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{AE5B29C5-0B8A-4B7B-9D8E-75FA8492B0CA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AE5B29C5-0B8A-4B7B-9D8E-75FA8492B0CA}.Debug|x86.Build.0 = Debug|Any CPU
+		{AE5B29C5-0B8A-4B7B-9D8E-75FA8492B0CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE5B29C5-0B8A-4B7B-9D8E-75FA8492B0CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE5B29C5-0B8A-4B7B-9D8E-75FA8492B0CA}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{AE5B29C5-0B8A-4B7B-9D8E-75FA8492B0CA}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{AE5B29C5-0B8A-4B7B-9D8E-75FA8492B0CA}.Release|x86.ActiveCfg = Release|Any CPU
+		{AE5B29C5-0B8A-4B7B-9D8E-75FA8492B0CA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B6B95098-CC58-4A57-AC96-D238E34EE0A1}
 	EndGlobalSection
 EndGlobal
