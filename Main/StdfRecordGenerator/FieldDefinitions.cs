@@ -30,19 +30,19 @@ namespace System.Diagnostics.CodeAnalysis
 
 namespace StdfRecordGenerator
 {
-    record FieldLayoutDefinition(int? FieldIndex = null, string? FieldType = null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true);
-    record ArrayFieldLayoutDefinition(int? FieldIndex = null, string? FieldType = null, int? ArrayLengthFieldIndex=null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true, bool AllowTruncation = false)
+    record FieldLayoutDefinition(int? FieldIndex = null, FieldTypes? FieldType = null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true);
+    record ArrayFieldLayoutDefinition(int? FieldIndex = null, FieldTypes? FieldType = null, int? ArrayLengthFieldIndex=null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true, bool AllowTruncation = false)
         : FieldLayoutDefinition(FieldIndex, FieldType, RecordProperty, IsOptional, MissingValue, PersistMissingValue);
-    record DependencyPropertyDefinition(int? FieldIndex = null, string? FieldType = null, int? DependentOnIndex=null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true)
+    record DependencyPropertyDefinition(int? FieldIndex = null, FieldTypes? FieldType = null, int? DependentOnIndex=null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true)
         : FieldLayoutDefinition(FieldIndex, FieldType, RecordProperty, IsOptional, MissingValue, PersistMissingValue);
-    record FlaggedFieldLayoutDefinition(int? FieldIndex = null, string? FieldType = null, int? FlagIndex=null, byte? FlagMask=null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true)
+    record FlaggedFieldLayoutDefinition(int? FieldIndex = null, FieldTypes? FieldType = null, int? FlagIndex=null, byte? FlagMask=null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true)
         : FieldLayoutDefinition(FieldIndex, FieldType, RecordProperty, IsOptional, MissingValue, PersistMissingValue);
     record NibbleArrayFieldLayoutDefinition(int? FieldIndex = null, int? ArrayLengthFieldIndex=null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true, bool AllowTruncation = false)
-        : ArrayFieldLayoutDefinition(FieldIndex, "System.Byte", ArrayLengthFieldIndex, RecordProperty, IsOptional, MissingValue, PersistMissingValue, AllowTruncation);
+        : ArrayFieldLayoutDefinition(FieldIndex, FieldTypes.U1, ArrayLengthFieldIndex, RecordProperty, IsOptional, MissingValue, PersistMissingValue, AllowTruncation);
     record StringFieldLayoutDefinition(int? FieldIndex = null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true, int? Length = null, char PadCharacter = ' ')
-        : FieldLayoutDefinition(FieldIndex, "System.String", RecordProperty, IsOptional, MissingValue, PersistMissingValue);
+        : FieldLayoutDefinition(FieldIndex, FieldTypes.String, RecordProperty, IsOptional, MissingValue, PersistMissingValue);
     record TimeFieldLayoutDefinition(int? FieldIndex = null, string? RecordProperty = null, bool IsOptional = false, bool PersistMissingValue = true)
-        : FieldLayoutDefinition(FieldIndex, "System.DateTime", RecordProperty, IsOptional, Epoch, PersistMissingValue)
+        : FieldLayoutDefinition(FieldIndex, FieldTypes.DateTime, RecordProperty, IsOptional, Epoch, PersistMissingValue)
     {
         static readonly DateTime Epoch = new DateTime(1970, 1, 1);
     }

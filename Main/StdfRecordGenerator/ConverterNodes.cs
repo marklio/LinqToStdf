@@ -140,27 +140,17 @@ namespace StdfRecordGenerator
     }
     class ReadTypeNode : CodeNode
     {
-        public int? LengthIndex { get; private set; }
-        public bool IsNibble { get; private set; }
-        public Type Type { get; private set; }
-        public ReadTypeNode(Type type)
+        public int? LengthIndex { get; }
+        public bool IsNibble => Type == FieldTypes.Nibble;
+        public FieldTypes Type { get; }
+        public ReadTypeNode(FieldTypes type)
         {
-            if (type.IsArray)
-            {
-                throw new InvalidOperationException("ReadTypeNode on an array type must be constructed with a length index.");
-            }
             Type = type;
         }
-        public ReadTypeNode(Type type, int lengthIndex, bool isNibble = false)
+        public ReadTypeNode(FieldTypes type, int lengthIndex)
         {
-            if (!type.IsArray)
-            {
-                throw new InvalidOperationException("ReadTypeNode on an non-array type can't be constructed with a length index.");
-            }
             Type = type;
             LengthIndex = lengthIndex;
-            if (isNibble && type != typeof(byte[])) throw new InvalidOperationException("Nibble arrays can only be read into byte arrays.");
-            IsNibble = isNibble;
         }
         public override CodeNode Accept(CodeNodeVisitor visitor)
         {
@@ -169,14 +159,14 @@ namespace StdfRecordGenerator
     }
     class FieldAssignmentNode : CodeNode
     {
-        public FieldAssignmentNode(Type type, int index, CodeNode readNode, BlockNode? assignmentBlock)
+        public FieldAssignmentNode(FieldTypes type, int index, CodeNode readNode, BlockNode? assignmentBlock)
         {
             Type = type;
             FieldIndex = index;
             ReadNode = readNode;
             AssignmentBlock = assignmentBlock;
         }
-        public Type Type { get; }
+        public FieldTypes Type { get; }
         public int FieldIndex { get; }
         public CodeNode ReadNode { get; }
         public BlockNode? AssignmentBlock { get; }
@@ -214,13 +204,13 @@ namespace StdfRecordGenerator
     }
     class AssignFieldToPropertyNode : CodeNode
     {
-        public AssignFieldToPropertyNode(Type fieldType, PropertyInfo property)
+        public AssignFieldToPropertyNode(FieldTypes fieldType, string property)
         {
             FieldType = fieldType;
             Property = property;
         }
-        public Type FieldType { get; private set; }
-        public PropertyInfo Property { get; private set; }
+        public FieldTypes FieldType { get; }
+        public string Property { get; }
         public override CodeNode Accept(CodeNodeVisitor visitor)
         {
             return visitor.VisitAssignFieldToProperty(this);

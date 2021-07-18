@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System;
@@ -55,6 +56,38 @@ namespace StdfRecordGenerator
             else
             {
                 return $"{symbol.ContainingNamespace.GetFullName()}.{symbol.Name}";
+            }
+        }
+
+        public static NameSyntax GetQualifiedNameSyntax(this INamespaceSymbol symbol)
+        {
+            if (symbol.ContainingNamespace.IsGlobalNamespace)
+            {
+                return SyntaxFactory.AliasQualifiedName(
+                    SyntaxFactory.IdentifierName(SyntaxFactory.Token(SyntaxKind.GlobalKeyword)),
+                    SyntaxFactory.IdentifierName(symbol.Name));
+            }
+            else
+            {
+                return SyntaxFactory.QualifiedName(
+                    symbol.ContainingNamespace.GetQualifiedNameSyntax(),
+                    SyntaxFactory.IdentifierName(symbol.Name));
+            }
+        }
+
+        public static TypeSyntax GetTypeSyntax(this ITypeSymbol symbol)
+        {
+            if (symbol.ContainingNamespace.IsGlobalNamespace)
+            {
+                return SyntaxFactory.QualifiedName(
+                    SyntaxFactory.IdentifierName(SyntaxFactory.Token(SyntaxKind.GlobalKeyword)),
+                    SyntaxFactory.IdentifierName(symbol.Name));
+            }
+            else
+            {
+                return SyntaxFactory.QualifiedName(
+                    symbol.ContainingNamespace.GetQualifiedNameSyntax(),
+                    SyntaxFactory.IdentifierName(symbol.Name));
             }
         }
 

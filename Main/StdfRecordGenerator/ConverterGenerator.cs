@@ -3,6 +3,7 @@
 // See http://www.microsoft.com/resources/sharedsource/licensingbasics/sharedsourcelicenses.mspx.
 // All other rights reserved.
 
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections;
@@ -11,12 +12,29 @@ using System.Linq;
 
 namespace StdfRecordGenerator
 {
+    enum FieldTypes
+    {
+        U1,
+        U2,
+        U4,
+        I1,
+        I2,
+        I4,
+        R4,
+        R8,
+        String,
+        BitField,
+        LongBitField,
+        Nibble,
+        DateTime,
+    }
+
     /// <summary>
     /// This helper class encapsulates the generation of IL for the converters
     /// </summary>
     class ConverterGenerator
     {
-        readonly ClassDeclarationSyntax _RecordClass;
+        readonly ITypeSymbol _RecordClass;
         readonly List<FieldLayoutDefinition> _FieldDefinitions;
 
         /// <summary>
@@ -25,13 +43,13 @@ namespace StdfRecordGenerator
         /// <param name="ilgen">The il generator to use</param>
         /// <param name="type">The type we're converting to</param>
         /// <param name="fields">The fields we should parse (null if we should parse everything, empty if we shouldn't parse at all)</param>
-        public ConverterGenerator(ClassDeclarationSyntax recordClass, List<FieldLayoutDefinition> fieldDefinitions)
+        public ConverterGenerator(ITypeSymbol recordClass, List<FieldLayoutDefinition> fieldDefinitions)
         {
             _RecordClass = recordClass;
             _FieldDefinitions = (from def in fieldDefinitions orderby def.FieldIndex select def).ToList();
             for (int i = 0; i < _FieldDefinitions.Count; i++)
             {
-                if (_FieldDefinitions[i].FieldIndex != i) throw new InvalidOperationException($"Non-consecutive field indexes on {recordClass.Identifier}");
+                if (_FieldDefinitions[i].FieldIndex != i) throw new InvalidOperationException($"Non-consecutive field indexes on {recordClass.GetFullName()}");
             }
         }
 
@@ -63,7 +81,7 @@ namespace StdfRecordGenerator
                 new ReturnRecordNode());
 
             //visit the block with an emitting visitor
-            new ConverterEmittingVisitor(_ILGen,_Type,ConverterLog.IsLogging).Visit(block);
+            new ConverterEmittingVisitor(_RecordClass.GetTypeSyntax(),ConverterLog.IsLogging).Visit(block);
         }
 
         CodeNode GenerateAssignment(FieldLayoutDefinition fieldDefinition)
@@ -74,12 +92,12 @@ namespace StdfRecordGenerator
             {
                 // TODO: catch these in GenerateArrayAssignment
                 //TODO: how to do these checks?
-                if (fieldType == typeof(string))
+                if (fieldType == FieldTypes.String)
                 {
                     // TODO: Accept string arrays
                     throw new InvalidOperationException(Resources.NoStringArrays);
                 }
-                if (fieldType == typeof(BitArray))
+                if (fieldType == FieldTypes.BitField || fieldType == FieldTypes.LongBitField)
                 {
                     throw new InvalidOperationException(Resources.NoBitArrayArrays);
                 }
@@ -120,13 +138,10 @@ namespace StdfRecordGenerator
                 //if we have a missing value, set us up to skip if the value matches the missing value
                 else if (fieldDefinition.MissingValue is not null && !fieldDefinition.PersistMissingValue)
                 {
-                    //TODO: let the compiler fix this?
-                    if (!(fieldType.IsAssignableFrom(pair.Key.MissingValue.GetType())))
-                        throw new InvalidOperationException(string.Format("Missing value {0} is not assignable to {1}.", fieldDefinition.MissingValue, fieldType));
                     assignmentNodes.Add(new SkipAssignmentIfMissingValueNode(fieldDefinition.MissingValue));
                 }
                 //set us up to assign to the property
-                assignmentNodes.Add(new AssignFieldToPropertyNode(fieldType, pair.Value));
+                assignmentNodes.Add(new AssignFieldToPropertyNode(fieldType, fieldDefinition.RecordProperty));
                 assignmentBlock = new BlockNode(assignmentNodes);
             }
             return new FieldAssignmentNode(fieldType, fieldDefinition.FieldIndex ?? throw new InvalidOperationException("FieldIndex is null"), readerNode, assignmentBlock);
@@ -142,11 +157,11 @@ namespace StdfRecordGenerator
             //we'll combine this as part of the "reading" of the field
             var parseConditionNode = new SkipArrayAssignmentIfLengthIsZeroNode(lengthIndex);
 
-            var readNode = new ReadTypeNode(fieldType.MakeArrayType(), lengthIndex, isNibble: isNibbleArray);
+            var readNode = new ReadTypeNode(fieldType.MakeArrayType(), lengthIndex);
             BlockNode? assignmentBlock = null;
-            if (pair.Value is not null)
+            if (fieldDefinition.RecordProperty is not null)
             {
-                assignmentBlock = new BlockNode(new AssignFieldToPropertyNode(fieldType.MakeArrayType(), pair.Value));
+                assignmentBlock = new BlockNode(new AssignFieldToPropertyNode(fieldType.MakeArrayType(), fieldDefinition.RecordProperty));
             }
             //return a FieldAssignmentNode.  Note we're combining the parseConditionNode and the readNode.
             return new FieldAssignmentNode(fieldType.MakeArrayType(), fieldDefinition.FieldIndex ?? throw new InvalidOperationException("FieldIndex is null"), new BlockNode(parseConditionNode, readNode), assignmentBlock);

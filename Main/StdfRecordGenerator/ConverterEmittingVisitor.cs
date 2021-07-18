@@ -170,6 +170,8 @@ namespace StdfRecordGenerator
 
         public override CodeNode VisitSkipType(SkipTypeNode node)
         {
+            throw new InvalidOperationException("Skipping no longer supported");
+            /*
             MethodInfo? skipTypeMethod;
             var argsArray = node.Type.IsArray ? new[] { typeof(int) } : new Type[0];
             var skipTypeRecord = node switch
@@ -216,20 +218,22 @@ namespace StdfRecordGenerator
             }
             ILGen.Callvirt(skipTypeMethod);
             return node;
+            */
         }
-        static readonly MethodInfo _ReadFixedStringMethod = typeof(BinaryReader).GetMethodOrThrow("ReadString", typeof(int));
         public override CodeNode VisitReadFixedString(ReadFixedStringNode node)
         {
-            if (_FieldLocal == null) throw new InvalidOperationException("Cannot read string outside a FieldAssignmentNode");
+            if (_FieldLocal is null) throw new InvalidOperationException("Cannot read string outside a FieldAssignmentNode");
             Log($"Reading string of fixed length {node.Length}.");
-            ILGen.Ldloc(_Reader);
-            ILGen.Ldc_I4(node.Length);
-            ILGen.Callvirt(_ReadFixedStringMethod);
-            ILGen.Stloc(_FieldLocal);
+            AddStatement(
+                ExpressionStatement(
+                    AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
+                        IdentifierName(_FieldLocal.Value),
+                        InvocationExpression(
+                            MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(_Reader), IdentifierName("ReadString")),
+                            ArgumentList(SeparatedList<ArgumentSyntax>(NodeOrTokenList(Literal(node.Length))))))));
             return node;
         }
 
-        readonly Dictionary<Type, MethodInfo> _ReadTypeMethods = new Dictionary<Type, MethodInfo>();
         public override CodeNode VisitReadType(ReadTypeNode node)
         {
             if (_FieldLocal == null) throw new InvalidOperationException("Cannot read string outside a FieldAssignmentNode");
@@ -291,6 +295,7 @@ namespace StdfRecordGenerator
                 throw new InvalidOperationException("EndOfStreamCheckNode must occur within a FieldAssignmentBlockNode");
             }
             _FieldLocal = ILGen.DeclareLocal(node.Type);
+            _FieldLocals[node.FieldIndex] = _FieldLocal.Value;
             try
             {
                 Log($"Handling field {node.FieldIndex}.");

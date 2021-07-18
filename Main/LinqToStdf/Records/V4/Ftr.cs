@@ -28,6 +28,7 @@ namespace LinqToStdf.Records.V4 {
 	NibbleArrayFieldLayout(FieldIndex = 15, ArrayLengthFieldIndex = 12, RecordProperty = "ReturnStates"),
 	ArrayFieldLayout(FieldIndex = 16, FieldType = typeof(ushort), ArrayLengthFieldIndex = 13, RecordProperty = "ProgrammedIndexes"),
 	NibbleArrayFieldLayout(FieldIndex = 17, ArrayLengthFieldIndex = 13, RecordProperty = "ProgrammedStates"),
+		//TODO: I don't think BitFields work right. Where does the length come from
     FieldLayout(FieldIndex = 18, FieldType = typeof(BitArray), IsOptional = true, RecordProperty = "FailingPinBitfield"),
     StringFieldLayout(FieldIndex = 19, IsOptional = true, RecordProperty = "VectorName"),
     StringFieldLayout(FieldIndex = 20, IsOptional = true, RecordProperty = "TimeSet"),
