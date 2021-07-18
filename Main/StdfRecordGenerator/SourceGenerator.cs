@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -7,6 +8,13 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace StdfRecordGenerator
 {
+    class Foo
+    {
+        void Bar()
+        {
+            var baz = new global::System.Collections.Generic.Dictionary<int, string>();
+        }
+    }
     static class Extensions
     {
         public static bool TryGetFieldLayoutAttribute(this GeneratorSyntaxContext context, [NotNullWhen(true)] out AttributeSyntax? attribute)
@@ -105,6 +113,8 @@ namespace StdfRecordGenerator
             foreach (var record in recordReceiver.RecordClasses)
             {
                 var generator = new ConverterGenerator(record.Key, record.Value);
+                //new ConverterEmittingVisitor()
+                //context.AddSource($"{record.Key.Identifier}Converter", new StringBuilderTe
             }
         }
 

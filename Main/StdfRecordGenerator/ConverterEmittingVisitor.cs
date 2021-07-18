@@ -2,6 +2,9 @@
 // This source is subject to the Microsoft Public License.
 // See http://www.microsoft.com/resources/sharedsource/licensingbasics/sharedsourcelicenses.mspx.
 // All other rights reserved.
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,23 +13,23 @@ using System.Reflection.Emit;
 
 namespace StdfRecordGenerator
 {
-    /*
     class ConverterEmittingVisitor : CodeNodeVisitor
     {
-        public ConverterEmittingVisitor(ILGenerator ilGen, Type concreteType, bool enableLog =false)
+        public ConverterEmittingVisitor(TypeSyntax recordType, bool enableLog =false)
         {
-            ILGen = ilGen;
-            ConcreteType = concreteType;
+            _RecordType = recordType;
             EnableLog = enableLog;
-            _ConcreteRecordLocal = ILGen.DeclareLocal(ConcreteType);
+            _ConcreteRecordLocal = SyntaxFactory.Identifier("record");
             _Reader = ILGen.DeclareLocal<BinaryReader>();
 
         }
-        public ILGenerator ILGen { get; }
-        public Type ConcreteType { get; }
         public bool EnableLog { get; }
 
-        readonly LocalBuilder _ConcreteRecordLocal;
+        readonly TypeSyntax _RecordType;
+        readonly SyntaxToken _ConcreteRecordLocal;
+
+        readonly List<SyntaxNode> _MainBlockContents = new();
+
         readonly LocalBuilder _Reader;
         bool _InFieldAssignmentBlock = false;
         Label _EndLabel;
@@ -44,9 +47,17 @@ namespace StdfRecordGenerator
         }
         public override CodeNode VisitInitializeRecord(InitializeRecordNode node)
         {
-            Log($"Initializing {ConcreteType}");
-            ILGen.Newobj(ConcreteType);
-            ILGen.Stloc(_ConcreteRecordLocal);
+            Log($"Initializing {_RecordType}");
+            _MainBlockContents.Add(
+                SyntaxFactory.LocalDeclarationStatement(
+                    SyntaxFactory.VariableDeclaration(
+                        SyntaxFactory.IdentifierName("var"),
+                        SyntaxFactory.SeparatedList<VariableDeclaratorSyntax>(new[] {
+                            SyntaxFactory.VariableDeclarator(
+                                SyntaxFactory.Identifier("record"),
+                                argumentList: null,
+                                initializer: SyntaxFactory.EqualsValueClause(
+                                    SyntaxFactory.ObjectCreationExpression(_RecordType)))}))));
             return node;
         }
         static readonly MethodInfo _EnsureConvertibleToMethod = typeof(UnknownRecord).GetMethodOrThrow("EnsureConvertibleTo", typeof(StdfRecord));
@@ -349,5 +360,4 @@ namespace StdfRecordGenerator
             return node;
         }
     }
-    */
 }
