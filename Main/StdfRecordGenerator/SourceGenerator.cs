@@ -10,9 +10,12 @@ namespace StdfRecordGenerator
 {
     class Foo
     {
-        void Bar()
+        void Bar(int intParam)
         {
             var baz = new global::System.Collections.Generic.Dictionary<int, string>();
+            var count = baz.Count;
+        TestLabel:
+            intParam.CompareTo(56);
         }
     }
     static class Extensions

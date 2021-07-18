@@ -10,33 +10,56 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace StdfRecordGenerator
 {
     class ConverterEmittingVisitor : CodeNodeVisitor
     {
+        static ConverterEmittingVisitor()
+        {
+            _LinqToStdfNamespace = AliasQualifiedName(
+                    IdentifierName(Token(SyntaxKind.GlobalKeyword)),
+                    IdentifierName("LinqToStdf"));
+            _UnknownRecordType = QualifiedName(
+                _LinqToStdfNamespace,
+                IdentifierName("UnknownRecord"));
+        }
         public ConverterEmittingVisitor(TypeSyntax recordType, bool enableLog =false)
         {
             _RecordType = recordType;
             EnableLog = enableLog;
-            _ConcreteRecordLocal = SyntaxFactory.Identifier("record");
-            _Reader = ILGen.DeclareLocal<BinaryReader>();
 
         }
         public bool EnableLog { get; }
 
         readonly TypeSyntax _RecordType;
-        readonly SyntaxToken _ConcreteRecordLocal;
+        readonly static SyntaxToken _ConcreteRecordLocal = Identifier("record");
+        readonly static SyntaxToken _Reader = Identifier("reader");
+        readonly static SyntaxToken _DoneLabel = Identifier("DoneAssigning");
 
-        readonly List<SyntaxNode> _MainBlockContents = new();
+        List<StatementSyntax> _CurrentBlockContents = new();
+        Queue<SyntaxToken> _PendingLabels = new();
+        void AddStatement(StatementSyntax statement)
+        {
+            while (_PendingLabels.Count > 0)
+            {
+                var label = _PendingLabels.Dequeue();
+                statement = LabeledStatement(label, statement);
+            }
+            _CurrentBlockContents.Add(statement);
+        }
 
-        readonly LocalBuilder _Reader;
+        static readonly AliasQualifiedNameSyntax _LinqToStdfNamespace;
+        static readonly TypeSyntax _UnknownRecordType;
+        static readonly IdentifierNameSyntax _UnknownRecordParameter = IdentifierName("unknownRecord");
+
         bool _InFieldAssignmentBlock = false;
         Label _EndLabel;
         Label _SkipAssignmentLabel;
-        readonly Dictionary<int, LocalBuilder> _FieldLocals = new Dictionary<int, LocalBuilder>();
+        readonly Dictionary<int, SyntaxToken> _FieldLocals = new Dictionary<int, SyntaxToken>();
 
-        LocalBuilder? _FieldLocal = null;
+        SyntaxToken? _FieldLocal = null;
 
         void Log(string msg)
         {
@@ -48,66 +71,78 @@ namespace StdfRecordGenerator
         public override CodeNode VisitInitializeRecord(InitializeRecordNode node)
         {
             Log($"Initializing {_RecordType}");
-            _MainBlockContents.Add(
-                SyntaxFactory.LocalDeclarationStatement(
-                    SyntaxFactory.VariableDeclaration(
-                        SyntaxFactory.IdentifierName("var"),
-                        SyntaxFactory.SeparatedList<VariableDeclaratorSyntax>(new[] {
-                            SyntaxFactory.VariableDeclarator(
-                                SyntaxFactory.Identifier("record"),
+            AddStatement(
+                LocalDeclarationStatement(
+                    VariableDeclaration(
+                        IdentifierName(Token(SyntaxKind.VarKeyword)),
+                        SeparatedList<VariableDeclaratorSyntax>(new[] {
+                            VariableDeclarator(
+                                _ConcreteRecordLocal,
                                 argumentList: null,
-                                initializer: SyntaxFactory.EqualsValueClause(
-                                    SyntaxFactory.ObjectCreationExpression(_RecordType)))}))));
+                                initializer: EqualsValueClause(
+                                    ObjectCreationExpression(_RecordType)))}))));
             return node;
         }
-        static readonly MethodInfo _EnsureConvertibleToMethod = typeof(UnknownRecord).GetMethodOrThrow("EnsureConvertibleTo", typeof(StdfRecord));
         public override CodeNode VisitEnsureCompat(EnsureCompatNode node)
         {
             Log($"Ensuring compatibility of record");
-            ILGen.Ldarg_0();
-            ILGen.Ldloc(_ConcreteRecordLocal);
-            ILGen.Callvirt(_EnsureConvertibleToMethod);
+            AddStatement(
+                ExpressionStatement(
+                    InvocationExpression(
+                        MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, _UnknownRecordParameter, IdentifierName("EnsureConvertibleTo")),
+                        ArgumentList(SeparatedList<ArgumentSyntax>(new[] { Argument(IdentifierName(_ConcreteRecordLocal)) })))));
             return node;
         }
-
-        static readonly MethodInfo _GetBinaryReaderForContentMethod = typeof(UnknownRecord).GetMethodOrThrow("GetBinaryReaderForContent", BindingFlags.Instance | BindingFlags.Public);
 
         public override CodeNode VisitInitReaderNode(InitReaderNode node)
         {
             Log($"Initializing reader");
-            ILGen.Ldarg_0();
-            ILGen.Callvirt(_GetBinaryReaderForContentMethod);
-            ILGen.Stloc(_Reader);
+            AddStatement(
+                LocalDeclarationStatement(
+                    VariableDeclaration(
+                        IdentifierName(Token(SyntaxKind.VarKeyword)),
+                        SeparatedList<VariableDeclaratorSyntax>(new[] {
+                            VariableDeclarator(
+                                _Reader,
+                                argumentList: null,
+                                initializer: EqualsValueClause(
+                                    InvocationExpression(
+                                        MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, _UnknownRecordParameter, IdentifierName("GetBinaryReaderForContent"))))) }))));
             return node;
         }
         public override CodeNode VisitTryFinallyNode(TryFinallyNode node)
         {
-            ILGen.BeginExceptionBlock();
+            var outerBlock = _CurrentBlockContents;
+            _CurrentBlockContents = new();
             Visit(node.TryNode);
-            ILGen.BeginFinallyBlock();
+            var tryBlock = _CurrentBlockContents;
+            _CurrentBlockContents = new();
             Visit(node.FinallyNode);
-            ILGen.EndExceptionBlock();
-
+            var finallyBlock = _CurrentBlockContents;
+            _CurrentBlockContents = outerBlock;
+            AddStatement(TryStatement(Block(tryBlock), List<CatchClauseSyntax>(), FinallyClause(Block(finallyBlock))));
             return node;
         }
-        static readonly MethodInfo _DisposeMethod = typeof(IDisposable).GetMethodOrThrow("Dispose", new Type[0]);
         public override CodeNode VisitDisposeReader(DisposeReaderNode node)
         {
             Log($"Disposing reader");
-            ILGen.Ldloc(_Reader);
-            ILGen.Callvirt(_DisposeMethod);
+            AddStatement(
+                ExpressionStatement(
+                    InvocationExpression(
+                        MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(_Reader), IdentifierName("Dispose")),
+                        ArgumentList())));
             return node;
         }
         public override CodeNode VisitFieldAssignmentBlock(FieldAssignmentBlockNode node)
         {
             _InFieldAssignmentBlock = true;
-            _EndLabel = ILGen.DefineLabel();
             try
             {
                 Log($"Handling field assignments.");
 
                 var visitedBlock = VisitBlock(node.Block);
-                ILGen.MarkLabel(_EndLabel);
+                //pend the label so it goes on the next statement
+                _PendingLabels.Enqueue(_DoneLabel);
                 if (visitedBlock == node.Block) return node;
                 else return new FieldAssignmentBlockNode(visitedBlock as BlockNode ?? new BlockNode(visitedBlock));
             }
@@ -119,53 +154,51 @@ namespace StdfRecordGenerator
         public override CodeNode VisitReturnRecord(ReturnRecordNode node)
         {
             Log($"returning record.");
-            ILGen.Ldloc(_ConcreteRecordLocal);
-            ILGen.Ret();
+            AddStatement(ReturnStatement(IdentifierName(_ConcreteRecordLocal)));
             return node;
         }
-        static readonly MethodInfo _SkipRawMethod = typeof(BinaryReader).GetMethodOrThrow("Skip", typeof(int));
         public override CodeNode VisitSkipRawBytes(SkipRawBytesNode node)
         {
             Log($"Skipping {node.Bytes} bytes.");
-            ILGen.Ldloc(_Reader);
-            ILGen.Ldc_I4(node.Bytes);
-            ILGen.Callvirt(_SkipRawMethod);
+            AddStatement(
+                ExpressionStatement(
+                    InvocationExpression(
+                        MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(_Reader), IdentifierName("Skip")),
+                        ArgumentList(SeparatedList<ArgumentSyntax>(NodeOrTokenList(Literal(node.Bytes)))))));
             return node;
         }
 
-        readonly Dictionary<Type, MethodInfo> _SkipTypeMethods = new Dictionary<Type, MethodInfo>();
         public override CodeNode VisitSkipType(SkipTypeNode node)
         {
             MethodInfo? skipTypeMethod;
             var argsArray = node.Type.IsArray ? new[] { typeof(int) } : new Type[0];
-            if (node.IsNibble) skipTypeMethod = typeof(BinaryReader).GetMethodOrThrow("SkipNibbleArray", argsArray);
-            else if (!_SkipTypeMethods.TryGetValue(node.Type, out skipTypeMethod))
+            var skipTypeRecord = node switch
             {
-                string skipTypeMethodName;
-                if (node.Type == typeof(byte)) skipTypeMethodName = "Skip1";
-                else if (node.Type == typeof(byte[])) skipTypeMethodName = "Skip1Array";
-                else if (node.Type == typeof(sbyte)) skipTypeMethodName = "Skip1";
-                else if (node.Type == typeof(sbyte[])) skipTypeMethodName = "Skip1Array";
-                else if (node.Type == typeof(ushort)) skipTypeMethodName = "Skip2";
-                else if (node.Type == typeof(ushort[])) skipTypeMethodName = "Skip2Array";
-                else if (node.Type == typeof(short)) skipTypeMethodName = "Skip2";
-                else if (node.Type == typeof(short[])) skipTypeMethodName = "Skip2Array";
-                else if (node.Type == typeof(uint)) skipTypeMethodName = "Skip4";
-                else if (node.Type == typeof(uint[])) skipTypeMethodName = "Skip4Array";
-                else if (node.Type == typeof(int)) skipTypeMethodName = "Skip4";
-                else if (node.Type == typeof(int[])) skipTypeMethodName = "Skip4Array";
-                else if (node.Type == typeof(ulong)) skipTypeMethodName = "Skip8";
-                else if (node.Type == typeof(ulong[])) skipTypeMethodName = "Skip8Array";
-                else if (node.Type == typeof(long)) skipTypeMethodName = "Skip8";
-                else if (node.Type == typeof(long[])) skipTypeMethodName = "Skip8Array";
-                else if (node.Type == typeof(float)) skipTypeMethodName = "Skip4";
-                else if (node.Type == typeof(float[])) skipTypeMethodName = "Skip4Array";
-                else if (node.Type == typeof(double)) skipTypeMethodName = "Skip8";
-                else if (node.Type == typeof(double[])) skipTypeMethodName = "Skip8Array";
-                else if (node.Type == typeof(string)) skipTypeMethodName = "SkipString";
-                else if (node.Type == typeof(string[])) skipTypeMethodName = "SkipStringArray";
-                else if (node.Type == typeof(DateTime)) skipTypeMethodName = "Skip4";
-                else if (node.Type == typeof(BitArray)) skipTypeMethodName = "SkipBitArray";
+                { IsNibble: true}=> "SkipNibbleArray",
+                { Type: typeof(byte) }=> "Skip1",
+                { Type:typeof(byte[]) }=>"Skip1Array",
+                { Type:typeof(sbyte) } =>"Skip1",
+                { Type:typeof(sbyte[]) } =>"Skip1Array",
+                { Type:typeof(ushort) } =>"Skip2",
+                { Type:typeof(ushort[]) } =>"Skip2Array",
+                { Type:typeof(short) } =>"Skip2",
+                { Type:typeof(short[]) =>"Skip2Array",
+                { Type:typeof(uint) }=>"Skip4",
+                { Type:typeof(uint[]) } =>"Skip4Array",
+                { Type:typeof(int) } =>"Skip4",
+                { Type:typeof(int[]) }=>"Skip4Array",
+                { Type:typeof(ulong) } =>"Skip8",
+                { Type:typeof(ulong[]) }=>"Skip8Array",
+                { Type:typeof(long) }=>"Skip8",
+                { Type:typeof(long[])) skipTypeMethodName = "Skip8Array";
+                { Type:typeof(float)) skipTypeMethodName = "Skip4";
+                { Type:typeof(float[])) skipTypeMethodName = "Skip4Array";
+                { Type:typeof(double)) skipTypeMethodName = "Skip8";
+                { Type:typeof(double[])) skipTypeMethodName = "Skip8Array";
+                { Type:typeof(string)) skipTypeMethodName = "SkipString";
+                { Type:typeof(string[])) skipTypeMethodName = "SkipStringArray";
+                { Type:typeof(DateTime)) skipTypeMethodName = "Skip4";
+                { Type: typeof(BitArray)) skipTypeMethodName = "SkipBitArray";
                 else
                 {
                     throw new NotSupportedException(string.Format(Resources.UnsupportedReaderType, node.Type));
