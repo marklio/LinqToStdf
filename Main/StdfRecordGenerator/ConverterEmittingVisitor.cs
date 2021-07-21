@@ -6,10 +6,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Reflection.Emit;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace StdfRecordGenerator
@@ -29,6 +26,7 @@ namespace StdfRecordGenerator
         {
             _RecordType = recordType;
             EnableLog = enableLog;
+            _ActiveBlock = new BlockScope(this);
 
         }
         public bool EnableLog { get; }
@@ -38,25 +36,75 @@ namespace StdfRecordGenerator
         readonly static SyntaxToken _Reader = Identifier("reader");
         readonly static SyntaxToken _DoneLabel = Identifier("DoneAssigning");
 
-        List<StatementSyntax> _CurrentBlockContents = new();
-        Queue<SyntaxToken> _PendingLabels = new();
-        void AddStatement(StatementSyntax statement)
+        class BlockScope : IDisposable
         {
-            while (_PendingLabels.Count > 0)
+            bool _Disposed = false;
+            readonly List<StatementSyntax> _Statements = new();
+            readonly Queue<SyntaxToken> _PendingLabels = new();
+            readonly object _Parent;
+            BlockScope(BlockScope parent)
             {
-                var label = _PendingLabels.Dequeue();
-                statement = LabeledStatement(label, statement);
+                _Parent = parent;
             }
-            _CurrentBlockContents.Add(statement);
+
+            public BlockScope(ConverterEmittingVisitor visitor)
+            {
+                _Parent = visitor;
+            }
+
+            ConverterEmittingVisitor GetVisitor() => _Parent switch
+            {
+                ConverterEmittingVisitor cve => cve,
+                BlockScope bs => bs.GetVisitor(),
+                _ => throw new InvalidOperationException("Something bizarre assigned to the "),
+            };
+
+            public BlockScope CreateChildScope() => new BlockScope(this);
+
+            public void AddStatement(StatementSyntax statement)
+            {
+                if (_Disposed) throw new ObjectDisposedException(nameof(BlockScope));
+                while (_PendingLabels.Count > 0)
+                {
+                    var label = _PendingLabels.Dequeue();
+                    statement = LabeledStatement(label, statement);
+                }
+                _Statements.Add(statement);
+            }
+
+            public void PrependLabel(SyntaxToken label)
+            {
+                if (_Disposed) throw new ObjectDisposedException(nameof(BlockScope));
+                _PendingLabels.Enqueue(label);
+            }
+
+            public BlockSyntax GetBlock() => _Disposed ? Block(_Statements) : throw new InvalidOperationException("Scope not yet disposed");
+
+            public void Dispose()
+            {
+                if (_Disposed) return;
+                if (_PendingLabels.Count > 0)
+                {
+                    StatementSyntax statement = ExpressionStatement(IdentifierName(MissingToken(SyntaxKind.IdentifierToken)));
+                    //emit any labels
+                    while (_PendingLabels.Count > 0)
+                    {
+                        var label = _PendingLabels.Dequeue();
+                        statement = LabeledStatement(label, statement);
+                    }
+                }
+                _Disposed = true;
+            }
         }
+        readonly BlockScope _ActiveBlock;
 
         static readonly AliasQualifiedNameSyntax _LinqToStdfNamespace;
         static readonly TypeSyntax _UnknownRecordType;
         static readonly IdentifierNameSyntax _UnknownRecordParameter = IdentifierName("unknownRecord");
 
         bool _InFieldAssignmentBlock = false;
-        Label _EndLabel;
-        Label _SkipAssignmentLabel;
+        SyntaxToken _EndLabel;
+        SyntaxToken _SkipAssignmentLabel;
         readonly Dictionary<int, SyntaxToken> _FieldLocals = new Dictionary<int, SyntaxToken>();
 
         SyntaxToken? _FieldLocal = null;
@@ -65,13 +113,31 @@ namespace StdfRecordGenerator
         {
             if (EnableLog)
             {
-                ILGen.Log(msg);
+                _ActiveBlock.AddStatement(
+                    ExpressionStatement(
+                        InvocationExpression(
+                            MemberAccessExpression(
+                                SyntaxKind.SimpleMemberAccessExpression,
+                                MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    AliasQualifiedName(
+                                        IdentifierName(Token(SyntaxKind.GlobalKeyword)),
+                                        IdentifierName("System")),
+                                    IdentifierName("Console")),
+                                IdentifierName("WriteLine")))
+                        .WithArgumentList(
+                            ArgumentList(
+                                SingletonSeparatedList<ArgumentSyntax>(
+                                    Argument(
+                                        LiteralExpression(
+                                            SyntaxKind.StringLiteralExpression,
+                                            Literal(msg))))))));
             }
         }
         public override CodeNode VisitInitializeRecord(InitializeRecordNode node)
         {
             Log($"Initializing {_RecordType}");
-            AddStatement(
+            _ActiveBlock.AddStatement(
                 LocalDeclarationStatement(
                     VariableDeclaration(
                         IdentifierName(Token(SyntaxKind.VarKeyword)),
@@ -86,7 +152,7 @@ namespace StdfRecordGenerator
         public override CodeNode VisitEnsureCompat(EnsureCompatNode node)
         {
             Log($"Ensuring compatibility of record");
-            AddStatement(
+            _ActiveBlock.AddStatement(
                 ExpressionStatement(
                     InvocationExpression(
                         MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, _UnknownRecordParameter, IdentifierName("EnsureConvertibleTo")),
@@ -97,7 +163,7 @@ namespace StdfRecordGenerator
         public override CodeNode VisitInitReaderNode(InitReaderNode node)
         {
             Log($"Initializing reader");
-            AddStatement(
+            _ActiveBlock.AddStatement(
                 LocalDeclarationStatement(
                     VariableDeclaration(
                         IdentifierName(Token(SyntaxKind.VarKeyword)),
@@ -112,21 +178,23 @@ namespace StdfRecordGenerator
         }
         public override CodeNode VisitTryFinallyNode(TryFinallyNode node)
         {
-            var outerBlock = _CurrentBlockContents;
-            _CurrentBlockContents = new();
-            Visit(node.TryNode);
-            var tryBlock = _CurrentBlockContents;
-            _CurrentBlockContents = new();
-            Visit(node.FinallyNode);
-            var finallyBlock = _CurrentBlockContents;
-            _CurrentBlockContents = outerBlock;
-            AddStatement(TryStatement(Block(tryBlock), List<CatchClauseSyntax>(), FinallyClause(Block(finallyBlock))));
+            var tryBlock = _ActiveBlock.CreateChildScope();
+            using (tryBlock)
+            {
+                Visit(node.TryNode);
+            }
+            var finallyBlock = _ActiveBlock.CreateChildScope();
+            using (finallyBlock)
+            {
+                Visit(node.FinallyNode);
+            }
+            _ActiveBlock.AddStatement(TryStatement(tryBlock.GetBlock(), List<CatchClauseSyntax>(), FinallyClause(finallyBlock.GetBlock())));
             return node;
         }
         public override CodeNode VisitDisposeReader(DisposeReaderNode node)
         {
             Log($"Disposing reader");
-            AddStatement(
+            _ActiveBlock.AddStatement(
                 ExpressionStatement(
                     InvocationExpression(
                         MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(_Reader), IdentifierName("Dispose")),
@@ -142,7 +210,7 @@ namespace StdfRecordGenerator
 
                 var visitedBlock = VisitBlock(node.Block);
                 //pend the label so it goes on the next statement
-                _PendingLabels.Enqueue(_DoneLabel);
+                _ActiveBlock.PrependLabel(_DoneLabel);
                 if (visitedBlock == node.Block) return node;
                 else return new FieldAssignmentBlockNode(visitedBlock as BlockNode ?? new BlockNode(visitedBlock));
             }
@@ -154,13 +222,13 @@ namespace StdfRecordGenerator
         public override CodeNode VisitReturnRecord(ReturnRecordNode node)
         {
             Log($"returning record.");
-            AddStatement(ReturnStatement(IdentifierName(_ConcreteRecordLocal)));
+            _ActiveBlock.AddStatement(ReturnStatement(IdentifierName(_ConcreteRecordLocal)));
             return node;
         }
         public override CodeNode VisitSkipRawBytes(SkipRawBytesNode node)
         {
             Log($"Skipping {node.Bytes} bytes.");
-            AddStatement(
+            _ActiveBlock.AddStatement(
                 ExpressionStatement(
                     InvocationExpression(
                         MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(_Reader), IdentifierName("Skip")),
@@ -224,7 +292,7 @@ namespace StdfRecordGenerator
         {
             if (_FieldLocal is null) throw new InvalidOperationException("Cannot read string outside a FieldAssignmentNode");
             Log($"Reading string of fixed length {node.Length}.");
-            AddStatement(
+            _ActiveBlock.AddStatement(
                 ExpressionStatement(
                     AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
                         IdentifierName(_FieldLocal.Value),
@@ -236,79 +304,73 @@ namespace StdfRecordGenerator
 
         public override CodeNode VisitReadType(ReadTypeNode node)
         {
-            if (_FieldLocal == null) throw new InvalidOperationException("Cannot read string outside a FieldAssignmentNode");
-            MethodInfo? readTypeMethod;
-            var argsArray = node.Type.IsArray ? new[] { typeof(int) } : new Type[0];
-            if (node.IsNibble) readTypeMethod = typeof(BinaryReader).GetMethodOrThrow("ReadNibbleArray", argsArray);
-            else if (!_ReadTypeMethods.TryGetValue(node.Type, out readTypeMethod))
-            {
-                string readTypeMethodName;
-                if (node.Type == typeof(byte)) readTypeMethodName = "ReadByte";
-                else if (node.Type == typeof(byte[])) readTypeMethodName = "ReadByteArray";
-                else if (node.Type == typeof(sbyte)) readTypeMethodName = "ReadSByte";
-                else if (node.Type == typeof(sbyte[])) readTypeMethodName = "ReadSByteArray";
-                else if (node.Type == typeof(ushort)) readTypeMethodName = "ReadUInt16";
-                else if (node.Type == typeof(ushort[])) readTypeMethodName = "ReadUInt16Array";
-                else if (node.Type == typeof(short)) readTypeMethodName = "ReadInt16";
-                else if (node.Type == typeof(short[])) readTypeMethodName = "ReadInt16Array";
-                else if (node.Type == typeof(uint)) readTypeMethodName = "ReadUInt32";
-                else if (node.Type == typeof(uint[])) readTypeMethodName = "ReadUInt32Array";
-                else if (node.Type == typeof(int)) readTypeMethodName = "ReadInt32";
-                else if (node.Type == typeof(int[])) readTypeMethodName = "ReadInt32Array";
-                else if (node.Type == typeof(ulong)) readTypeMethodName = "ReadUInt64";
-                else if (node.Type == typeof(ulong[])) readTypeMethodName = "ReadUInt64Array";
-                else if (node.Type == typeof(long)) readTypeMethodName = "ReadInt64";
-                else if (node.Type == typeof(long[])) readTypeMethodName = "ReadInt64Array";
-                else if (node.Type == typeof(float)) readTypeMethodName = "ReadSingle";
-                else if (node.Type == typeof(float[])) readTypeMethodName = "ReadSingleArray";
-                else if (node.Type == typeof(double)) readTypeMethodName = "ReadDouble";
-                else if (node.Type == typeof(double[])) readTypeMethodName = "ReadDoubleArray";
-                else if (node.Type == typeof(string)) readTypeMethodName = "ReadString";
-                else if (node.Type == typeof(string[])) readTypeMethodName = "ReadStringArray";
-                else if (node.Type == typeof(DateTime)) readTypeMethodName = "ReadDateTime";
-                else if (node.Type == typeof(BitArray)) readTypeMethodName = "ReadBitArray";
-                else
-                {
-                    throw new NotSupportedException(string.Format(Resources.UnsupportedReaderType, node.Type));
-                }
-                readTypeMethod = typeof(BinaryReader).GetMethodOrThrow(readTypeMethodName, argsArray);
-                _ReadTypeMethods[node.Type] = readTypeMethod;
-            }
-            Log($"Reading with {readTypeMethod.Name}.");
+            if (_FieldLocal == null) throw new InvalidOperationException("Cannot read value outside a FieldAssignmentNode");
 
-            ILGen.Ldloc(_Reader);
-            //if we have a length index, load its local (we enforce its presence for arrays in the node)
-            if (node.LengthIndex.HasValue)
+            var readTypeMethod = node.LengthIndex switch
             {
-                ILGen.Ldloc(_FieldLocals[node.LengthIndex.Value]);
-            }
-            ILGen.Callvirt(readTypeMethod);
-            ILGen.Stloc(_FieldLocal);
+                null => node.Type switch
+                {
+                    FieldTypes.U1 => "ReadByte",
+                    FieldTypes.I1 => "ReadSByte",
+                    FieldTypes.U2 => "ReadUInt16",
+                    FieldTypes.I2 => "ReadInt16",
+                    FieldTypes.U4 => "ReadUInt32",
+                    FieldTypes.I4 => "ReadInt32",
+                    FieldTypes.R4 => "ReadSingle",
+                    FieldTypes.R8 => "ReadDouble",
+                    FieldTypes.DateTime => "ReadDateTime",
+                    FieldTypes.BitField => "ReadBitArray",
+                    _ => throw new InvalidOperationException($"Unsupported type {node.Type}"),
+                },
+                _ => node.Type switch
+                {
+                    FieldTypes.U1 => "ReadByteArray",
+                    FieldTypes.I1 => "ReadSByteArray",
+                    FieldTypes.U2 => "ReadUInt16Array",
+                    FieldTypes.I2 => "ReadInt16Array",
+                    FieldTypes.U4 => "ReadUInt32Array",
+                    FieldTypes.I4 => "ReadInt32Array",
+                    FieldTypes.R4 => "ReadSingleArray",
+                    FieldTypes.R8 => "ReadDoubleArray",
+                    FieldTypes.Nibble => "ReadNibbleArray",
+                    _ => throw new InvalidOperationException($"Unsupported type {node.Type}"),
+                },
+            };
+
+            Log($"Reading with {readTypeMethod}.");
+            var args = node.LengthIndex is null ?
+                ArgumentList() :
+                ArgumentList(SeparatedList<ArgumentSyntax>(NodeOrTokenList(_FieldLocals[node.LengthIndex.Value])));
+            _ActiveBlock.AddStatement(
+                ExpressionStatement(
+                    AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
+                        IdentifierName(_FieldLocal.Value),
+                        InvocationExpression(
+                            MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(_Reader), IdentifierName(readTypeMethod)),
+                            args))));
             return node;
         }
-        static readonly MethodInfo _AtEndOfStreamMethod = typeof(BinaryReader).GetProperty("AtEndOfStream")?.GetGetMethod() ?? throw new InvalidOperationException("Could not get getter for AtEndOfStream");
         public override CodeNode VisitFieldAssignment(FieldAssignmentNode node)
         {
             //ensure we're in a FieldAssignmentBlock
             if (!_InFieldAssignmentBlock)
             {
-                throw new InvalidOperationException("EndOfStreamCheckNode must occur within a FieldAssignmentBlockNode");
+                throw new InvalidOperationException("Field assignment must occur within a FieldAssignmentBlockNode");
             }
-            _FieldLocal = ILGen.DeclareLocal(node.Type);
+            _FieldLocal = Identifier($"field{node.FieldIndex}");
             _FieldLocals[node.FieldIndex] = _FieldLocal.Value;
             try
             {
                 Log($"Handling field {node.FieldIndex}.");
                 //generate the end of stream check
-                ILGen.Ldloc(_Reader);
-                ILGen.Callvirt(_AtEndOfStreamMethod);
-                ILGen.Brtrue(_EndLabel);
+                _ActiveBlock.AddStatement(
+                    IfStatement(
+                        InvocationExpression(
+                            MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(_Reader), IdentifierName("AtEndOfStream"))),
+                            GotoStatement(SyntaxKind.GotoStatement, IdentifierName(_EndLabel))));
 
-                //declare the local and enable it in the scope of child visiting
-                _FieldLocals[node.FieldIndex] = _FieldLocal;
-
-                _SkipAssignmentLabel = ILGen.DefineLabel();
-                var assignmentCompleted = ILGen.DefineLabel();
+                _SkipAssignmentLabel = Identifier($"SkipAssignment{node.FieldIndex}");
+                var assignmentCompleted = Identifier($"AssignmentComplete{node.FieldIndex}");
 
                 //visit any read node there is
                 Visit(node.ReadNode);
@@ -322,10 +384,10 @@ namespace StdfRecordGenerator
                 {
                     Log($"No assignment for {node.FieldIndex}.");
                 }
-                ILGen.Br(assignmentCompleted);
-                ILGen.MarkLabel(_SkipAssignmentLabel);
+                _ActiveBlock.AddStatement(GotoStatement(SyntaxKind.GotoStatement, IdentifierName(assignmentCompleted)));
+                _ActiveBlock.PrependLabel(_SkipAssignmentLabel);
                 Log($"Assignment skipped.");
-                ILGen.MarkLabel(assignmentCompleted);
+                _ActiveBlock.PrependLabel(assignmentCompleted);
                 Log($"Done with {node.FieldIndex}.");
 
                 _FieldLocal = null;
@@ -342,49 +404,59 @@ namespace StdfRecordGenerator
             if (_FieldLocal is null) throw new InvalidOperationException("SkipAssignmentIfFlagSetNode must be in a FieldAssignmentNode");
             Log($"Handling conditional assignment based on field {node.FlagFieldIndex}, mask 0x{node.FlagMask:x}.");
             //get the flag field
-            LocalBuilder flag = _FieldLocals[node.FlagFieldIndex];
+            var flag = _FieldLocals[node.FlagFieldIndex];
             //TODO: assert that it's a byte?
-            ILGen.Ldloc(flag);
-            ILGen.Ldc_I4_S(node.FlagMask);
-            ILGen.And();
-            //skip assignment if the flag is set
-            ILGen.Brtrue(_SkipAssignmentLabel);
+            _ActiveBlock.AddStatement(IfStatement(
+                BinaryExpression(
+                    SyntaxKind.NotEqualsExpression,
+                    ParenthesizedExpression(
+                        BinaryExpression(
+                            SyntaxKind.BitwiseAndExpression,
+                            IdentifierName(flag),
+                            LiteralExpression(
+                                SyntaxKind.NumericLiteralExpression,
+                                Literal(node.FlagMask)))),
+                    LiteralExpression(
+                        SyntaxKind.NumericLiteralExpression,
+                        Literal(0))),
+                GotoStatement(SyntaxKind.GotoStatement, IdentifierName(_SkipAssignmentLabel))));
             return node;
         }
         public override CodeNode VisitSkipAssignmentIfMissingValue(SkipAssignmentIfMissingValueNode node)
         {
             if (_FieldLocal is null) throw new InvalidOperationException("SkipAssignmentIfMissingValueNode must be in a FieldAssignmentNode");
             Log($"Handling conditional assignment based on missing value {node.MissingValue}.");
-            ILGen.Ldloca(_FieldLocal);
-            ILGen.Ldc(node.MissingValue, node.MissingValue.GetType());
-            //BUG: Revisit this.  The purpose of constrained is so you don't have to do different codegen for valuetype vs. reference type
-            if (_FieldLocal.LocalType.IsValueType)
+            var literal = node.MissingValue switch
             {
-                ILGen.Box(_FieldLocal.LocalType);
-            }
-            ILGen.Constrained(_FieldLocal.LocalType);
-            // TODO: if (!node.AllowMissingValue) { do the next two lines... }
-            ILGen.Callvirt(typeof(object).GetMethodOrThrow("Equals", typeof(object)));
-            ILGen.Brtrue(_SkipAssignmentLabel);
+                int i => Literal(i),
+                _ => throw new InvalidOperationException($"Unsupported missing value type {node.MissingValue.GetType()}"),
+            };
+            // TODO: use node.AllowMissingValue
+            _ActiveBlock.AddStatement(IfStatement(
+                InvocationExpression(
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        IdentifierName(_FieldLocal.Value),
+                        IdentifierName("Equals")))
+                .WithArgumentList(
+                    ArgumentList(
+                        SingletonSeparatedList(
+                            Argument(
+                                LiteralExpression(literal.Kind(), literal))))),
+                GotoStatement(SyntaxKind.GotoStatement, IdentifierName(_SkipAssignmentLabel))));
             return node;
         }
         public override CodeNode VisitAssignFieldToProperty(AssignFieldToPropertyNode node)
         {
             if (_FieldLocal is null) throw new InvalidOperationException("AssignFieldToPropertyNode must be in a FieldAssignmentNode");
-            Log($"Assigning value to {node.Property.Name}.");
-            ILGen.Ldloc(_ConcreteRecordLocal);
-            ILGen.Ldloc(_FieldLocal);
-            //handle the case where the property is a nullable version of the field type
-            if (node.FieldType.IsValueType)
-            {
-                Type genericType = typeof(Nullable<>).MakeGenericType(node.FieldType);
-                if (node.Property.PropertyType == genericType)
-                {
-                    ILGen.Newobj(genericType, node.FieldType);
-                }
-            }
-            //assign the value to the property
-            ILGen.Callvirt(node.Property.GetSetMethod() ?? throw new InvalidOperationException("Could not get setter for property."));
+            Log($"Assigning value to {node.Property}.");
+            _ActiveBlock.AddStatement(
+                ExpressionStatement(
+                    AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
+                        MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                            IdentifierName(_ConcreteRecordLocal),
+                            IdentifierName(node.Property)),
+                        IdentifierName(_FieldLocal.Value))));
             return node;
         }
         public override CodeNode VisitSkipArrayAssignmentIfLengthIsZero(SkipArrayAssignmentIfLengthIsZeroNode node)
@@ -393,8 +465,11 @@ namespace StdfRecordGenerator
             Log($"Handling conditional assignment based zero length array.");
             //If the length field is zero, skip past assignment
             var lengthLocal = _FieldLocals[node.LengthIndex];
-            ILGen.Ldloc(lengthLocal);
-            ILGen.Brfalse(_SkipAssignmentLabel);
+            _ActiveBlock.AddStatement(IfStatement(
+                BinaryExpression(SyntaxKind.EqualsExpression,
+                    IdentifierName(lengthLocal),
+                    LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(0))),
+                GotoStatement(SyntaxKind.GotoStatement, IdentifierName(_SkipAssignmentLabel))));
             return node;
         }
     }

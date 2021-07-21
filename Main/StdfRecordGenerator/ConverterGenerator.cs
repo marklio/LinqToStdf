@@ -133,7 +133,7 @@ namespace StdfRecordGenerator
                 {
                     assignmentNodes.Add(new SkipAssignmentIfFlagSetNode(
                         optionalLayout.FlagIndex ?? throw new InvalidOperationException("FlagIndex is null"),
-                        optionalLayout.FlagMask ?? throw new InvalidOperationException("FlagMask is null"));
+                        optionalLayout.FlagMask ?? throw new InvalidOperationException("FlagMask is null")));
                 }
                 //if we have a missing value, set us up to skip if the value matches the missing value
                 else if (fieldDefinition.MissingValue is not null && !fieldDefinition.PersistMissingValue)
