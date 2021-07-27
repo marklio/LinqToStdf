@@ -95,11 +95,11 @@ namespace StdfRecordGenerator
                 if (fieldType == FieldTypes.String)
                 {
                     // TODO: Accept string arrays
-                    throw new InvalidOperationException(Resources.NoStringArrays);
+                    throw new InvalidOperationException("String Arrays not supported.");
                 }
                 if (fieldType == FieldTypes.BitField || fieldType == FieldTypes.LongBitField)
                 {
-                    throw new InvalidOperationException(Resources.NoBitArrayArrays);
+                    throw new InvalidOperationException("BitArray arrays not supported.");
                 }
                 return GenerateArrayAssignment(arrayDefinition);
             }
@@ -157,14 +157,14 @@ namespace StdfRecordGenerator
             //we'll combine this as part of the "reading" of the field
             var parseConditionNode = new SkipArrayAssignmentIfLengthIsZeroNode(lengthIndex);
 
-            var readNode = new ReadTypeNode(fieldType.MakeArrayType(), lengthIndex);
+            var readNode = new ReadTypeNode(fieldType, lengthIndex);
             BlockNode? assignmentBlock = null;
             if (fieldDefinition.RecordProperty is not null)
             {
-                assignmentBlock = new BlockNode(new AssignFieldToPropertyNode(fieldType.MakeArrayType(), fieldDefinition.RecordProperty));
+                assignmentBlock = new BlockNode(new AssignFieldToPropertyNode(fieldType, fieldDefinition.RecordProperty));
             }
             //return a FieldAssignmentNode.  Note we're combining the parseConditionNode and the readNode.
-            return new FieldAssignmentNode(fieldType.MakeArrayType(), fieldDefinition.FieldIndex ?? throw new InvalidOperationException("FieldIndex is null"), new BlockNode(parseConditionNode, readNode), assignmentBlock);
+            return new FieldAssignmentNode(fieldType, fieldDefinition.FieldIndex ?? throw new InvalidOperationException("FieldIndex is null"), new BlockNode(parseConditionNode, readNode), assignmentBlock);
         }
     }
 }

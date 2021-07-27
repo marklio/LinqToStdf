@@ -23,7 +23,7 @@ namespace StdfRecordGenerator
         {
             _Writer.WriteStartElement("AssignFieldToProperty");
             _Writer.WriteAttributeString("Type", node.FieldType.ToString());
-            _Writer.WriteAttributeString("Property", node.Property.Name);
+            _Writer.WriteAttributeString("Property", node.Property);
             _Writer.WriteEndElement();
             return node;
         }

@@ -103,7 +103,6 @@ namespace StdfRecordGenerator
         static readonly IdentifierNameSyntax _UnknownRecordParameter = IdentifierName("unknownRecord");
 
         bool _InFieldAssignmentBlock = false;
-        SyntaxToken _EndLabel;
         SyntaxToken _SkipAssignmentLabel;
         readonly Dictionary<int, SyntaxToken> _FieldLocals = new Dictionary<int, SyntaxToken>();
 
@@ -367,7 +366,7 @@ namespace StdfRecordGenerator
                     IfStatement(
                         InvocationExpression(
                             MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(_Reader), IdentifierName("AtEndOfStream"))),
-                            GotoStatement(SyntaxKind.GotoStatement, IdentifierName(_EndLabel))));
+                            GotoStatement(SyntaxKind.GotoStatement, IdentifierName(_DoneLabel))));
 
                 _SkipAssignmentLabel = Identifier($"SkipAssignment{node.FieldIndex}");
                 var assignmentCompleted = Identifier($"AssignmentComplete{node.FieldIndex}");

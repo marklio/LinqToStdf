@@ -9,16 +9,6 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace StdfRecordGenerator
 {
-    class Foo
-    {
-        void Bar(int intParam)
-        {
-            var baz = new global::System.Collections.Generic.Dictionary<int, string>();
-            var count = baz.Count;
-        TestLabel:
-            intParam.CompareTo(56);
-        }
-    }
     static class Extensions
     {
         public static bool TryGetFieldLayoutAttribute(this GeneratorSyntaxContext context, [NotNullWhen(true)] out AttributeSyntax? attribute)
@@ -107,9 +97,29 @@ namespace StdfRecordGenerator
         {
             return (int)argument.GetObject(semanticModel);
         }
-        public static string GetFieldType(this AttributeArgumentSyntax argument, SemanticModel semanticModel)
+        public static FieldTypes GetFieldType(this AttributeArgumentSyntax argument, SemanticModel semanticModel)
         {
-            return "";
+            return argument.Expression switch
+            {
+                TypeOfExpressionSyntax toe => toe.Type switch
+                {
+                    PredefinedTypeSyntax pdt => pdt.Keyword.Kind() switch
+                    {
+                        SyntaxKind.IntKeyword => FieldTypes.I4,
+                        SyntaxKind.UIntKeyword => FieldTypes.U4,
+                        SyntaxKind.ShortKeyword => FieldTypes.I2,
+                        SyntaxKind.UShortKeyword => FieldTypes.U2,
+                        SyntaxKind.ByteKeyword => FieldTypes.U1,
+                        SyntaxKind.SByteKeyword => FieldTypes.I1,
+                        SyntaxKind.FloatKeyword => FieldTypes.R4,
+                        SyntaxKind.DoubleKeyword => FieldTypes.R8,
+                        SyntaxKind.StringKeyword => FieldTypes.String,
+                        _ => throw new InvalidOperationException($"Unsupported type {pdt.Keyword}"),
+                    },
+                    _ => throw new InvalidOperationException($"Unsupported type {toe.Type}"),
+                },
+                _ => throw new InvalidOperationException($"Unsupported expression type {argument.Expression}"),
+            };
         }
         public static string GetString(this AttributeArgumentSyntax argument, SemanticModel semanticModel)
         {
@@ -163,16 +173,18 @@ namespace StdfRecordGenerator
 
     class RecordSyntaxReceiver : ISyntaxContextReceiver
     {
-        public ConcurrentDictionary<ClassDeclarationSyntax, List<FieldLayoutDefinition>> RecordClasses { get; } = new();
+        public ConcurrentDictionary<ITypeSymbol, List<FieldLayoutDefinition>> RecordClasses { get; } = new();
 
         public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
         {
             if (context.TryGetFieldLayoutAttribute(out var attribute))
             {
                 var parent = attribute.Parent?.Parent as ClassDeclarationSyntax ?? throw new InvalidOperationException("");
+                var typeInfo = context.SemanticModel.GetTypeInfo(parent);
+                if (typeInfo.Type is null) throw new InvalidOperationException($"Could not get type for {parent}");
 
                 var definition = GetFieldLayoutDefinitionFromAttribute(attribute, context.SemanticModel);
-                RecordClasses.AddOrUpdate(parent, key => new List<FieldLayoutDefinition> { definition }, (key, list) => { list.Add(definition); return list; });
+                RecordClasses.AddOrUpdate(typeInfo.Type ?? throw new InvalidOperationException("No type available"), key => new List<FieldLayoutDefinition> { definition }, (key, list) => { list.Add(definition); return list; });
             }
         }
 
