@@ -16,14 +16,21 @@ namespace StdfRecordGenerator
         static ConverterEmittingVisitor()
         {
             _LinqToStdfNamespace = AliasQualifiedName(
-                    IdentifierName(Token(SyntaxKind.GlobalKeyword)),
+                    _GlobalNamespace,
                     IdentifierName("LinqToStdf"));
+            _SystemNamespace = AliasQualifiedName(
+                    _GlobalNamespace,
+                    IdentifierName("System"));
+            _SystemCollectionsNamespace = QualifiedName(
+                _SystemNamespace,
+                IdentifierName("Collections"));
             _UnknownRecordType = QualifiedName(
                 _LinqToStdfNamespace,
                 IdentifierName("UnknownRecord"));
         }
-        public ConverterEmittingVisitor(TypeSyntax recordType, bool enableLog =false)
+        public ConverterEmittingVisitor(string recordTypeName, TypeSyntax recordType, bool enableLog =false)
         {
+            _RecordTypeName = recordTypeName;
             _RecordType = recordType;
             EnableLog = enableLog;
             _ActiveBlock = new BlockScope(this);
@@ -31,6 +38,7 @@ namespace StdfRecordGenerator
         }
         public bool EnableLog { get; }
 
+        readonly string _RecordTypeName;
         readonly TypeSyntax _RecordType;
         readonly static SyntaxToken _ConcreteRecordLocal = Identifier("record");
         readonly static SyntaxToken _Reader = Identifier("reader");
@@ -98,15 +106,32 @@ namespace StdfRecordGenerator
         }
         readonly BlockScope _ActiveBlock;
 
+        static readonly IdentifierNameSyntax _GlobalNamespace = IdentifierName(Token(SyntaxKind.GlobalKeyword));
+        static readonly AliasQualifiedNameSyntax _SystemNamespace;
+        static readonly QualifiedNameSyntax _SystemCollectionsNamespace;
         static readonly AliasQualifiedNameSyntax _LinqToStdfNamespace;
         static readonly TypeSyntax _UnknownRecordType;
         static readonly IdentifierNameSyntax _UnknownRecordParameter = IdentifierName("unknownRecord");
-
+        static readonly IdentifierNameSyntax _VarType = IdentifierName(
+                                            Identifier(
+                                                TriviaList(),
+                                                SyntaxKind.VarKeyword,
+                                                "var",
+                                                "var",
+                                                TriviaList()));
         bool _InFieldAssignmentBlock = false;
         SyntaxToken _SkipAssignmentLabel;
         readonly Dictionary<int, SyntaxToken> _FieldLocals = new Dictionary<int, SyntaxToken>();
 
         SyntaxToken? _FieldLocal = null;
+
+        public MethodDeclarationSyntax GetConverterMethod()
+        {
+            _ActiveBlock.Dispose();
+            return MethodDeclaration(_RecordType, $"ConvertTo{_RecordTypeName}")
+                .WithParameterList(ParameterList(SeparatedList<ParameterSyntax>(NodeOrTokenList(Parameter(_UnknownRecordParameter.Identifier).WithType(_UnknownRecordType)))))
+                .WithBody(_ActiveBlock.GetBlock());
+        }
 
         void Log(string msg)
         {
@@ -139,13 +164,14 @@ namespace StdfRecordGenerator
             _ActiveBlock.AddStatement(
                 LocalDeclarationStatement(
                     VariableDeclaration(
-                        IdentifierName(Token(SyntaxKind.VarKeyword)),
-                        SeparatedList<VariableDeclaratorSyntax>(new[] {
+                        _VarType,
+                        SeparatedList<VariableDeclaratorSyntax>(NodeOrTokenList(
                             VariableDeclarator(
                                 _ConcreteRecordLocal,
                                 argumentList: null,
                                 initializer: EqualsValueClause(
-                                    ObjectCreationExpression(_RecordType)))}))));
+                                    ObjectCreationExpression(_RecordType)
+                                    .WithArgumentList(ArgumentList()))))))));
             return node;
         }
         public override CodeNode VisitEnsureCompat(EnsureCompatNode node)
@@ -165,7 +191,8 @@ namespace StdfRecordGenerator
             _ActiveBlock.AddStatement(
                 LocalDeclarationStatement(
                     VariableDeclaration(
-                        IdentifierName(Token(SyntaxKind.VarKeyword)),
+                        _VarType
+                        ,
                         SeparatedList<VariableDeclaratorSyntax>(new[] {
                             VariableDeclarator(
                                 _Reader,
@@ -297,7 +324,7 @@ namespace StdfRecordGenerator
                         IdentifierName(_FieldLocal.Value),
                         InvocationExpression(
                             MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(_Reader), IdentifierName("ReadString")),
-                            ArgumentList(SeparatedList<ArgumentSyntax>(NodeOrTokenList(Literal(node.Length))))))));
+                            ArgumentList(SingletonSeparatedList<ArgumentSyntax>(Argument(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(node.Length)))))))));
             return node;
         }
 
@@ -319,6 +346,7 @@ namespace StdfRecordGenerator
                     FieldTypes.R8 => "ReadDouble",
                     FieldTypes.DateTime => "ReadDateTime",
                     FieldTypes.BitField => "ReadBitArray",
+                    FieldTypes.String => "ReadString",
                     _ => throw new InvalidOperationException($"Unsupported type {node.Type}"),
                 },
                 _ => node.Type switch
@@ -339,7 +367,7 @@ namespace StdfRecordGenerator
             Log($"Reading with {readTypeMethod}.");
             var args = node.LengthIndex is null ?
                 ArgumentList() :
-                ArgumentList(SeparatedList<ArgumentSyntax>(NodeOrTokenList(_FieldLocals[node.LengthIndex.Value])));
+                ArgumentList(SeparatedList<ArgumentSyntax>(NodeOrTokenList(Argument(IdentifierName(_FieldLocals[node.LengthIndex.Value])))));
             _ActiveBlock.AddStatement(
                 ExpressionStatement(
                     AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
@@ -349,6 +377,40 @@ namespace StdfRecordGenerator
                             args))));
             return node;
         }
+        static readonly SyntaxList<ArrayRankSpecifierSyntax> _EmptyArrayRank = SingletonList<ArrayRankSpecifierSyntax>(ArrayRankSpecifier(SingletonSeparatedList<ExpressionSyntax>(OmittedArraySizeExpression())));
+        TypeSyntax GetTypeFor(FieldTypes fieldType, bool isArray) => isArray switch {
+            true => fieldType switch
+            {
+                FieldTypes.I1 => ArrayType(PredefinedType(Token(SyntaxKind.SByteKeyword))).WithRankSpecifiers(_EmptyArrayRank),
+                FieldTypes.I2 => ArrayType(PredefinedType(Token(SyntaxKind.ShortKeyword))).WithRankSpecifiers(_EmptyArrayRank),
+                FieldTypes.I4 => ArrayType(PredefinedType(Token(SyntaxKind.IntKeyword))).WithRankSpecifiers(_EmptyArrayRank),
+                FieldTypes.Nibble => ArrayType(PredefinedType(Token(SyntaxKind.ByteKeyword))).WithRankSpecifiers(_EmptyArrayRank),
+                FieldTypes.R4 => ArrayType(PredefinedType(Token(SyntaxKind.FloatKeyword))).WithRankSpecifiers(_EmptyArrayRank),
+                FieldTypes.R8 => ArrayType(PredefinedType(Token(SyntaxKind.DoubleKeyword))).WithRankSpecifiers(_EmptyArrayRank),
+                FieldTypes.U1 => ArrayType(PredefinedType(Token(SyntaxKind.ByteKeyword))).WithRankSpecifiers(_EmptyArrayRank),
+                FieldTypes.U2 => ArrayType(PredefinedType(Token(SyntaxKind.UShortKeyword))).WithRankSpecifiers(_EmptyArrayRank),
+                FieldTypes.U4 => ArrayType(PredefinedType(Token(SyntaxKind.UIntKeyword))).WithRankSpecifiers(_EmptyArrayRank),
+                _=> throw new InvalidOperationException($"Unsupported array field type {fieldType}")
+            },
+            false => fieldType switch
+            {
+                FieldTypes.BitField => QualifiedName(_SystemCollectionsNamespace, IdentifierName("BitArray")),
+                FieldTypes.LongBitField => QualifiedName(_SystemCollectionsNamespace, IdentifierName("BitArray")),
+                FieldTypes.DateTime => QualifiedName(_SystemNamespace, IdentifierName("DateTime")),
+                FieldTypes.I1 => PredefinedType(Token(SyntaxKind.SByteKeyword)),
+                FieldTypes.I2 => PredefinedType(Token(SyntaxKind.ShortKeyword)),
+                FieldTypes.I4 => PredefinedType(Token(SyntaxKind.IntKeyword)),
+                FieldTypes.U1 => PredefinedType(Token(SyntaxKind.ByteKeyword)),
+                FieldTypes.U2 => PredefinedType(Token(SyntaxKind.UShortKeyword)),
+                FieldTypes.U4 => PredefinedType(Token(SyntaxKind.UIntKeyword)),
+                FieldTypes.R4 => PredefinedType(Token(SyntaxKind.FloatKeyword)),
+                FieldTypes.R8 => PredefinedType(Token(SyntaxKind.DoubleKeyword)),
+                FieldTypes.String => PredefinedType(Token(SyntaxKind.StringKeyword)),
+                _ => throw new InvalidOperationException($"Unsupported field type {fieldType}")
+            },
+        };
+
+
         public override CodeNode VisitFieldAssignment(FieldAssignmentNode node)
         {
             //ensure we're in a FieldAssignmentBlock
@@ -358,15 +420,18 @@ namespace StdfRecordGenerator
             }
             _FieldLocal = Identifier($"field{node.FieldIndex}");
             _FieldLocals[node.FieldIndex] = _FieldLocal.Value;
+            _ActiveBlock.AddStatement(
+                LocalDeclarationStatement(
+                    VariableDeclaration(GetTypeFor(node.Type, node.IsArray))
+                    .WithVariables(SingletonSeparatedList<VariableDeclaratorSyntax>(VariableDeclarator(_FieldLocal.Value)))));
             try
             {
                 Log($"Handling field {node.FieldIndex}.");
                 //generate the end of stream check
                 _ActiveBlock.AddStatement(
                     IfStatement(
-                        InvocationExpression(
-                            MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(_Reader), IdentifierName("AtEndOfStream"))),
-                            GotoStatement(SyntaxKind.GotoStatement, IdentifierName(_DoneLabel))));
+                        MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(_Reader), IdentifierName("AtEndOfStream")),
+                        GotoStatement(SyntaxKind.GotoStatement, IdentifierName(_DoneLabel))));
 
                 _SkipAssignmentLabel = Identifier($"SkipAssignment{node.FieldIndex}");
                 var assignmentCompleted = Identifier($"AssignmentComplete{node.FieldIndex}");
@@ -388,8 +453,6 @@ namespace StdfRecordGenerator
                 Log($"Assignment skipped.");
                 _ActiveBlock.PrependLabel(assignmentCompleted);
                 Log($"Done with {node.FieldIndex}.");
-
-                _FieldLocal = null;
 
                 return node;
             }

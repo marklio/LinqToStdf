@@ -6,6 +6,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Text;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace StdfRecordGenerator
 {
@@ -116,6 +119,15 @@ namespace StdfRecordGenerator
                         SyntaxKind.StringKeyword => FieldTypes.String,
                         _ => throw new InvalidOperationException($"Unsupported type {pdt.Keyword}"),
                     },
+                    IdentifierNameSyntax identifierName => semanticModel.GetTypeInfo(identifierName).Type switch
+                    {
+                        ITypeSymbol type => type.GetFullName() switch
+                        {
+                            "System.Collections.BitArray" => FieldTypes.BitField,
+                            _ => throw new InvalidOperationException($"Unsupported type {identifierName}"),
+                        },
+                        _ => throw new InvalidOperationException($"Unsupported type {identifierName}"),
+                    },
                     _ => throw new InvalidOperationException($"Unsupported type {toe.Type}"),
                 },
                 _ => throw new InvalidOperationException($"Unsupported expression type {argument.Expression}"),
@@ -156,35 +168,44 @@ namespace StdfRecordGenerator
             var recordReceiver = context.SyntaxContextReceiver as RecordSyntaxReceiver ?? throw new InvalidOperationException("Could not get the record receiver.");
             //at this point, we have the records and field layout attributes, we need to convert to definitions
 
-            foreach (var record in recordReceiver.RecordClasses)
-            {
-                var generator = new ConverterGenerator(record.Key, record.Value);
-                //new ConverterEmittingVisitor()
-                //context.AddSource($"{record.Key.Identifier}Converter", new StringBuilderTe
-            }
+
+            var converterClass = ClassDeclaration("Converters")
+                .WithMembers(List<MemberDeclarationSyntax>(from record in recordReceiver.RecordClasses
+                                                           where record.Key.GetFullName() != "LinqToStdf.Records.V4.Plr" //TODO: take care of this with a marking or something?
+                                                           where record.Key.GetFullName() != "LinqToStdf.Records.V4.BinSummaryRecord" //TODO: take care of this with a marking or something?
+                                                           let generator = new ConverterGenerator(record.Key, record.Value)
+                                                           select generator.GenerateConverter().WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))));
+
+            var source = CompilationUnit()
+                .WithMembers(SingletonList<MemberDeclarationSyntax>(NamespaceDeclaration(QualifiedName(IdentifierName("LinqToStdf"), IdentifierName("RecordConverting")))
+                    .WithMembers(SingletonList<MemberDeclarationSyntax>(converterClass))));
+
+            var sourceText = source.NormalizeWhitespace().GetText(Encoding.UTF8);
+            context.AddSource("Converters", sourceText);
         }
 
         public void Initialize(GeneratorInitializationContext context)
         {
-            System.Diagnostics.Debugger.Launch();
+            //System.Diagnostics.Debugger.Launch();
             context.RegisterForSyntaxNotifications(() => new RecordSyntaxReceiver());
         }
     }
 
     class RecordSyntaxReceiver : ISyntaxContextReceiver
     {
-        public ConcurrentDictionary<ITypeSymbol, List<FieldLayoutDefinition>> RecordClasses { get; } = new();
+        public ConcurrentDictionary<INamedTypeSymbol, List<FieldLayoutDefinition>> RecordClasses { get; } = new();
 
         public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
         {
             if (context.TryGetFieldLayoutAttribute(out var attribute))
             {
                 var parent = attribute.Parent?.Parent as ClassDeclarationSyntax ?? throw new InvalidOperationException("");
-                var typeInfo = context.SemanticModel.GetTypeInfo(parent);
-                if (typeInfo.Type is null) throw new InvalidOperationException($"Could not get type for {parent}");
 
+                //TODO: we need to propagate attributes appropriately
+                var namedTypeSymbol = context.SemanticModel.GetDeclaredSymbol(parent);
+                if (namedTypeSymbol is null) throw new InvalidOperationException("declared symbol is null");
                 var definition = GetFieldLayoutDefinitionFromAttribute(attribute, context.SemanticModel);
-                RecordClasses.AddOrUpdate(typeInfo.Type ?? throw new InvalidOperationException("No type available"), key => new List<FieldLayoutDefinition> { definition }, (key, list) => { list.Add(definition); return list; });
+                RecordClasses.AddOrUpdate(namedTypeSymbol, key => new List<FieldLayoutDefinition> { definition }, (key, list) => { list.Add(definition); return list; });
             }
         }
 
@@ -253,8 +274,7 @@ namespace StdfRecordGenerator
                         layout = layout with { FieldIndex = argument.GetIntLiteral(semanticModel) };
                         break;
                     case "FieldType":
-                        layout = layout with { FieldType = argument.GetFieldType(semanticModel) };
-                        break;
+                        throw new InvalidOperationException("DependencyProperties should not specify a type");
                     case "MissingValue":
                         layout = layout with { MissingValue = argument.GetObject(semanticModel) };
                         break;

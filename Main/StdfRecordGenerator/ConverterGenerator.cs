@@ -14,6 +14,7 @@ namespace StdfRecordGenerator
 {
     enum FieldTypes
     {
+        None = 0,
         U1,
         U2,
         U4,
@@ -34,7 +35,7 @@ namespace StdfRecordGenerator
     /// </summary>
     class ConverterGenerator
     {
-        readonly ITypeSymbol _RecordClass;
+        readonly INamedTypeSymbol _RecordClass;
         readonly List<FieldLayoutDefinition> _FieldDefinitions;
 
         /// <summary>
@@ -43,7 +44,7 @@ namespace StdfRecordGenerator
         /// <param name="ilgen">The il generator to use</param>
         /// <param name="type">The type we're converting to</param>
         /// <param name="fields">The fields we should parse (null if we should parse everything, empty if we shouldn't parse at all)</param>
-        public ConverterGenerator(ITypeSymbol recordClass, List<FieldLayoutDefinition> fieldDefinitions)
+        public ConverterGenerator(INamedTypeSymbol recordClass, List<FieldLayoutDefinition> fieldDefinitions)
         {
             _RecordClass = recordClass;
             _FieldDefinitions = (from def in fieldDefinitions orderby def.FieldIndex select def).ToList();
@@ -56,7 +57,7 @@ namespace StdfRecordGenerator
         /// <summary>
         /// Does the work of generating the appropriate code.
         /// </summary>
-        internal void GenerateConverter()
+        internal MethodDeclarationSyntax GenerateConverter()
         {
             //generate the assignment nodes
             var assignments = from field in _FieldDefinitions
@@ -81,9 +82,10 @@ namespace StdfRecordGenerator
                 new ReturnRecordNode());
 
             //visit the block with an emitting visitor
-            new ConverterEmittingVisitor(_RecordClass.GetTypeSyntax(),ConverterLog.IsLogging).Visit(block);
+            var visitor = new ConverterEmittingVisitor(_RecordClass.Name, _RecordClass.GetTypeSyntax(), ConverterLog.IsLogging);
+            visitor.Visit(block);
+            return visitor.GetConverterMethod();
         }
-
         CodeNode GenerateAssignment(FieldLayoutDefinition fieldDefinition)
         {
             var fieldType = fieldDefinition.FieldType ?? throw new InvalidOperationException("The field type for assignment is null");
@@ -144,7 +146,7 @@ namespace StdfRecordGenerator
                 assignmentNodes.Add(new AssignFieldToPropertyNode(fieldType, fieldDefinition.RecordProperty));
                 assignmentBlock = new BlockNode(assignmentNodes);
             }
-            return new FieldAssignmentNode(fieldType, fieldDefinition.FieldIndex ?? throw new InvalidOperationException("FieldIndex is null"), readerNode, assignmentBlock);
+            return new FieldAssignmentNode(fieldType, isArray: false, fieldDefinition.FieldIndex ?? throw new InvalidOperationException("FieldIndex is null"), readerNode, assignmentBlock);
         }
 
         CodeNode GenerateArrayAssignment(ArrayFieldLayoutDefinition fieldDefinition)
@@ -164,7 +166,7 @@ namespace StdfRecordGenerator
                 assignmentBlock = new BlockNode(new AssignFieldToPropertyNode(fieldType, fieldDefinition.RecordProperty));
             }
             //return a FieldAssignmentNode.  Note we're combining the parseConditionNode and the readNode.
-            return new FieldAssignmentNode(fieldType, fieldDefinition.FieldIndex ?? throw new InvalidOperationException("FieldIndex is null"), new BlockNode(parseConditionNode, readNode), assignmentBlock);
+            return new FieldAssignmentNode(fieldType, isArray: true, fieldDefinition.FieldIndex ?? throw new InvalidOperationException("FieldIndex is null"), new BlockNode(parseConditionNode, readNode), assignmentBlock);
         }
     }
 }

@@ -159,14 +159,16 @@ namespace StdfRecordGenerator
     }
     class FieldAssignmentNode : CodeNode
     {
-        public FieldAssignmentNode(FieldTypes type, int index, CodeNode readNode, BlockNode? assignmentBlock)
+        public FieldAssignmentNode(FieldTypes type, bool isArray, int index, CodeNode readNode, BlockNode? assignmentBlock)
         {
             Type = type;
+            IsArray = isArray;
             FieldIndex = index;
             ReadNode = readNode;
             AssignmentBlock = assignmentBlock;
         }
         public FieldTypes Type { get; }
+        public bool IsArray { get; }
         public int FieldIndex { get; }
         public CodeNode ReadNode { get; }
         public BlockNode? AssignmentBlock { get; }

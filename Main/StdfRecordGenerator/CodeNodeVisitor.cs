@@ -75,7 +75,7 @@ namespace StdfRecordGenerator
             if (visitedReadNode == node.ReadNode && visitedConditionalsBlock == node.AssignmentBlock) return node;
             else
             {
-                return new FieldAssignmentNode(node.Type, node.FieldIndex, visitedReadNode, visitedConditionalsBlock switch
+                return new FieldAssignmentNode(node.Type, node.IsArray, node.FieldIndex, visitedReadNode, visitedConditionalsBlock switch
                 {
                     null => null,
                     BlockNode blockNode => blockNode,

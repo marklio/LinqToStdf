@@ -33,8 +33,8 @@ namespace StdfRecordGenerator
     record FieldLayoutDefinition(int? FieldIndex = null, FieldTypes? FieldType = null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true);
     record ArrayFieldLayoutDefinition(int? FieldIndex = null, FieldTypes? FieldType = null, int? ArrayLengthFieldIndex=null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true, bool AllowTruncation = false)
         : FieldLayoutDefinition(FieldIndex, FieldType, RecordProperty, IsOptional, MissingValue, PersistMissingValue);
-    record DependencyPropertyDefinition(int? FieldIndex = null, FieldTypes? FieldType = null, int? DependentOnIndex=null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true)
-        : FieldLayoutDefinition(FieldIndex, FieldType, RecordProperty, IsOptional, MissingValue, PersistMissingValue);
+    record DependencyPropertyDefinition(int? FieldIndex = null, int? DependentOnIndex=null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true)
+        : FieldLayoutDefinition(FieldIndex, FieldTypes.None, RecordProperty, IsOptional, MissingValue, PersistMissingValue);
     record FlaggedFieldLayoutDefinition(int? FieldIndex = null, FieldTypes? FieldType = null, int? FlagIndex=null, byte? FlagMask=null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true)
         : FieldLayoutDefinition(FieldIndex, FieldType, RecordProperty, IsOptional, MissingValue, PersistMissingValue);
     record NibbleArrayFieldLayoutDefinition(int? FieldIndex = null, int? ArrayLengthFieldIndex=null, string? RecordProperty = null, bool IsOptional = false, object? MissingValue = null, bool PersistMissingValue = true, bool AllowTruncation = false)
