@@ -42,13 +42,13 @@ namespace StdfRecordGenerator
         readonly TypeSyntax _RecordType;
         readonly static SyntaxToken _ConcreteRecordLocal = Identifier("record");
         readonly static SyntaxToken _Reader = Identifier("reader");
-        readonly static SyntaxToken _DoneLabel = Identifier("DoneAssigning");
+        readonly static LazyLabel _DoneLabel = new LazyLabel("DoneAssigning");
 
         class BlockScope : IDisposable
         {
             bool _Disposed = false;
             readonly List<StatementSyntax> _Statements = new();
-            readonly Queue<SyntaxToken> _PendingLabels = new();
+            readonly Queue<LazyLabel> _PendingLabels = new();
             readonly object _Parent;
             BlockScope(BlockScope parent)
             {
@@ -75,12 +75,15 @@ namespace StdfRecordGenerator
                 while (_PendingLabels.Count > 0)
                 {
                     var label = _PendingLabels.Dequeue();
-                    statement = LabeledStatement(label, statement);
+                    if (label.IsUsed)
+                    {
+                        statement = LabeledStatement(label.GetSyntaxToken(), statement);
+                    }
                 }
                 _Statements.Add(statement);
             }
 
-            public void PrependLabel(SyntaxToken label)
+            public void PrependLabel(LazyLabel label)
             {
                 if (_Disposed) throw new ObjectDisposedException(nameof(BlockScope));
                 _PendingLabels.Enqueue(label);
@@ -98,7 +101,10 @@ namespace StdfRecordGenerator
                     while (_PendingLabels.Count > 0)
                     {
                         var label = _PendingLabels.Dequeue();
-                        statement = LabeledStatement(label, statement);
+                        if (label.IsUsed)
+                        {
+                            statement = LabeledStatement(label.GetSyntaxToken(), statement);
+                        }
                     }
                 }
                 _Disposed = true;
@@ -119,8 +125,23 @@ namespace StdfRecordGenerator
                                                 "var",
                                                 "var",
                                                 TriviaList()));
+
+        class LazyLabel
+        {
+            SyntaxToken? _LabelToken;
+            public LazyLabel(string label)
+            {
+                Label = label;
+            }
+            public string Label { get; }
+
+            public SyntaxToken GetSyntaxToken() => _LabelToken ??= Identifier(Label);
+
+            public bool IsUsed => _LabelToken is null;
+        }
+
         bool _InFieldAssignmentBlock = false;
-        SyntaxToken _SkipAssignmentLabel;
+        LazyLabel? _SkipAssignmentLabel;
         readonly Dictionary<int, SyntaxToken> _FieldLocals = new Dictionary<int, SyntaxToken>();
 
         SyntaxToken? _FieldLocal = null;
@@ -191,8 +212,7 @@ namespace StdfRecordGenerator
             _ActiveBlock.AddStatement(
                 LocalDeclarationStatement(
                     VariableDeclaration(
-                        _VarType
-                        ,
+                        _VarType,
                         SeparatedList<VariableDeclaratorSyntax>(new[] {
                             VariableDeclarator(
                                 _Reader,
@@ -419,6 +439,7 @@ namespace StdfRecordGenerator
                 throw new InvalidOperationException("Field assignment must occur within a FieldAssignmentBlockNode");
             }
             _FieldLocal = Identifier($"field{node.FieldIndex}");
+            _SkipAssignmentLabel = new LazyLabel($"SkipAssignment{node.FieldIndex}");
             _FieldLocals[node.FieldIndex] = _FieldLocal.Value;
             _ActiveBlock.AddStatement(
                 LocalDeclarationStatement(
@@ -431,10 +452,9 @@ namespace StdfRecordGenerator
                 _ActiveBlock.AddStatement(
                     IfStatement(
                         MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(_Reader), IdentifierName("AtEndOfStream")),
-                        GotoStatement(SyntaxKind.GotoStatement, IdentifierName(_DoneLabel))));
+                        GotoStatement(SyntaxKind.GotoStatement, IdentifierName(_DoneLabel.GetSyntaxToken()))));
 
-                _SkipAssignmentLabel = Identifier($"SkipAssignment{node.FieldIndex}");
-                var assignmentCompleted = Identifier($"AssignmentComplete{node.FieldIndex}");
+                var assignmentCompleted = new LazyLabel($"AssignmentComplete{node.FieldIndex}");
 
                 //visit any read node there is
                 Visit(node.ReadNode);
@@ -448,7 +468,7 @@ namespace StdfRecordGenerator
                 {
                     Log($"No assignment for {node.FieldIndex}.");
                 }
-                _ActiveBlock.AddStatement(GotoStatement(SyntaxKind.GotoStatement, IdentifierName(assignmentCompleted)));
+                _ActiveBlock.AddStatement(GotoStatement(SyntaxKind.GotoStatement, IdentifierName(assignmentCompleted.GetSyntaxToken())));
                 _ActiveBlock.PrependLabel(_SkipAssignmentLabel);
                 Log($"Assignment skipped.");
                 _ActiveBlock.PrependLabel(assignmentCompleted);
@@ -459,11 +479,12 @@ namespace StdfRecordGenerator
             finally
             {
                 _FieldLocal = null;
+                _SkipAssignmentLabel = null;
             }
         }
         public override CodeNode VisitSkipAssignmentIfFlagSet(SkipAssignmentIfFlagSetNode node)
         {
-            if (_FieldLocal is null) throw new InvalidOperationException("SkipAssignmentIfFlagSetNode must be in a FieldAssignmentNode");
+            if (_FieldLocal is null || _SkipAssignmentLabel is null) throw new InvalidOperationException("SkipAssignmentIfFlagSetNode must be in a FieldAssignmentNode");
             Log($"Handling conditional assignment based on field {node.FlagFieldIndex}, mask 0x{node.FlagMask:x}.");
             //get the flag field
             var flag = _FieldLocals[node.FlagFieldIndex];
@@ -481,12 +502,12 @@ namespace StdfRecordGenerator
                     LiteralExpression(
                         SyntaxKind.NumericLiteralExpression,
                         Literal(0))),
-                GotoStatement(SyntaxKind.GotoStatement, IdentifierName(_SkipAssignmentLabel))));
+                GotoStatement(SyntaxKind.GotoStatement, IdentifierName(_SkipAssignmentLabel.GetSyntaxToken()))));
             return node;
         }
         public override CodeNode VisitSkipAssignmentIfMissingValue(SkipAssignmentIfMissingValueNode node)
         {
-            if (_FieldLocal is null) throw new InvalidOperationException("SkipAssignmentIfMissingValueNode must be in a FieldAssignmentNode");
+            if (_FieldLocal is null || _SkipAssignmentLabel is null) throw new InvalidOperationException("SkipAssignmentIfMissingValueNode must be in a FieldAssignmentNode");
             Log($"Handling conditional assignment based on missing value {node.MissingValue}.");
             var literal = node.MissingValue switch
             {
@@ -505,7 +526,7 @@ namespace StdfRecordGenerator
                         SingletonSeparatedList(
                             Argument(
                                 LiteralExpression(literal.Kind(), literal))))),
-                GotoStatement(SyntaxKind.GotoStatement, IdentifierName(_SkipAssignmentLabel))));
+                GotoStatement(SyntaxKind.GotoStatement, IdentifierName(_SkipAssignmentLabel.GetSyntaxToken()))));
             return node;
         }
         public override CodeNode VisitAssignFieldToProperty(AssignFieldToPropertyNode node)
@@ -523,7 +544,7 @@ namespace StdfRecordGenerator
         }
         public override CodeNode VisitSkipArrayAssignmentIfLengthIsZero(SkipArrayAssignmentIfLengthIsZeroNode node)
         {
-            if (_FieldLocal is null) throw new InvalidOperationException("SkipArrayAssignmentIfLengthIsZeroNode must be in a FieldAssignmentNode");
+            if (_FieldLocal is null || _SkipAssignmentLabel is null) throw new InvalidOperationException("SkipArrayAssignmentIfLengthIsZeroNode must be in a FieldAssignmentNode");
             Log($"Handling conditional assignment based zero length array.");
             //If the length field is zero, skip past assignment
             var lengthLocal = _FieldLocals[node.LengthIndex];
@@ -531,7 +552,7 @@ namespace StdfRecordGenerator
                 BinaryExpression(SyntaxKind.EqualsExpression,
                     IdentifierName(lengthLocal),
                     LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(0))),
-                GotoStatement(SyntaxKind.GotoStatement, IdentifierName(_SkipAssignmentLabel))));
+                GotoStatement(SyntaxKind.GotoStatement, IdentifierName(_SkipAssignmentLabel.GetSyntaxToken()))));
             return node;
         }
     }
