@@ -56,6 +56,7 @@ namespace LinqToStdf.Indexing {
                 //TODO: optimized search (binary?)
                 var candidate = _ExtentsList.TakeWhile(e => e.StartOffset <= record.Offset)
                     .LastOrDefault();
+                if (candidate is null) return null;
                 return (candidate.EndOffset >= record.Offset) ? candidate : null;
             }
 

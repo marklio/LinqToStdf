@@ -42,7 +42,7 @@ namespace StdfRecordGenerator
         readonly TypeSyntax _RecordType;
         readonly static SyntaxToken _ConcreteRecordLocal = Identifier("record");
         readonly static SyntaxToken _Reader = Identifier("reader");
-        readonly static LazyLabel _DoneLabel = new LazyLabel("DoneAssigning");
+        readonly static LazyLabel _DoneLabel = new ("DoneAssigning");
 
         class BlockScope : IDisposable
         {
@@ -67,7 +67,7 @@ namespace StdfRecordGenerator
                 _ => throw new InvalidOperationException("Something bizarre assigned to the "),
             };
 
-            public BlockScope CreateChildScope() => new BlockScope(this);
+            public BlockScope CreateChildScope() => new (this);
 
             public void AddStatement(StatementSyntax statement)
             {
@@ -106,6 +106,8 @@ namespace StdfRecordGenerator
                             statement = LabeledStatement(label.GetSyntaxToken(), statement);
                         }
                     }
+                    //TODO: conditionally based on use?
+                    _Statements.Add(statement);
                 }
                 _Disposed = true;
             }
@@ -137,12 +139,12 @@ namespace StdfRecordGenerator
 
             public SyntaxToken GetSyntaxToken() => _LabelToken ??= Identifier(Label);
 
-            public bool IsUsed => _LabelToken is null;
+            public bool IsUsed => _LabelToken is not null;
         }
 
         bool _InFieldAssignmentBlock = false;
         LazyLabel? _SkipAssignmentLabel;
-        readonly Dictionary<int, SyntaxToken> _FieldLocals = new Dictionary<int, SyntaxToken>();
+        readonly Dictionary<int, SyntaxToken> _FieldLocals = new();
 
         SyntaxToken? _FieldLocal = null;
 
@@ -401,21 +403,21 @@ namespace StdfRecordGenerator
         TypeSyntax GetTypeFor(FieldTypes fieldType, bool isArray) => isArray switch {
             true => fieldType switch
             {
-                FieldTypes.I1 => ArrayType(PredefinedType(Token(SyntaxKind.SByteKeyword))).WithRankSpecifiers(_EmptyArrayRank),
-                FieldTypes.I2 => ArrayType(PredefinedType(Token(SyntaxKind.ShortKeyword))).WithRankSpecifiers(_EmptyArrayRank),
-                FieldTypes.I4 => ArrayType(PredefinedType(Token(SyntaxKind.IntKeyword))).WithRankSpecifiers(_EmptyArrayRank),
-                FieldTypes.Nibble => ArrayType(PredefinedType(Token(SyntaxKind.ByteKeyword))).WithRankSpecifiers(_EmptyArrayRank),
-                FieldTypes.R4 => ArrayType(PredefinedType(Token(SyntaxKind.FloatKeyword))).WithRankSpecifiers(_EmptyArrayRank),
-                FieldTypes.R8 => ArrayType(PredefinedType(Token(SyntaxKind.DoubleKeyword))).WithRankSpecifiers(_EmptyArrayRank),
-                FieldTypes.U1 => ArrayType(PredefinedType(Token(SyntaxKind.ByteKeyword))).WithRankSpecifiers(_EmptyArrayRank),
-                FieldTypes.U2 => ArrayType(PredefinedType(Token(SyntaxKind.UShortKeyword))).WithRankSpecifiers(_EmptyArrayRank),
-                FieldTypes.U4 => ArrayType(PredefinedType(Token(SyntaxKind.UIntKeyword))).WithRankSpecifiers(_EmptyArrayRank),
+                FieldTypes.I1 => NullableType(ArrayType(PredefinedType(Token(SyntaxKind.SByteKeyword))).WithRankSpecifiers(_EmptyArrayRank)),
+                FieldTypes.I2 => NullableType(ArrayType(PredefinedType(Token(SyntaxKind.ShortKeyword))).WithRankSpecifiers(_EmptyArrayRank)),
+                FieldTypes.I4 => NullableType(ArrayType(PredefinedType(Token(SyntaxKind.IntKeyword))).WithRankSpecifiers(_EmptyArrayRank)),
+                FieldTypes.Nibble => NullableType(ArrayType(PredefinedType(Token(SyntaxKind.ByteKeyword))).WithRankSpecifiers(_EmptyArrayRank)),
+                FieldTypes.R4 => NullableType(ArrayType(PredefinedType(Token(SyntaxKind.FloatKeyword))).WithRankSpecifiers(_EmptyArrayRank)),
+                FieldTypes.R8 => NullableType(ArrayType(PredefinedType(Token(SyntaxKind.DoubleKeyword))).WithRankSpecifiers(_EmptyArrayRank)),
+                FieldTypes.U1 => NullableType(ArrayType(PredefinedType(Token(SyntaxKind.ByteKeyword))).WithRankSpecifiers(_EmptyArrayRank)),
+                FieldTypes.U2 => NullableType(ArrayType(PredefinedType(Token(SyntaxKind.UShortKeyword))).WithRankSpecifiers(_EmptyArrayRank)),
+                FieldTypes.U4 => NullableType(ArrayType(PredefinedType(Token(SyntaxKind.UIntKeyword))).WithRankSpecifiers(_EmptyArrayRank)),
                 _=> throw new InvalidOperationException($"Unsupported array field type {fieldType}")
             },
             false => fieldType switch
             {
-                FieldTypes.BitField => QualifiedName(_SystemCollectionsNamespace, IdentifierName("BitArray")),
-                FieldTypes.LongBitField => QualifiedName(_SystemCollectionsNamespace, IdentifierName("BitArray")),
+                FieldTypes.BitField => NullableType(QualifiedName(_SystemCollectionsNamespace, IdentifierName("BitArray"))),
+                FieldTypes.LongBitField => NullableType(QualifiedName(_SystemCollectionsNamespace, IdentifierName("BitArray"))),
                 FieldTypes.DateTime => QualifiedName(_SystemNamespace, IdentifierName("DateTime")),
                 FieldTypes.I1 => PredefinedType(Token(SyntaxKind.SByteKeyword)),
                 FieldTypes.I2 => PredefinedType(Token(SyntaxKind.ShortKeyword)),
@@ -468,11 +470,19 @@ namespace StdfRecordGenerator
                 {
                     Log($"No assignment for {node.FieldIndex}.");
                 }
-                _ActiveBlock.AddStatement(GotoStatement(SyntaxKind.GotoStatement, IdentifierName(assignmentCompleted.GetSyntaxToken())));
+                //TODO: all this has to do with the log statement below. we don't need this goto when logging isn't enabled.
+                //we need to figure out how to not have logging be so convoluted.
+                if (EnableLog)
+                {
+                    _ActiveBlock.AddStatement(GotoStatement(SyntaxKind.GotoStatement, IdentifierName(assignmentCompleted.GetSyntaxToken())));
+                }
                 _ActiveBlock.PrependLabel(_SkipAssignmentLabel);
-                Log($"Assignment skipped.");
-                _ActiveBlock.PrependLabel(assignmentCompleted);
-                Log($"Done with {node.FieldIndex}.");
+                if (EnableLog)
+                {
+                    Log($"Assignment skipped.");
+                    _ActiveBlock.PrependLabel(assignmentCompleted);
+                    Log($"Done with {node.FieldIndex}.");
+                }
 
                 return node;
             }

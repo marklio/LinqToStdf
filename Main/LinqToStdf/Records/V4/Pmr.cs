@@ -9,7 +9,7 @@ using System.Text;
 namespace LinqToStdf.Records.V4 {
 	using Attributes;
 
-    [FieldLayout(FieldIndex = 0, FieldType = typeof(ushort), RecordProperty = "Index"),
+    [FieldLayout(FieldIndex = 0, FieldType = typeof(ushort), RecordProperty = "PinIndex"),
     FieldLayout(FieldIndex = 1, FieldType = typeof(ushort), MissingValue = ushort.MinValue, RecordProperty = "ChannelType"),
     StringFieldLayout(FieldIndex = 2, IsOptional = true, RecordProperty = "ChannelName"),
     StringFieldLayout(FieldIndex = 3, IsOptional = true, RecordProperty = "PhysicalName"),

@@ -22,22 +22,6 @@ namespace System.Runtime.CompilerServices
     {
     }
 }
-namespace System.Diagnostics.CodeAnalysis
-{
-    [System.AttributeUsage(System.AttributeTargets.Method | System.AttributeTargets.Property, AllowMultiple = true, Inherited = false)]
-    public sealed class MemberNotNullAttribute : Attribute
-    {
-        public string[] Members { get; }
-        public MemberNotNullAttribute(string member)
-        {
-            Members = new[] { member };
-        }
-        public MemberNotNullAttribute(string[] members)
-        {
-            Members = members;
-        }
-    }
-}
 
 namespace LinqToStdf {
     /// <summary>

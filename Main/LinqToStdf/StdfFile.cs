@@ -267,10 +267,7 @@ namespace LinqToStdf {
             [MemberNotNull(nameof(_EnumerableQuery))]
             void EnsureQuery()
             {
-                if (_EnumerableQuery is null)
-                {
-                    _EnumerableQuery = new EnumerableQuery<T>(new QueryableRewriter().Visit(_ExpressionTransform(_Expression)));
-                }
+                _EnumerableQuery ??= new EnumerableQuery<T>(new QueryableRewriter().Visit(_ExpressionTransform(_Expression)));
             }
             private IEnumerator<T> GetEnumeratorInternal()
             {
@@ -351,7 +348,7 @@ namespace LinqToStdf {
                 return ((IQueryProvider)queryable).Execute<TResult>((new QueryableRewriter().Visit(_ExpressionTransform(expression))));
             }
 
-            public object Execute(Expression expression)
+            public object? Execute(Expression expression)
             {
                 EnsureQuery();
                 EnumerableQuery<T> queryable = _EnumerableQuery;
