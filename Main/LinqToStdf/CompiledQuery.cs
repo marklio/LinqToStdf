@@ -52,10 +52,10 @@ namespace LinqToStdf {
         /// <param name="stdfFileInit">An action that will initialize the <see cref="StdfFile"/>.</param>
         /// <param name="query">The expression tree representing the query.</param>
         /// <returns>The results of the query</returns>
-        public static Func<string, TResult> Compile<TResult>(Action<StdfFile> stdfFileInit, Expression<Func<StdfFile, TResult>> query) {
+        public static Func<string, TResult> Compile<TResult>(Action<StdfFile>? stdfFileInit, Expression<Func<StdfFile, TResult>> query) {
             var rnf = ExpressionInspector.Inspect(query);
             var compiled = query.Compile();
-            RecordConverterFactory factory = null;
+            RecordConverterFactory? factory = null;
             return (path) => {
                 StdfFile stdf;
                 if (factory == null) {
@@ -74,10 +74,10 @@ namespace LinqToStdf {
             return Compile(null, query);
         }
 
-        public static Func<string, T1, TResult> Compile<T1, TResult>(Action<StdfFile> stdfFileInit, Expression<Func<StdfFile, T1, TResult>> query) {
+        public static Func<string, T1, TResult> Compile<T1, TResult>(Action<StdfFile>? stdfFileInit, Expression<Func<StdfFile, T1, TResult>> query) {
             var rnf = ExpressionInspector.Inspect(query);
             var compiled = query.Compile();
-            RecordConverterFactory factory = null;
+            RecordConverterFactory? factory = null;
             return (path, t1) => {
                 StdfFile stdf;
                 if (factory == null) {
@@ -96,10 +96,10 @@ namespace LinqToStdf {
             return Compile(null, query);
         }
 
-        public static Func<string, T1, T2, TResult> Compile<T1, T2, TResult>(Action<StdfFile> stdfFileInit, Expression<Func<StdfFile, T1, T2, TResult>> query) {
+        public static Func<string, T1, T2, TResult> Compile<T1, T2, TResult>(Action<StdfFile>? stdfFileInit, Expression<Func<StdfFile, T1, T2, TResult>> query) {
             var rnf = ExpressionInspector.Inspect(query);
             var compiled = query.Compile();
-            RecordConverterFactory factory = null;
+            RecordConverterFactory? factory = null;
             return (path, t1, t2) => {
                 StdfFile stdf;
                 if (factory == null) {
@@ -118,10 +118,10 @@ namespace LinqToStdf {
             return Compile(null, query);
         }
 
-        public static Func<string, T1, T2, T3, TResult> Compile<T1, T2, T3, TResult>(Action<StdfFile> stdfFileInit, Expression<Func<StdfFile, T1, T2, T3, TResult>> query) {
+        public static Func<string, T1, T2, T3, TResult> Compile<T1, T2, T3, TResult>(Action<StdfFile>? stdfFileInit, Expression<Func<StdfFile, T1, T2, T3, TResult>> query) {
             var rnf = ExpressionInspector.Inspect(query);
             var compiled = query.Compile();
-            RecordConverterFactory factory = null;
+            RecordConverterFactory? factory = null;
             return (path, t1, t2, t3) => {
                 StdfFile stdf;
                 if (factory == null) {

@@ -7,7 +7,7 @@ namespace LinqToStdf.RecordConverting
 {
     public class ConverterLog
     {
-        public static event Action<string> MessageLogged;
+        public static event Action<string>? MessageLogged;
 
         public static void Log(string msg)
         {

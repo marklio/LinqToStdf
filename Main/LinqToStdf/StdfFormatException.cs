@@ -29,7 +29,7 @@ namespace LinqToStdf {
         //
 
         public StdfFormatException() { }
-        public StdfFormatException(string message) : base(message) { }
-        public StdfFormatException(string message, Exception inner) : base(message, inner) { }
+        public StdfFormatException(string? message) : base(message) { }
+        public StdfFormatException(string? message, Exception inner) : base(message, inner) { }
     }
 }

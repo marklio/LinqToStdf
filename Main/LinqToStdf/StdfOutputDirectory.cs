@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using LinqToStdf.Records;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToStdf {
 
@@ -38,23 +39,25 @@ namespace LinqToStdf {
         /// </summary>
         /// <param name="records">The records to write.</param>
         public void WriteRecords(IEnumerable<StdfRecord> records) {
-            StdfFileWriter writer = null;
+            StdfFileWriter? writer = null;
             foreach (var r in records) {
                 if (r.GetType() == typeof(StartOfStreamRecord)) {
 					var sos = (StartOfStreamRecord)r;
                     if (writer != null) {
                         throw new InvalidOperationException(Resources.SOFBeforeEOF);
                     }
-                    writer = new StdfFileWriter(Path.Combine(_Path, sos.FileName), sos.Endian);
+                    writer = new StdfFileWriter(Path.Combine(_Path, sos.FileName ?? throw new InvalidOperationException("StartOfStream record contains null FileName")), sos.Endian);
                 }
                 else if (r.GetType() == typeof(EndOfStreamException)) {
                     EnsureWriter(writer);
-                    writer.Dispose();
+                    //TODO: better nullability pattern?
+                    writer!.Dispose();
                     writer = null;
                 }
                 else {
                     EnsureWriter(writer);
-                    writer.WriteRecord(r);
+                    //TODO: better nullability pattern?
+                    writer!.WriteRecord(r);
                 }
             }
             if (writer != null) {
@@ -62,8 +65,8 @@ namespace LinqToStdf {
             }
         }
 
-        static void EnsureWriter(StdfFileWriter writer) {
-            if (writer == null) throw new InvalidOperationException(Resources.WriteOutsideSOSEOS);
+        static void EnsureWriter(StdfFileWriter? writer) {
+            if (writer is null) throw new InvalidOperationException(Resources.WriteOutsideSOSEOS);
         }
     }
 }

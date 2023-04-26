@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -19,7 +20,7 @@ namespace LinqToStdf.RecordConverting
     {
         readonly ILGenerator _ILGen;
         readonly Type _Type;
-        readonly HashSet<string> _Fields;
+        readonly HashSet<string>? _Fields;
 
         /// <summary>
         /// Constructs a converter using the supplied il generator and the type we're converting to.
@@ -27,7 +28,7 @@ namespace LinqToStdf.RecordConverting
         /// <param name="ilgen">The il generator to use</param>
         /// <param name="type">The type we're converting to</param>
         /// <param name="fields">The fields we should parse (null if we should parse everything, empty if we shouldn't parse at all)</param>
-        public ConverterGenerator(ILGenerator ilgen, Type type, HashSet<string> fields)
+        public ConverterGenerator(ILGenerator ilgen, Type type, HashSet<string>? fields)
         {
             _ILGen = ilgen ?? throw new ArgumentNullException("ilgen");
             _Type = type ?? throw new ArgumentNullException("type");
@@ -47,7 +48,7 @@ namespace LinqToStdf.RecordConverting
         /// </summary>
         internal void GenerateConverter()
         {
-            List<KeyValuePair<FieldLayoutAttribute, PropertyInfo>> fields = GetFieldLayoutsAndAssignments(_Type);
+            var fields = GetFieldLayoutsAndAssignments(_Type);
             //pick up any fields that are required to parse the fields we need
             if (_Fields != null)
             {
@@ -107,7 +108,7 @@ namespace LinqToStdf.RecordConverting
             }.Visit(block);
         }
 
-        static List<KeyValuePair<FieldLayoutAttribute, PropertyInfo>> GetFieldLayoutsAndAssignments(Type recordType)
+        static List<KeyValuePair<FieldLayoutAttribute, PropertyInfo?>> GetFieldLayoutsAndAssignments(Type recordType)
         {
             //get the list
             var attributes = from a in ((Type)recordType).GetCustomAttributes(typeof(FieldLayoutAttribute), true).Cast<FieldLayoutAttribute>()
@@ -120,16 +121,17 @@ namespace LinqToStdf.RecordConverting
                 if (list[i].FieldIndex != i) throw new NonconsecutiveFieldIndexException(recordType);
             }
             var withPropInfo = from l in list
-                               select new KeyValuePair<FieldLayoutAttribute, PropertyInfo>(
+                               select new KeyValuePair<FieldLayoutAttribute, PropertyInfo?>(
                                           l,
-                                          (l.RecordProperty == null) ? null : ((Type)recordType).GetProperty(l.RecordProperty));
+                                          (l.RecordProperty == null) ? null : ((Type)recordType).GetProperty(l.RecordProperty) ?? throw new InvalidOperationException($"Can't find record property {l.RecordProperty}"));
 
-            return new List<KeyValuePair<FieldLayoutAttribute, PropertyInfo>>(withPropInfo);
+            return new List<KeyValuePair<FieldLayoutAttribute, PropertyInfo?>>(withPropInfo);
         }
 
         CodeNode GenerateAssignment(KeyValuePair<FieldLayoutAttribute, PropertyInfo> pair)
         {
             var fieldType = pair.Key.FieldType;
+            Debug.Assert(fieldType is not null);
             //if this is an array, defer to GenerateArrayAssignment
             if (pair.Key is ArrayFieldLayoutAttribute)
             {
@@ -177,7 +179,7 @@ namespace LinqToStdf.RecordConverting
                 readerNode = new ReadTypeNode(fieldType);
             }
 
-            BlockNode assignmentBlock = null;
+            BlockNode? assignmentBlock = null;
             //if we have a property to assign to, generate the appropriate assignment statements
             if (pair.Value != null)
             {
@@ -204,6 +206,7 @@ namespace LinqToStdf.RecordConverting
         CodeNode GenerateArrayAssignment(KeyValuePair<FieldLayoutAttribute, PropertyInfo> pair)
         {
             var fieldType = pair.Key.FieldType;
+            Debug.Assert(fieldType is not null);
             bool isNibbleArray = pair.Key is NibbleArrayFieldLayoutAttribute;
             int lengthIndex = ((ArrayFieldLayoutAttribute)pair.Key).ArrayLengthFieldIndex;
 
@@ -220,7 +223,7 @@ namespace LinqToStdf.RecordConverting
             else
             {
                 var readNode = new ReadTypeNode(fieldType.MakeArrayType(), lengthIndex, isNibble: isNibbleArray);
-                BlockNode assignmentBlock = null;
+                BlockNode? assignmentBlock = null;
                 if (pair.Value != null)
                 {
                     assignmentBlock = new BlockNode(new AssignFieldToPropertyNode(fieldType.MakeArrayType(), pair.Value));

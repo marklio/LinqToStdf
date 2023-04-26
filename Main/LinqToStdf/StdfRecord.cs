@@ -21,7 +21,9 @@ namespace LinqToStdf {
         /// <summary>
         /// Reference to the "owning" StdfFile.
         /// </summary>
-        public StdfFile StdfFile { get; set; }
+        public StdfFile StdfFile {
+            get { return _StdfFile ?? throw new InvalidOperationException("StdfFile has not yet been set."); } set { _StdfFile = value; } }
+        StdfFile? _StdfFile = null;
 
         /// <summary>
         /// Indicates whether this record should be considered for persisting to a file.

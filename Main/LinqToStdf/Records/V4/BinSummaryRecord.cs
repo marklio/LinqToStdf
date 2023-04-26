@@ -27,7 +27,7 @@ namespace LinqToStdf.Records.V4 {
         /// <summary>
         /// Known values are P, F
         /// </summary>
-        public string BinPassFail { get; set; }
-        public string BinName { get; set; }
+        public string? BinPassFail { get; set; }
+        public string? BinName { get; set; }
     }
 }

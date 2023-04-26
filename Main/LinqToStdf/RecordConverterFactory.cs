@@ -36,18 +36,18 @@ namespace LinqToStdf {
     /// <seealso cref="FieldLayoutAttribute"/>
     public class RecordConverterFactory {
 
-        public event Action<ConverterType, Type> ConverterGenerated;
+        public event Action<ConverterType, Type>? ConverterGenerated;
 
         /// <summary>
         /// Creates a new factory
         /// </summary>
-        public RecordConverterFactory() : this((RecordsAndFields)null) { }
+        public RecordConverterFactory() : this((RecordsAndFields?)null) { }
 
         /// <summary>
         /// Used internally by compiled query support
         /// </summary>
         /// <param name="recordsAndFields"></param>
-        internal RecordConverterFactory(RecordsAndFields recordsAndFields) {
+        internal RecordConverterFactory(RecordsAndFields? recordsAndFields) {
             _RecordsAndFields = recordsAndFields;
             _Converters = new Dictionary<RecordType, Converter<UnknownRecord, StdfRecord>>();
             _Unconverters = new Dictionary<Type, Func<StdfRecord, Endian, UnknownRecord>>();
@@ -77,7 +77,7 @@ namespace LinqToStdf {
         /// Internal storage for the unconverter delegates
         /// </summary>
         readonly Dictionary<Type, Func<StdfRecord, Endian, UnknownRecord>> _Unconverters;
-        readonly RecordsAndFields _RecordsAndFields;
+        readonly RecordsAndFields? _RecordsAndFields;
 
         /// <summary>
         /// If this is set to true, rather than use LCG, a dynamic assembly will
@@ -184,31 +184,6 @@ namespace LinqToStdf {
             return GetUnconverter(record.GetType())(record, endian);
         }
 
-        AssemblyBuilder _DynamicAssembly;
-        ModuleBuilder _DynamicModule;
-
-        /*
-        void InitializeDynamicAssembly() {
-            _DynamicAssembly = AppDomain.CurrentDomain.DefineDynamicAssembly(
-                new AssemblyName("DynamicConverters"),
-                AssemblyBuilderAccess.RunAndSave);
-            _DynamicModule = _DynamicAssembly.DefineDynamicModule(
-                "DynamicConverters",
-                "DynamicConverters.dll",
-                true);
-        }
-
-        /// <summary>
-        /// If <see cref="Debug"/> is set, saves a dynamic assembly
-        /// with all the converters and unconverters created so far.
-        /// </summary>
-        public void SaveDynamicAssembly()
-        {
-            if (!Debug || _DynamicAssembly == null) throw new InvalidOperationException(Resources.InvalidSaveAssembly);
-            _DynamicAssembly.Save("DynamicConverters.dll");
-        }
-        */
-
         #region CreateConverterForType
 
         /// <summary>
@@ -220,7 +195,7 @@ namespace LinqToStdf {
             if (!typeof(StdfRecord).IsAssignableFrom(type)) {
                 throw new InvalidOperationException(string.Format(Resources.ConverterTargetNotStdfRecord, type));
             }
-            Converter<UnknownRecord, StdfRecord> converter = null;
+            Converter<UnknownRecord, StdfRecord>? converter = null;
             //only bother creating a converter if we need to parse fields
             if (_RecordsAndFields == null || _RecordsAndFields.TypeHasFields(type)) {
                 //TODO:consider making the pattern more clear here
@@ -244,8 +219,7 @@ namespace LinqToStdf {
         /// </summary>
         Converter<UnknownRecord, StdfRecord> LazyCreateConverterForType(Type type)
         {
-            Func<Converter<UnknownRecord, StdfRecord>> finalizeConverter = null;
-            var ilGenerator = CreateNewLCGMethod<Converter<UnknownRecord, StdfRecord>>(string.Format("ConvertTo{0}", type.Name), ref finalizeConverter);
+            var ilGenerator = CreateNewLCGMethod<Converter<UnknownRecord, StdfRecord>>($"ConvertTo{type.Name}", out var finalizeConverter);
             var generator = new ConverterGenerator(ilGenerator, type, _RecordsAndFields?.GetFieldsForType(type));
             {
                 generator.GenerateConverter();
@@ -265,7 +239,7 @@ namespace LinqToStdf {
             {
                 throw new InvalidOperationException(string.Format(Resources.ConverterTargetNotStdfRecord, type));
             }
-            Func<StdfRecord, Endian, UnknownRecord> unconverter = null;
+            Func<StdfRecord, Endian, UnknownRecord>? unconverter = null;
             return (r, e) =>
             {
                 if (unconverter == null)
@@ -278,8 +252,7 @@ namespace LinqToStdf {
 
         Func<StdfRecord, Endian, UnknownRecord> LazyCreateUnconverterForType(Type type)
         {
-            Func<Func<StdfRecord, Endian, UnknownRecord>> finalizeUnconverter = null;
-            var ilGenerator = CreateNewLCGMethod<Func<StdfRecord, Endian, UnknownRecord>>(string.Format("UnconvertFrom{0}", type.Name), ref finalizeUnconverter);
+            var ilGenerator = CreateNewLCGMethod<Func<StdfRecord, Endian, UnknownRecord>>(string.Format("UnconvertFrom{0}", type.Name), out var finalizeUnconverter);
             var generator = new UnconverterGenerator(ilGenerator, type);
             generator.GenerateUnconverter();
             var unconverter = finalizeUnconverter();
@@ -299,40 +272,8 @@ namespace LinqToStdf {
             {
                 throw new InvalidOperationException("TSig must be a delegate");
             }
-            return delegateType.GetMethod("Invoke");
+            return delegateType.GetMethod("Invoke") ?? throw new InvalidOperationException($"Could not find Invoke on {typeof(TSig)}");
         }
-
-        /*
-        /// <summary>
-        /// Creates a new dynamic Reflection.Emit method and provides the ILGenerator for it, as well as a delegate to call
-        /// to "bake" the method for use.
-        /// </summary>
-        /// <typeparam name="TSig">A delegate that represents the signature of the method to be created.</typeparam>
-        /// <param name="typeName">The name for a type to create to hold the method</param>
-        /// <param name="methodName">The name for the method</param>
-        /// <param name="bakeMethod">A delegate to call with IL generation is complete to get the created method in
-        /// the form of a delegate</param>
-        /// <returns>The ILGenerator for the new method</returns>
-        private ILGenerator CreateNewRefEmitMethod<TSig>(string typeName, string methodName, ref Func<TSig> bakeMethod)
-        {
-            var sigMethod = GetSignatureInfo<TSig>();
-            if (_DynamicAssembly == null) InitializeDynamicAssembly();
-            var dynamicType = _DynamicModule.DefineType(typeName);
-            var dynamicMethod = dynamicType.DefineMethod(
-                methodName,
-                MethodAttributes.Public | MethodAttributes.Static,
-                sigMethod.ReturnType,
-                (from p in sigMethod.GetParameters() select p.ParameterType).ToArray());
-            bakeMethod = () =>
-            {
-                var newType = dynamicType.CreateType();
-                return (TSig)(object)Delegate.CreateDelegate(
-                    typeof(TSig),
-                    newType.GetMethod(methodName));
-            };
-            return dynamicMethod.GetILGenerator();
-        }
-        */
 
         /// <summary>
         /// Creates a new dynamic method using LCG and provides the ILGenerator for it, as well as a delegate to call
@@ -343,7 +284,7 @@ namespace LinqToStdf {
         /// <param name="bakeMethod">A delegate to call with IL generation is complete to get the created method in
         /// the form of a delegate</param>
         /// <returns>The ILGenerator for the new method</returns>
-        private ILGenerator CreateNewLCGMethod<TSig>(string methodName, ref Func<TSig> bakeMethod)
+        private ILGenerator CreateNewLCGMethod<TSig>(string methodName, out Func<TSig> bakeMethod)
         {
             var sigMethod = GetSignatureInfo<TSig>();
             var dynamicMethod = new DynamicMethod(

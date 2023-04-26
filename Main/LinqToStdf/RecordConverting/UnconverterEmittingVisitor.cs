@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -13,13 +14,13 @@ namespace LinqToStdf.RecordConverting
 {
     class UnconverterEmittingVisitor : CodeNodeVisitor
     {
-        public ILGenerator ILGen;
-        public Type ConcreteType;
+        public required ILGenerator ILGen;
+        public required Type ConcreteType;
         public bool EnableLog = false;
 
-        LocalBuilder _ConcreteRecordLocal;
-        LocalBuilder _StartedWriting;
-        LocalBuilder _Writer;
+        LocalBuilder? _ConcreteRecordLocal;
+        LocalBuilder? _StartedWriting;
+        LocalBuilder? _Writer;
         readonly Dictionary<int, LocalBuilder> _FieldLocals = new Dictionary<int, LocalBuilder>();
 
         void Log(string msg)
@@ -70,7 +71,7 @@ namespace LinqToStdf.RecordConverting
             //get the content
             Log($"Getting data and reversing");
             ILGen.Ldloc(memoryStream);
-            ILGen.Callvirt(typeof(MemoryStream).GetMethod("ToArray"));
+            ILGen.Callvirt(typeof(MemoryStream).GetMethod("ToArray") ?? throw new InvalidOperationException("Could not find MemoryStream.ToArray"));
             var content = ILGen.DeclareLocal<byte[]>();
             ILGen.Stloc(content);
             ILGen.Ldloc(content);
@@ -80,12 +81,12 @@ namespace LinqToStdf.RecordConverting
             //dispose the memorystream
             Log($"Cleaning up");
             ILGen.Ldloc(memoryStream);
-            ILGen.Callvirt(typeof(Stream).GetMethod("Dispose"));
+            ILGen.Callvirt(typeof(Stream).GetMethod("Dispose") ?? throw new InvalidOperationException("Could not find Stream.Dispose"));
             ILGen.EndExceptionBlock();
 
             //get the record type
             ILGen.Ldarg_0();
-            ILGen.Callvirt(typeof(StdfRecord).GetProperty("RecordType").GetGetMethod());
+            ILGen.Callvirt(typeof(StdfRecord).GetProperty("RecordType")?.GetGetMethod() ?? throw new InvalidOperationException("Could not find StdfRecord.RecordType getter."));
 
             //load the content
             ILGen.Ldloc(content);
@@ -128,6 +129,8 @@ namespace LinqToStdf.RecordConverting
         }
         public override CodeNode VisitWriteField(WriteFieldNode node)
         {
+            Debug.Assert(_ConcreteRecordLocal is not null);
+            Debug.Assert(_StartedWriting is not null);
             Log($"Writing field {node.FieldIndex}");
             //TODO: do the right kind of checks for the optional node properties
 
@@ -149,12 +152,12 @@ namespace LinqToStdf.RecordConverting
             {
                 //get the field local
                 var fieldLocal = _FieldLocals[node.FieldIndex];
-                if (fieldLocal.LocalType != node.FieldType) throw new InvalidOperationException("Field assignment is occuring on a mismatched field local type.");
+                if (fieldLocal.LocalType != node.FieldType) throw new InvalidOperationException("Field assignment is occurring on a mismatched field local type.");
 
                 Log($"Reading {node.Property.Name} for field {node.FieldIndex}");
                 //get the value of the property
                 ILGen.Ldloc(_ConcreteRecordLocal);
-                ILGen.Callvirt(node.Property.GetGetMethod());
+                ILGen.Callvirt(node.Property.GetGetMethod() ?? throw new InvalidOperationException("Could not get node property getter"));
 
                 //generate the check for whether we have a value to write
                 if (node.Property.PropertyType.IsValueType)
@@ -171,7 +174,7 @@ namespace LinqToStdf.RecordConverting
                         ILGen.Stloc(nullableLocal);
                         //call .HasValue
                         ILGen.Ldloca(nullableLocal); //load address so we can call methods
-                        ILGen.Callvirt(nullable.GetProperty("HasValue").GetGetMethod());
+                        ILGen.Callvirt(nullable.GetProperty("HasValue")?.GetGetMethod() ?? throw new InvalidOperationException("Can't find nullable HasValue getter"));
                         //dup and store hasValue
                         ILGen.Dup();
                         ILGen.Stloc(hasValueLocal);
@@ -182,7 +185,7 @@ namespace LinqToStdf.RecordConverting
                         //otherwise, get the value 
                         Log($"Getting Value");
                         ILGen.Ldloca(nullableLocal);
-                        ILGen.Callvirt(nullable.GetProperty("Value").GetGetMethod());
+                        ILGen.Callvirt(nullable.GetProperty("Value")?.GetGetMethod() ?? throw new InvalidOperationException("Could not find nullable Value getter."));
                     }
                     //BUG: if we have a field that we persist AND represents the state of another field,
                     // then there should be a merge operation here (or a consistency check should fail earlier).
@@ -269,6 +272,7 @@ namespace LinqToStdf.RecordConverting
         }
         public override CodeNode VisitWriteFixedString(WriteFixedStringNode node)
         {
+            Debug.Assert(_Writer is not null);
             Log($"Writing fixed string of length {node.StringLength}.");
             ILGen.Ldloc(_Writer);
             Visit(node.ValueSource);
@@ -279,8 +283,9 @@ namespace LinqToStdf.RecordConverting
         static readonly Dictionary<Type, MethodInfo> _WriteMethods = new Dictionary<Type, MethodInfo>();
         public override CodeNode VisitWriteType(WriteTypeNode node)
         {
-            MethodInfo writeMethod;
-            if (node.IsNibble) writeMethod = typeof(BinaryWriter).GetMethod(nameof(BinaryWriter.WriteNibbleArray), node.Type);
+            Debug.Assert(_Writer is not null);
+            MethodInfo? writeMethod;
+            if (node.IsNibble) writeMethod = typeof(BinaryWriter).GetMethod(nameof(BinaryWriter.WriteNibbleArray), node.Type) ?? throw new InvalidOperationException("Could not find BinaryWriter.WriteNibbleArray");
             else if (!_WriteMethods.TryGetValue(node.Type, out writeMethod))
             {
                 string writeMethodName;
@@ -312,7 +317,7 @@ namespace LinqToStdf.RecordConverting
                 {
                     throw new NotSupportedException(string.Format(Resources.UnsupportedWriterType, node.Type));
                 }
-                writeMethod = typeof(BinaryWriter).GetMethod(writeMethodName, node.Type);
+                writeMethod = typeof(BinaryWriter).GetMethod(writeMethodName, node.Type) ?? throw new InvalidOperationException($"Could not find method {writeMethodName}");
                 _WriteMethods[node.Type] = writeMethod;
             }
 

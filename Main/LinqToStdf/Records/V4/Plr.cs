@@ -24,19 +24,19 @@ namespace LinqToStdf.Records.V4 {
             get { return new RecordType(1, 63); }
         }
 
-        public ushort[] GroupIndexes { get; set; }
+        public ushort[]? GroupIndexes { get; set; }
         /// <summary>
         /// Known values are: 0, 10, 20, 21, 22, 23, 30, 31, 32, 33
         /// </summary>
-        public ushort[] GroupModes { get; set; }
+        public ushort[]? GroupModes { get; set; }
         /// <summary>
         /// Known values are: 0, 2, 8, 10, 16, 20
         /// </summary>
-        public byte[] GroupRadixes { get; set; }
-        public string[] ProgramStatesRight { get; set; }
-        public string[] ReturnStatesRight { get; set; }
-        public string[] ProgramStatesLeft { get; set; }
-        public string[] ReturnStatesLeft { get; set; }
+        public byte[]? GroupRadixes { get; set; }
+        public string[]? ProgramStatesRight { get; set; }
+        public string[]? ReturnStatesRight { get; set; }
+        public string[]? ProgramStatesLeft { get; set; }
+        public string[]? ReturnStatesLeft { get; set; }
 
         internal static Plr ConvertToPlr(UnknownRecord unknownRecord) {
             Plr plr = new Plr();
@@ -47,7 +47,7 @@ namespace LinqToStdf.Records.V4 {
 
                 // Latter arrays are optional, and may be truncated
                 if (!reader.AtEndOfStream) {
-                    ushort[] groupModes = reader.ReadUInt16Array(groupCount, false);
+                    var groupModes = reader.ReadUInt16Array(groupCount, false);
                     // Expand a truncated array, filling with missing value
                     if ((groupModes != null) && (groupModes.Length < groupCount)) {
                         int i = groupModes.Length;
@@ -58,7 +58,7 @@ namespace LinqToStdf.Records.V4 {
                     plr.GroupModes = groupModes;
                 }
                 if (!reader.AtEndOfStream) {
-                    byte[] groupRadixes = reader.ReadByteArray(groupCount, false);
+                    var groupRadixes = reader.ReadByteArray(groupCount, false);
                     // Expand a truncated array, filling with missing value
                     if ((groupRadixes != null) && (groupRadixes.Length < groupCount)) {
                         int i = groupRadixes.Length;
@@ -69,7 +69,7 @@ namespace LinqToStdf.Records.V4 {
                     plr.GroupRadixes = groupRadixes;
                 }
                 if (!reader.AtEndOfStream) {
-                    string[] programStatesRight = reader.ReadStringArray(groupCount, false);
+                    var programStatesRight = reader.ReadStringArray(groupCount, false);
                     // Expand a truncated array, filling with missing value
                     if ((programStatesRight != null) && (programStatesRight.Length < groupCount)) {
                         int i = programStatesRight.Length;
@@ -80,7 +80,7 @@ namespace LinqToStdf.Records.V4 {
                     plr.ProgramStatesRight = programStatesRight;
                 }
                 if (!reader.AtEndOfStream) {
-                    string[] returnStatesRight = reader.ReadStringArray(groupCount, false);
+                    var returnStatesRight = reader.ReadStringArray(groupCount, false);
                     // Expand a truncated array, filling with missing value
                     if ((returnStatesRight != null) && (returnStatesRight.Length < groupCount)) {
                         int i = returnStatesRight.Length;
@@ -91,7 +91,7 @@ namespace LinqToStdf.Records.V4 {
                     plr.ReturnStatesRight = returnStatesRight;
                 }
                 if (!reader.AtEndOfStream) {
-                    string[] programStatesLeft = reader.ReadStringArray(groupCount, false);
+                    var programStatesLeft = reader.ReadStringArray(groupCount, false);
                     // Expand a truncated array, filling with missing value
                     if ((programStatesLeft != null) && (programStatesLeft.Length < groupCount)) {
                         int i = programStatesLeft.Length;
@@ -102,7 +102,7 @@ namespace LinqToStdf.Records.V4 {
                     plr.ProgramStatesLeft = programStatesLeft;
                 }
                 if (!reader.AtEndOfStream) {
-                    string[] returnStatesLeft = reader.ReadStringArray(groupCount, false);
+                    var returnStatesLeft = reader.ReadStringArray(groupCount, false);
                     // Expand a truncated array, filling with missing value
                     if ((returnStatesLeft != null) && (returnStatesLeft.Length < groupCount)) {
                         int i = returnStatesLeft.Length;
@@ -135,7 +135,7 @@ namespace LinqToStdf.Records.V4 {
                 // Field 7: ReturnStatesLeft
                 if (plr.ReturnStatesLeft != null) {
                     // Check for larger group length (writing has definitely not occurred yet)
-                    if (plr.ProgramStatesLeft.Length > groupCount)
+                    if (plr.ProgramStatesLeft?.Length > groupCount)
                         throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, 7));
                     // Write the field
                     writer.WriteStringArray(plr.ReturnStatesLeft);
@@ -151,7 +151,7 @@ namespace LinqToStdf.Records.V4 {
                 // Field 6: ProgramStatesLeft
                 if (plr.ProgramStatesLeft != null) {
                     // Check for larger, or not equal group length ifwriting has occurred
-                    if ((plr.ProgramStatesLeft.Length > groupCount) || (fieldsWritten && (plr.ProgramStatesLeft.Length != groupCount)))
+                    if ((plr.ProgramStatesLeft?.Length > groupCount) || (fieldsWritten && (plr.ProgramStatesLeft?.Length != groupCount)))
                         throw new InvalidOperationException(String.Format(Resources.SharedLengthViolation, 6));
                     // Write the field
                     writer.WriteStringArray(plr.ProgramStatesLeft);

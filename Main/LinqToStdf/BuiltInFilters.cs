@@ -35,7 +35,7 @@ namespace LinqToStdf {
             /// <summary>
             /// The cached records
             /// </summary>
-            List<StdfRecord> _Records;
+            List<StdfRecord>? _Records;
             bool _Caching;
 
             /// <summary>
@@ -47,7 +47,7 @@ namespace LinqToStdf {
                     throw new InvalidOperationException(Resources.CachingReEntrancy);
                 }
                 //cache the records
-                if (_Records == null) {
+                if (_Records is null) {
                     _Caching = true;
                     _Records = new List<StdfRecord>();
                     foreach (var r in input) {
@@ -154,7 +154,7 @@ namespace LinqToStdf {
         #region MissingPcrSummaryFilter implementation
 
         class MissingPcrSummaryFilterImpl {
-            Pcr _Summary = new Pcr()
+            Pcr? _Summary = new Pcr()
             {
                 Synthesized = true,
                 HeadNumber = 255,
@@ -162,7 +162,7 @@ namespace LinqToStdf {
             };
             public IEnumerable<StdfRecord> Filter(IEnumerable<StdfRecord> input) {
                 foreach (var r in input) {
-                    if (r.GetType() == typeof(Pcr) && _Summary != null) {
+                    if (r.GetType() == typeof(Pcr) && _Summary is not null) {
                         Pcr p = (Pcr)r;
                         if (p.HeadNumber == 255) _Summary = null;
                         else {
@@ -284,8 +284,8 @@ namespace LinqToStdf {
         /// </summary>
         class RecordState {
             public string Message = Resources.V4ContentState_Unknown;
-            public Func<StdfRecord, bool> ShouldTransition;
-            public List<RecordState> Routes;
+            public Func<StdfRecord, bool>? ShouldTransition = null;
+            public List<RecordState>? Routes = null;
         }
 
         /// <summary>
@@ -351,13 +351,14 @@ namespace LinqToStdf {
             #endregion
 
             //we'll start in a pre-far state
-            var currentState = new RecordState() {
+            var currentState = new RecordState {
                                    Message = Resources.V4ContentState_BeforeSOF,
                                    Routes = new List<RecordState>() { sofState }
                                };
             foreach (var r in input) {
                 bool transitioned = false;
-                foreach (var state in currentState.Routes) {
+                foreach (var state in currentState.Routes ?? throw new InvalidOperationException("No routes in current state")) {
+                    if (state.ShouldTransition is null) throw new InvalidOperationException("state doesn't have ShouldTransition implementation");
                     if (state.ShouldTransition(r)) {
                         transitioned = true;
                         currentState = state;
@@ -398,7 +399,7 @@ namespace LinqToStdf {
         // This boils down to whether spec violations should be repaired before or after validation.
         // Up to this point, repairs have not been the result of violations, so this is the first case.
         static IEnumerable<StdfRecord> RepairMissingMrrImpl(IEnumerable<StdfRecord> input) {
-            Mrr mrr = null;
+            Mrr? mrr = null;
             foreach (var r in input) {
                 if (r.GetType() == typeof(Mrr)) mrr = (Mrr)r;
                 else if (r.GetType() == typeof(EndOfStreamRecord) && (mrr == null)) {

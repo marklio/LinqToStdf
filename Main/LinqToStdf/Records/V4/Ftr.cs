@@ -54,18 +54,18 @@ namespace LinqToStdf.Records.V4 {
 		public int? XFailureAddress { get; set; }
 		public int? YFailureAddress { get; set; }
 		public short? VectorOffset { get; set; }
-		public ushort[] ReturnIndexes { get; set; }
-		public byte[] ReturnStates { get; set; }
-		public ushort[] ProgrammedIndexes { get; set; }
-		public byte[] ProgrammedStates { get; set; }
-		public BitArray FailingPinBitfield { get; set; }
-		public string VectorName { get; set; }
-		public string OpCode { get; set; }
-		public string TestText { get; set; }
-		public string AlarmId { get; set; }
-		public string ProgrammedText { get; set; }
-		public string ResultText { get; set; }
+		public ushort[]? ReturnIndexes { get; set; }
+		public byte[]? ReturnStates { get; set; }
+		public ushort[]? ProgrammedIndexes { get; set; }
+		public byte[]? ProgrammedStates { get; set; }
+		public BitArray? FailingPinBitfield { get; set; }
+		public string? VectorName { get; set; }
+		public string? OpCode { get; set; }
+		public string? TestText { get; set; }
+		public string? AlarmId { get; set; }
+		public string? ProgrammedText { get; set; }
+		public string? ResultText { get; set; }
 		public byte? PatternGeneratorNumber { get; set; }
-        public BitArray SpinMap { get; set; }
+        public BitArray? SpinMap { get; set; }
 	}
 }

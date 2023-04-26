@@ -37,11 +37,11 @@ namespace LinqToStdf.Records.V4 {
         public uint? AbortCount { get; set; }
         public uint? GoodCount { get; set; }
         public uint? FunctionalCount { get; set; }
-        public string WaferId { get; set; }
-        public string FabWaferId { get; set; }
-        public string FrameId { get; set; }
-        public string MaskId { get; set; }
-        public string UserDescription { get; set; }
-        public string ExecDescription { get; set; }
+        public string? WaferId { get; set; }
+        public string? FabWaferId { get; set; }
+        public string? FrameId { get; set; }
+        public string? MaskId { get; set; }
+        public string? UserDescription { get; set; }
+        public string? ExecDescription { get; set; }
     }
 }

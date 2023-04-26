@@ -3,6 +3,7 @@
 // See http://www.microsoft.com/resources/sharedsource/licensingbasics/sharedsourcelicenses.mspx.
 // All other rights reserved.
 using System;
+using System.Diagnostics;
 using System.Linq;
 
 namespace LinqToStdf.RecordConverting
@@ -67,9 +68,9 @@ namespace LinqToStdf.RecordConverting
         public virtual CodeNode VisitFieldAssignment(FieldAssignmentNode node)
         {
             var visitedReadNode = Visit(node.ReadNode);
-            var visitedConditionalsBlock = Visit(node.AssignmentBlock);
+            var visitedConditionalsBlock = node.AssignmentBlock is null ? null : Visit(node.AssignmentBlock);
             if (visitedReadNode == node.ReadNode && visitedConditionalsBlock == node.AssignmentBlock) return node;
-            else return new FieldAssignmentNode(node.Type, node.FieldIndex, visitedReadNode, visitedConditionalsBlock as BlockNode ?? new BlockNode(visitedConditionalsBlock));
+            else return new FieldAssignmentNode(node.Type, node.FieldIndex, visitedReadNode, visitedConditionalsBlock switch { BlockNode blockNode => blockNode, null => null, var vcb => new BlockNode(vcb) });
         }
         public virtual CodeNode VisitSkipAssignmentIfFlagSet(SkipAssignmentIfFlagSetNode node)
         {

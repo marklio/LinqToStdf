@@ -17,7 +17,7 @@ namespace LinqToStdf {
     /// IL OpCodes, which makes things much more readable.
     /// </summary>
     static class ILGenHelpers {
-        static readonly MethodInfo _LogMethod = typeof(RecordConverting.ConverterLog).GetMethod(nameof(RecordConverting.ConverterLog.Log), BindingFlags.Static | BindingFlags.Public);
+        static readonly MethodInfo _LogMethod = typeof(RecordConverting.ConverterLog).GetMethod(nameof(RecordConverting.ConverterLog.Log), BindingFlags.Static | BindingFlags.Public) ?? throw new InvalidOperationException("Could not find ConverterLog.Log");
 
         public static void Log(this ILGenerator ilgen, string msg)
         {
@@ -144,7 +144,7 @@ namespace LinqToStdf {
                     //TODO:resource
                     throw new NotSupportedException("we can only load the Epoch as a \"constant\"");
                 }
-                ilgen.Ldsfld(typeof(Attributes.TimeFieldLayoutAttribute).GetField(nameof(Attributes.TimeFieldLayoutAttribute.Epoch), BindingFlags.Public | BindingFlags.Static));
+                ilgen.Ldsfld(typeof(Attributes.TimeFieldLayoutAttribute).GetField(nameof(Attributes.TimeFieldLayoutAttribute.Epoch), BindingFlags.Public | BindingFlags.Static) ?? throw new InvalidOperationException("Could not find the Epoch field"));
             }
             else
             {
@@ -363,7 +363,7 @@ namespace LinqToStdf {
 
         /// <seealso cref="OpCodes.Newobj"/>
         public static void Newobj(this ILGenerator ilgen, Type type, params Type[] parameters) {
-            ilgen.Emit(OpCodes.Newobj, type.GetConstructor(parameters));
+            ilgen.Emit(OpCodes.Newobj, type.GetConstructor(parameters) ?? throw new InvalidOperationException("Could not find the constructor we were looking for."));
         }
 
         /// <seealso cref="OpCodes.Newarr"/>
@@ -421,7 +421,7 @@ namespace LinqToStdf {
         /// for the parameters, so you don't have to construct an array in the code
         /// </summary>
         public static MethodInfo GetMethod(this Type type, string methodName, params Type[] parameters) {
-            return type.GetMethod(methodName, parameters);
+            return type.GetMethod(methodName, parameters) ?? throw new InvalidOperationException($"Could not find method '{methodName}' on {type}.");
         }
     }
 }

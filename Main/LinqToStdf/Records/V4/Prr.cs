@@ -47,9 +47,9 @@ namespace LinqToStdf.Records.V4 {
         public short? XCoordinate { get; set; }
         public short? YCoordinate { get; set; }
         public uint? TestTime { get; set; }
-        public string PartId { get; set; }
-        public string PartText { get; set; }
-        public byte[] PartFix { get; set; }
+        public string? PartId { get; set; }
+        public string? PartText { get; set; }
+        public byte[]? PartFix { get; set; }
         //dependency properties
         static readonly byte _SupersedesPartIdMask = 0x01;
         static readonly byte _SupersedesCoordsMask = 0x02;

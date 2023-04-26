@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -12,19 +13,19 @@ namespace LinqToStdf.RecordConverting
 {
     class ConverterEmittingVisitor : CodeNodeVisitor
     {
-        public ILGenerator ILGen;
-        public Type ConcreteType;
+        public required ILGenerator ILGen;
+        public required Type ConcreteType;
         public bool EnableLog = false;
 
-        LocalBuilder _ConcreteRecordLocal;
-        LocalBuilder _Reader;
+        LocalBuilder? _ConcreteRecordLocal;
+        LocalBuilder? _Reader;
         bool _InFieldAssignmentBlock = false;
         bool _InFieldAssignment = false;
         Label _EndLabel;
         Label _SkipAssignmentLabel;
         readonly Dictionary<int, LocalBuilder> _FieldLocals = new Dictionary<int, LocalBuilder>();
 
-        LocalBuilder _FieldLocal = null;
+        LocalBuilder? _FieldLocal = null;
 
         void Log(string msg)
         {
@@ -44,13 +45,14 @@ namespace LinqToStdf.RecordConverting
         static readonly MethodInfo _EnsureConvertibleToMethod = typeof(UnknownRecord).GetMethod("EnsureConvertibleTo", typeof(StdfRecord));
         public override CodeNode VisitEnsureCompat(EnsureCompatNode node)
         {
+            Debug.Assert(_ConcreteRecordLocal is not null);
             Log($"Ensuring compatibility of record");
             ILGen.Ldarg_0();
             ILGen.Ldloc(_ConcreteRecordLocal);
             ILGen.Callvirt(_EnsureConvertibleToMethod);
             return node;
         }
-        static readonly MethodInfo _GetBinaryReaderForContentMethod = typeof(UnknownRecord).GetMethod("GetBinaryReaderForContent", BindingFlags.Instance | BindingFlags.Public);
+        static readonly MethodInfo _GetBinaryReaderForContentMethod = typeof(UnknownRecord).GetMethod("GetBinaryReaderForContent", BindingFlags.Instance | BindingFlags.Public) ?? throw new InvalidOperationException("Can't find GetBinaryReaderForContent()");
 
         public override CodeNode VisitInitReaderNode(InitReaderNode node)
         {
@@ -71,10 +73,11 @@ namespace LinqToStdf.RecordConverting
 
             return node;
         }
-        static readonly MethodInfo _DisposeMethod = typeof(IDisposable).GetMethod("Dispose", new Type[0]);
+        static readonly MethodInfo _DisposeMethod = typeof(IDisposable).GetMethod("Dispose", new Type[0]) ?? throw new InvalidOperationException("Can't find IDisposable.Dispose");
         public override CodeNode VisitDisposeReader(DisposeReaderNode node)
         {
             Log($"Disposing reader");
+            Debug.Assert(_Reader is not null);
             ILGen.Ldloc(_Reader);
             ILGen.Callvirt(_DisposeMethod);
             return node;
@@ -100,6 +103,7 @@ namespace LinqToStdf.RecordConverting
         public override CodeNode VisitReturnRecord(ReturnRecordNode node)
         {
             Log($"returning record.");
+            Debug.Assert(_ConcreteRecordLocal is not null);
             ILGen.Ldloc(_ConcreteRecordLocal);
             ILGen.Ret();
             return node;
@@ -108,6 +112,7 @@ namespace LinqToStdf.RecordConverting
         public override CodeNode VisitSkipRawBytes(SkipRawBytesNode node)
         {
             Log($"Skipping {node.Bytes} bytes.");
+            Debug.Assert(_Reader is not null);
             ILGen.Ldloc(_Reader);
             ILGen.Ldc_I4(node.Bytes);
             ILGen.Callvirt(_SkipRawMethod);
@@ -117,9 +122,9 @@ namespace LinqToStdf.RecordConverting
         readonly Dictionary<Type, MethodInfo> _SkipTypeMethods = new Dictionary<Type, MethodInfo>();
         public override CodeNode VisitSkipType(SkipTypeNode node)
         {
-            MethodInfo skipTypeMethod;
+            MethodInfo? skipTypeMethod;
             var argsArray = node.Type.IsArray ? new[] { typeof(int) } : new Type[0];
-            if (node.IsNibble) skipTypeMethod = typeof(BinaryReader).GetMethod("SkipNibbleArray", argsArray);
+            if (node.IsNibble) skipTypeMethod = typeof(BinaryReader).GetMethod("SkipNibbleArray", argsArray) ?? throw new InvalidOperationException("Can't find SkipNibbleArray");
             else if (!_SkipTypeMethods.TryGetValue(node.Type, out skipTypeMethod))
             {
                 string skipTypeMethodName;
@@ -151,11 +156,12 @@ namespace LinqToStdf.RecordConverting
                 {
                     throw new NotSupportedException(string.Format(Resources.UnsupportedReaderType, node.Type));
                 }
-                skipTypeMethod = typeof(BinaryReader).GetMethod(skipTypeMethodName, argsArray);
+                skipTypeMethod = typeof(BinaryReader).GetMethod(skipTypeMethodName, argsArray) ?? throw new InvalidOperationException($"Can't find skipTypeMethodName: {skipTypeMethodName}");
                 _SkipTypeMethods[node.Type] = skipTypeMethod;
             }
             Log($"Skipping with {skipTypeMethod}.");
 
+            Debug.Assert(_Reader is not null);
             ILGen.Ldloc(_Reader);
             //if we have a length index, load its local (we enforce its presence for arrays in the node)
             if (node.LengthIndex.HasValue)
@@ -170,6 +176,7 @@ namespace LinqToStdf.RecordConverting
         {
             if (_FieldLocal == null) throw new InvalidOperationException("Cannot read string outside a FieldAssignmentNode");
             Log($"Reading string of fixed length {node.Length}.");
+            Debug.Assert(_Reader is not null);
             ILGen.Ldloc(_Reader);
             ILGen.Ldc_I4(node.Length);
             ILGen.Callvirt(_ReadFixedStringMethod);
@@ -181,9 +188,9 @@ namespace LinqToStdf.RecordConverting
         public override CodeNode VisitReadType(ReadTypeNode node)
         {
             if (_FieldLocal == null) throw new InvalidOperationException("Cannot read string outside a FieldAssignmentNode");
-            MethodInfo readTypeMethod;
+            MethodInfo? readTypeMethod;
             var argsArray = node.Type.IsArray ? new[] { typeof(int) } : new Type[0];
-            if (node.IsNibble) readTypeMethod = typeof(BinaryReader).GetMethod("ReadNibbleArray", argsArray);
+            if (node.IsNibble) readTypeMethod = typeof(BinaryReader).GetMethod("ReadNibbleArray", argsArray) ?? throw new InvalidOperationException($"Can't find ReadNibbleArray");
             else if (!_ReadTypeMethods.TryGetValue(node.Type, out readTypeMethod))
             {
                 string readTypeMethodName;
@@ -215,11 +222,12 @@ namespace LinqToStdf.RecordConverting
                 {
                     throw new NotSupportedException(string.Format(Resources.UnsupportedReaderType, node.Type));
                 }
-                readTypeMethod = typeof(BinaryReader).GetMethod(readTypeMethodName, argsArray);
+                readTypeMethod = typeof(BinaryReader).GetMethod(readTypeMethodName, argsArray) ?? throw new InvalidOperationException($"Can't find readTypeMethodName: {readTypeMethodName}");
                 _ReadTypeMethods[node.Type] = readTypeMethod;
             }
             Log($"Reading with {readTypeMethod.Name}.");
 
+            Debug.Assert(_Reader is not null);
             ILGen.Ldloc(_Reader);
             //if we have a length index, load its local (we enforce its presence for arrays in the node)
             if (node.LengthIndex.HasValue)
@@ -230,7 +238,7 @@ namespace LinqToStdf.RecordConverting
             ILGen.Stloc(_FieldLocal);
             return node;
         }
-        static readonly MethodInfo _AtEndOfStreamMethod = typeof(BinaryReader).GetProperty("AtEndOfStream").GetGetMethod();
+        static readonly MethodInfo _AtEndOfStreamMethod = typeof(BinaryReader).GetProperty("AtEndOfStream")?.GetGetMethod() ?? throw new InvalidOperationException("Can't find BinaryReader.AtEndOfStream getter");
         public override CodeNode VisitFieldAssignment(FieldAssignmentNode node)
         {
             //ensure we're in a FieldAssignmentBlock
@@ -243,6 +251,7 @@ namespace LinqToStdf.RecordConverting
             {
                 Log($"Handling field {node.FieldIndex}.");
                 //generate the end of stream check
+                Debug.Assert(_Reader is not null);
                 ILGen.Ldloc(_Reader);
                 ILGen.Callvirt(_AtEndOfStreamMethod);
                 ILGen.Brtrue(_EndLabel);
@@ -299,6 +308,7 @@ namespace LinqToStdf.RecordConverting
         {
             if (!_InFieldAssignment) throw new InvalidOperationException("SkipAssignmentIfMissingValueNode must be in a FieldAssignmentNode");
             Log($"Handling conditional assignment based on missing value {node.MissingValue}.");
+            Debug.Assert(_FieldLocal is not null);
             ILGen.Ldloca(_FieldLocal);
             ILGen.Ldc(node.MissingValue, node.MissingValue.GetType());
             //BUG: Revisit this.  The purpose of constrained is so you don't have to do different codegen for valuetype vs. reference type
@@ -316,7 +326,9 @@ namespace LinqToStdf.RecordConverting
         {
             if (!_InFieldAssignment) throw new InvalidOperationException("AssignFieldToPropertyNode must be in a FieldAssignmentNode");
             Log($"Assigning value to {node.Property.Name}.");
+            Debug.Assert(_ConcreteRecordLocal is not null);
             ILGen.Ldloc(_ConcreteRecordLocal);
+            Debug.Assert(_FieldLocal is not null);
             ILGen.Ldloc(_FieldLocal);
             //handle the case where the property is a nullable version of the field type
             if (node.FieldType.IsValueType)
@@ -328,7 +340,7 @@ namespace LinqToStdf.RecordConverting
                 }
             }
             //assign the value to the property
-            ILGen.Callvirt(node.Property.GetSetMethod());
+            ILGen.Callvirt(node.Property.GetSetMethod() ?? throw new InvalidOperationException("Can't find set method for property."));
             return node;
         }
         public override CodeNode VisitSkipArrayAssignmentIfLengthIsZero(SkipArrayAssignmentIfLengthIsZeroNode node)

@@ -33,7 +33,7 @@ namespace LinqToStdf {
         {
             return source.Provider.CreateQuery<TRecord>(
                 Expression.Call(
-                    ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TRecord)),
+                    ((MethodInfo)(MethodBase.GetCurrentMethod() ?? throw new InvalidOperationException("Couldn't get current method."))).MakeGenericMethod(typeof(TRecord)),
                     source.Expression));
         }
 
@@ -43,7 +43,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets the <see cref="Mir"/> for the record context.
         /// </summary>
-        public static Mir GetMir(this IRecordContext record) {
+        public static Mir? GetMir(this IRecordContext record) {
             return (from mir in record.StdfFile.GetRecords().OfExactType<Mir>()
                     select mir).FirstOrDefault();
         }
@@ -51,7 +51,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets the <see cref="Mrr"/> for the record context.
         /// </summary>
-        public static Mrr GetMrr(this IRecordContext record) {
+        public static Mrr? GetMrr(this IRecordContext record) {
             return (from mrr in record.StdfFile.GetRecords().OfExactType<Mrr>()
                     select mrr).FirstOrDefault();
         }
@@ -76,7 +76,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets the summary (head 255) <see cref="Pcr"/> for the record context.
         /// </summary>
-        public static Pcr GetSummaryPcr(this IRecordContext record) {
+        public static Pcr? GetSummaryPcr(this IRecordContext record) {
             return (from r in record.StdfFile.GetRecords().OfExactType<Pcr>()
                     where r.HeadNumber == 255
                     select r).FirstOrDefault();
@@ -210,7 +210,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets the <see cref="Wir"/> for the current head
         /// </summary>
-        public static Wir GetWir(this IHeadIndexable record) {
+        public static Wir? GetWir(this IHeadIndexable record) {
             return (from wir in record.StdfFile.GetRecords().OfExactType<Wir>()
                     where wir.HeadNumber == record.HeadNumber
                     select wir).FirstOrDefault();
@@ -219,7 +219,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets the <see cref="Wrr"/> for the current head
         /// </summary>
-        public static Wrr GetWrr(this IHeadIndexable record) {
+        public static Wrr? GetWrr(this IHeadIndexable record) {
             return (from wrr in record.StdfFile.GetRecords().OfExactType<Wrr>()
                     where wrr.HeadNumber == record.HeadNumber
                     select wrr).FirstOrDefault();
@@ -232,7 +232,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets the current Prr associated with the head/site
         /// </summary>
-        public static Prr GetPrr(this IHeadSiteIndexable record) {
+        public static Prr? GetPrr(this IHeadSiteIndexable record) {
             return (from prr in record.StdfFile.GetRecords().OfExactType<Prr>()
                     where prr.HeadNumber == record.HeadNumber && prr.SiteNumber == record.SiteNumber
                     select prr).FirstOrDefault();
@@ -241,7 +241,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Gets the current Pir associated with the head/site
         /// </summary>
-        public static Pir GetPir(this IHeadSiteIndexable record) {
+        public static Pir? GetPir(this IHeadSiteIndexable record) {
             return (from pir in record.StdfFile.GetRecords().OfExactType<Pir>()
                     where pir.HeadNumber == record.HeadNumber && pir.SiteNumber == record.SiteNumber
                     select pir).FirstOrDefault();
@@ -251,14 +251,14 @@ namespace LinqToStdf {
 
         #region extending PIR/PRR
 
-        public static Prr GetMatchingPrr(this Pir pir) {
+        public static Prr? GetMatchingPrr(this Pir pir) {
             return pir.After()
                 .OfExactType<Prr>()
                 .Where(r => r.HeadNumber == pir.HeadNumber && r.SiteNumber == pir.SiteNumber)
                 .FirstOrDefault();
         }
 
-        public static Pir GetMatchingPir(this Prr prr) {
+        public static Pir? GetMatchingPir(this Prr prr) {
             return prr.Before()
                 .OfExactType<Pir>()
                 .Where(r => r.HeadNumber == prr.HeadNumber && r.SiteNumber == prr.SiteNumber)
@@ -286,7 +286,7 @@ namespace LinqToStdf {
         /// <returns>The records associated with the part (between the <see cref="Pir"/>
         /// and <see cref="Prr"/> and sharing the same head/site information.</returns>
         public static IEnumerable<StdfRecord> GetChildRecords(this Prr prr) {
-            return prr.GetMatchingPir().GetChildRecords();
+            return prr.GetMatchingPir()?.GetChildRecords() ?? throw new InvalidOperationException("Couldn't find matching Pir");
         }
 
         #endregion
@@ -322,5 +322,8 @@ namespace LinqToStdf {
         public static SeekAlgorithm Chain(this SeekAlgorithm first, SeekAlgorithm other) {
             return (input, endian, callback) => other(first(input, endian, callback), endian, callback);
         }
+
+        public static MethodInfo GetMethodOrFail(this Type type, string methodName) => type.GetMethod(methodName) ?? throw new InvalidOperationException($"Could not get method {methodName} on type {type}");
+        public static MethodInfo GetMethodOrFail(this Type type, string methodName, params Type[] parameters) => type.GetMethod(methodName, parameters) ?? throw new InvalidOperationException($"Could not get method {methodName} on type {type}");
     }
 }

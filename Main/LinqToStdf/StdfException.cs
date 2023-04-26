@@ -22,12 +22,12 @@ namespace LinqToStdf {
         //
 
         public StdfException() { }
-        public StdfException(string message) : base(message) { }
-        public StdfException(string message, Exception inner) : base(message, inner) { }
+        public StdfException(string? message) : base(message) { }
+        public StdfException(string? message, Exception inner) : base(message, inner) { }
 
         /// <summary>
         /// If applicable, the <see cref="ErrorRecord"/> associated with the record.
         /// </summary>
-        public ErrorRecord ErrorRecord { get; set; }
+        public ErrorRecord? ErrorRecord { get; set; }
     }
 }

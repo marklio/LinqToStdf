@@ -40,7 +40,7 @@ namespace LinqToStdf {
         /// </summary>
         /// <param name="obj">the object to compare to</param>
         /// <returns>true if the instance is equal to <paramref name="obj"/>, otherwise false</returns>
-        public override bool Equals(object obj) {
+        public override bool Equals(object? obj) {
 			if (!(obj is RecordType)) {
 				return false;
 			}
@@ -100,8 +100,8 @@ namespace LinqToStdf {
 		/// <param name="obj">the RecordType to compare to</param>
 		/// <returns>the standard comparison values</returns>
 		/// <seealso cref="IComparable.CompareTo"/>
-		public int CompareTo(object obj) {
-			return CompareTo((RecordType)obj);
+		public int CompareTo(object? obj) {
+			return obj is RecordType rt ? CompareTo((RecordType)obj) : -1;
 		}
 
 		#endregion

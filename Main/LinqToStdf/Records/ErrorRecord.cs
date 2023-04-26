@@ -33,7 +33,7 @@ namespace LinqToStdf.Records {
             get { return new RecordType(); }
         }
 
-        public virtual string Message { get; set; }
+        public virtual string? Message { get; set; }
 
 
         public virtual StdfException ToException() {

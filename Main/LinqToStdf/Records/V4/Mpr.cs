@@ -47,10 +47,10 @@ namespace LinqToStdf.Records.V4 {
         public byte? SiteNumber { get; set; }
         public byte TestFlags { get; set; }
         public byte ParametricFlags { get; set; }
-        public byte[] PinStates { get; set; }
-        public float[] Results { get; set; }
-        public string TestText { get; set; }
-        public string AlarmId { get; set; }
+        public byte[]? PinStates { get; set; }
+        public float[]? Results { get; set; }
+        public string? TestText { get; set; }
+        public string? AlarmId { get; set; }
         public byte? OptionalFlags { get; set; }
         /// <summary>
         /// Known values are: 15, 12, 9, 6, 3, 2, 0, -3, -6, -9, -12
@@ -68,12 +68,12 @@ namespace LinqToStdf.Records.V4 {
         public float? HighLimit { get; set; }
         public float? StartingCondition { get; set; }
         public float? ConditionIncrement { get; set; }
-        public ushort[] PinIndexes { get; set; }
-        public string Units { get; set; }
-        public string IncrementUnits { get; set; }
-        public string ResultFormatString { get; set; }
-        public string LowLimitFormatString { get; set; }
-        public string HighLimitFormatString { get; set; }
+        public ushort[]? PinIndexes { get; set; }
+        public string? Units { get; set; }
+        public string? IncrementUnits { get; set; }
+        public string? ResultFormatString { get; set; }
+        public string? LowLimitFormatString { get; set; }
+        public string? HighLimitFormatString { get; set; }
         public float? LowSpecLimit { get; set; }
         public float? HighSpecLimit { get; set; }
     }

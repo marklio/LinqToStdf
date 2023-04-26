@@ -54,7 +54,7 @@ namespace LinqToStdf.Indexing {
     }
 
     public class SimpleIndexingStrategy : CachingIndexingStrategy {
-        List<StdfRecord> _Records;
+        List<StdfRecord>? _Records;
 
         public override Expression TransformQuery(Expression query) {
             return query;
@@ -68,7 +68,7 @@ namespace LinqToStdf.Indexing {
         }
 
         public override IEnumerable<StdfRecord> EnumerateIndexedRecords() {
-            foreach (var r in _Records) {
+            foreach (var r in _Records ?? throw new InvalidOperationException("Records have not been indexed.")) {
                 yield return r;
             }
         }

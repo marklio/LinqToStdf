@@ -23,8 +23,8 @@ namespace LinqToStdf.Records.V4 {
         /// While ushort, valid PGR Indexes must be 32,768 - 65,535
         /// </summary>
         public ushort GroupIndex { get; set; }
-        public string GroupName { get; set; }
-        public ushort[] PinIndexes { get; set; }
+        public string? GroupName { get; set; }
+        public ushort[]? PinIndexes { get; set; }
 
     }
 }

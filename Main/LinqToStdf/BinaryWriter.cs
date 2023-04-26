@@ -11,6 +11,7 @@ using System.Diagnostics;
 
 namespace LinqToStdf {
     using Attributes;
+    using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
     /// Knows how to write STDF-relevant binary data to a stream.
@@ -68,7 +69,8 @@ namespace LinqToStdf {
 
         private readonly Stream _Stream;
         private readonly Endian _StreamEndian;
-        private byte[] _Buffer;
+        //TODO: rent buffer
+        private byte[]? _Buffer;
         private readonly bool _WriteBackwards;
 
         /// <summary>
@@ -76,6 +78,7 @@ namespace LinqToStdf {
         /// </summary>
         /// <param name="length">The number of bytes to write</param>
         void WriteToStream(int length) {
+            Debug.Assert(_Buffer is not null);
             if (_WriteBackwards) {
                 Array.Reverse(_Buffer, 0, length);
             }
@@ -107,7 +110,7 @@ namespace LinqToStdf {
         /// <typeparam name="T">The element type</typeparam>
         /// <param name="arr">The array to write</param>
         /// <param name="writeFunc">The function that will write a single element</param>
-        void WriteArray<T>(T[] arr, Action<T> writeFunc) {
+        void WriteArray<T>(T[]? arr, Action<T> writeFunc) {
             Debug.Assert(writeFunc != null, "The provided writeFunc delegate is null");
             if (arr == null || arr.Length == 0) return;
             if (_WriteBackwards) {
@@ -129,14 +132,14 @@ namespace LinqToStdf {
         /// <summary>
         /// Writes a byte array
         /// </summary>
-        public void WriteByteArray(byte[] value) {
+        public void WriteByteArray(byte[]? value) {
             WriteArray(value, WriteByte);
         }
 
         /// <summary>
         /// Writes a nibble array
         /// </summary>
-        public void WriteNibbleArray(byte[] value) {
+        public void WriteNibbleArray(byte[]? value) {
             if (value == null || value.Length == 0) return;
             var newArray = new byte[(value.Length + 1) / 2];
             for (var i = 0; i < newArray.Length; i++) {
@@ -150,6 +153,7 @@ namespace LinqToStdf {
             {
                 Array.Reverse(newArray);
             }
+            EnsureBufferLength(newArray.Length);
             newArray.CopyTo(_Buffer, 0);
             WriteToStream(newArray.Length);
         }
@@ -157,7 +161,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Writes a bit array
         /// </summary>
-        public void WriteBitArray(BitArray value) {
+        public void WriteBitArray(BitArray? value) {
             value = value ?? new BitArray(0);
             var length = (ushort)value.Length;
             if (!_WriteBackwards) {
@@ -185,7 +189,7 @@ namespace LinqToStdf {
         /// Writes a signed byte array
         /// </summary>
         /// <param name="value"></param>
-        public void WriteSByteArray(sbyte[] value) {
+        public void WriteSByteArray(sbyte[]? value) {
             WriteArray(value, WriteSByte);
         }
 
@@ -200,7 +204,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Writes an unsigned 2-byte integer array
         /// </summary>
-        public void WriteUInt16Array(ushort[] value) {
+        public void WriteUInt16Array(ushort[]? value) {
             WriteArray(value, WriteUInt16);
         }
 
@@ -215,7 +219,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Writes a 2-byte integer array
         /// </summary>
-        public void WriteInt16Array(short[] value) {
+        public void WriteInt16Array(short[]? value) {
             WriteArray(value, WriteInt16);
         }
 
@@ -230,7 +234,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Writes an unsigned 4-byte integer array
         /// </summary>
-        public void WriteUInt32Array(uint[] value) {
+        public void WriteUInt32Array(uint[]? value) {
             WriteArray(value, WriteUInt32);
         }
 
@@ -260,7 +264,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Writes an unsigned 8-byte integer array
         /// </summary>
-        public void WriteUInt64Array(ulong[] value) {
+        public void WriteUInt64Array(ulong[]? value) {
             WriteArray(value, WriteUInt64);
         }
 
@@ -275,7 +279,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Writes an 8-byte integer array
         /// </summary>
-        public void WriteInt64Array(long[] value) {
+        public void WriteInt64Array(long[]? value) {
             WriteArray(value, WriteInt64);
         }
 
@@ -290,7 +294,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Writes a 4-byte IEEE floating point number array
         /// </summary>
-        public void WriteSingleArray(float[] value) {
+        public void WriteSingleArray(float[]? value) {
             WriteArray(value, WriteSingle);
         }
 
@@ -321,7 +325,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Writes an array of single characters
         /// </summary>
-        public void WriteCharacterArray(char[] value) {
+        public void WriteCharacterArray(char[]? value) {
             WriteArray(value, WriteCharacter);
         }
 
@@ -337,7 +341,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Writes a string where the first byte indicates the length
         /// </summary>
-        public void WriteString(string value) {
+        public void WriteString(string? value) {
             // TODO: This should be setting value to the fields MissingValue
             value = value ?? String.Empty;
             if (value.Length > 255) throw new InvalidOperationException(Resources.StringTooLong);
@@ -357,7 +361,7 @@ namespace LinqToStdf {
         /// <summary>
         /// Writes a string where the first byte indicates the length
         /// </summary>
-        public void WriteStringArray(string[] value) {
+        public void WriteStringArray(string[]? value) {
             WriteArray(value, WriteString);
         }
 
@@ -405,6 +409,7 @@ namespace LinqToStdf {
             }
         }
 
+        [MemberNotNull(nameof(_Buffer))]
         /// <summary>
         /// Ensures the buffer is large enough to handle the specified length
         /// </summary>
@@ -421,6 +426,7 @@ namespace LinqToStdf {
         /// </summary>
         /// <param name="length">The relevant length</param>
         void SwapBuffer(int length) {
+            Debug.Assert(_Buffer is not null);
             Array.Reverse(_Buffer, 0, length);
         }
 

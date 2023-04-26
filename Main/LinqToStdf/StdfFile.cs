@@ -14,6 +14,7 @@ using LinqToStdf.Indexing;
 using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToStdf {
 
@@ -42,16 +43,13 @@ namespace LinqToStdf {
     /// </remarks>
     public sealed partial class StdfFile : IRecordContext {
         readonly IStdfStreamManager _StreamManager;
-        RewindableByteStream _Stream;
+        RewindableByteStream? _Stream;
         readonly static internal RecordConverterFactory _V4ConverterFactory = new RecordConverterFactory();
-        readonly RecordConverterFactory _ConverterFactory;
         /// <summary>
         /// Exposes the ConverterFactory in use for parsing.
         /// This allows record un/converters to be registered.
         /// </summary>
-        public RecordConverterFactory ConverterFactory {
-            get { return _ConverterFactory; }
-        }
+        public RecordConverterFactory ConverterFactory { get; }
 
         Endian _Endian = Endian.Unknown;
         /// <summary>
@@ -63,10 +61,10 @@ namespace LinqToStdf {
         long? _ExpectedLength = null;
         public long? ExpectedLength { get { return _ExpectedLength; } }
 
-        RecordFilter _RecordFilter = null;
+        RecordFilter _RecordFilter;
         bool _FiltersLocked;
         readonly object _ISLock = new object();
-        private IIndexingStrategy _IndexingStrategy = null;
+        private IIndexingStrategy? _IndexingStrategy = null;
 
         public IIndexingStrategy IndexingStrategy
         {
@@ -165,28 +163,29 @@ namespace LinqToStdf {
         /// to emit to a dynamic assembly suitable for debugging IL generation.</param>
         public StdfFile(IStdfStreamManager streamManager, bool debug) : this(streamManager, debug, null) { }
 
-        internal StdfFile(IStdfStreamManager streamManager, bool debug, RecordsAndFields recordsAndFields)
-            : this(streamManager, PrivateImpl.None) {
-            if (debug || recordsAndFields != null) {
-                _ConverterFactory = new RecordConverterFactory(recordsAndFields) { Debug = debug };
-                StdfV4Specification.RegisterRecords(_ConverterFactory);
+        static RecordConverterFactory CreateConverterFactory(bool debug, RecordsAndFields? recordsAndFields)
+        {
+            if (debug || recordsAndFields != null)
+            {
+                var factory = new RecordConverterFactory(recordsAndFields) { Debug = debug };
+                StdfV4Specification.RegisterRecords(factory);
+                return factory;
             }
-            else {
-                _ConverterFactory = new RecordConverterFactory(_V4ConverterFactory);
+            else
+            {
+                return new RecordConverterFactory(_V4ConverterFactory);
             }
         }
-
-        internal StdfFile(IStdfStreamManager streamManager, RecordConverterFactory rcf)
-            : this(streamManager, PrivateImpl.None) {
-            _ConverterFactory = rcf;
+        internal StdfFile(IStdfStreamManager streamManager, bool debug, RecordsAndFields? recordsAndFields)
+            : this(streamManager, CreateConverterFactory(debug, recordsAndFields)) {
         }
 
-        private StdfFile(IStdfStreamManager streamManager, PrivateImpl _) {
+        internal StdfFile(IStdfStreamManager streamManager, RecordConverterFactory recordConverterFactory)
+        {
             _StreamManager = streamManager;
             _RecordFilter = BuiltInFilters.IdentityFilter;
+            ConverterFactory = recordConverterFactory;
         }
-
-        enum PrivateImpl { None = 0 }
 
         /// <summary>
         /// Adds a record filter to the stream.
@@ -226,12 +225,12 @@ namespace LinqToStdf {
 
             internal static IQueryable Create(Type elementType, IEnumerable sequence, Func<Expression, Expression> transform)
             {
-                return (IQueryable)Activator.CreateInstance(typeof(Queryable<>).MakeGenericType(new Type[] { elementType }), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { sequence, transform }, null);
+                return (IQueryable)(Activator.CreateInstance(typeof(Queryable<>).MakeGenericType(new Type[] { elementType }), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { sequence, transform }, null) ?? throw new InvalidOperationException("Couldn't create Queryable instance."));
             }
 
             internal static IQueryable Create(Type elementType, Expression expression, Func<Expression, Expression> transform)
             {
-                return (IQueryable)Activator.CreateInstance(typeof(Queryable<>).MakeGenericType(new Type[] { elementType }), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { expression, transform }, null);
+                return (IQueryable)(Activator.CreateInstance(typeof(Queryable<>).MakeGenericType(new Type[] { elementType }), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { expression, transform }, null) ?? throw new InvalidOperationException("Couldn't create Queryable instance."));
             }
 
             public abstract IEnumerable Enumerable { get; }
@@ -240,13 +239,16 @@ namespace LinqToStdf {
 
         internal class Queryable<T> : Queryable, IOrderedQueryable<T>, IQueryProvider
         {
-            EnumerableQuery<T> _EnumerableQuery;
+            EnumerableQuery<T>? _EnumerableQuery;
             readonly Func<Expression, Expression> _ExpressionTransform;
             readonly Expression _Expression;
 
             Queryable(Func<Expression, Expression> expressionTransform)
             {
                 _ExpressionTransform = expressionTransform;
+                //we need _Expression to be "assigned" before exiting this ctor to make nullability analysis happy, but we can't assign it
+                //because we need to access "this". So, assign a dummy, non-null value and overwrite it.
+                _Expression = Expression.Constant(null);
             }
 
             public Queryable(IEnumerable<T> enumerable, Func<Expression, Expression> expressionTransform)
@@ -262,12 +264,15 @@ namespace LinqToStdf {
                 _Expression = expression;
             }
 
+            [MemberNotNull(nameof(_EnumerableQuery))]
+            void EnsureEnumerableQuery()
+            {
+                _EnumerableQuery ??= new EnumerableQuery<T>(new QueryableRewriter().Visit(_ExpressionTransform(_Expression)));
+            }
+
             private IEnumerator<T> GetEnumeratorInternal()
             {
-                if (_EnumerableQuery == null)
-                {
-                    _EnumerableQuery = new EnumerableQuery<T>(new QueryableRewriter().Visit(_ExpressionTransform(_Expression)));
-                }
+                EnsureEnumerableQuery();
                 return ((IEnumerable<T>)this._EnumerableQuery).GetEnumerator();
             }
 
@@ -303,7 +308,11 @@ namespace LinqToStdf {
 
             public override IEnumerable Enumerable
             {
-                get { return _EnumerableQuery; }
+                get
+                {
+                    EnsureEnumerableQuery();
+                    return _EnumerableQuery;
+                }
             }
 
             public IQueryProvider Provider
@@ -322,8 +331,8 @@ namespace LinqToStdf {
 
             public IQueryable CreateQuery(Expression expression)
             {
-                Type type = TypeHelper.FindGenericType(typeof(IQueryable<>), expression.Type);
-                if (type == null)
+                var type = TypeHelper.FindGenericType(typeof(IQueryable<>), expression.Type);
+                if (type is null)
                 {
                     throw new ArgumentException("Could not find type", "expression");
                 }
@@ -332,22 +341,14 @@ namespace LinqToStdf {
 
             public TResult Execute<TResult>(Expression expression)
             {
-                EnumerableQuery<T> queryable = _EnumerableQuery;
-                if (queryable == null)
-                {
-                    queryable = new EnumerableQuery<T>(_Expression);
-                }
-                return ((IQueryProvider)queryable).Execute<TResult>((new QueryableRewriter().Visit(_ExpressionTransform(expression))));
+                var queryable = _EnumerableQuery ?? new EnumerableQuery<T>(_Expression);
+                return ((IQueryProvider)queryable).Execute<TResult>(new QueryableRewriter().Visit(_ExpressionTransform(expression)));
             }
 
             public object Execute(Expression expression)
             {
-                EnumerableQuery<T> queryable = _EnumerableQuery;
-                if (queryable == null)
-                {
-                    queryable = new EnumerableQuery<T>(_Expression);
-                }
-                return ((IQueryProvider)queryable).Execute(new QueryableRewriter().Visit(_ExpressionTransform(expression)));
+                var queryable = _EnumerableQuery ?? new EnumerableQuery<T>(_Expression);
+                return ((IQueryProvider)queryable).Execute(new QueryableRewriter().Visit(_ExpressionTransform(expression))) ?? throw new InvalidOperationException("Execute returned null");
             }
 
             #endregion
@@ -578,7 +579,7 @@ namespace LinqToStdf {
                         }
                         else {
                             var ur = new UnknownRecord(header.Value.RecordType, contents, endian) { Offset = position };
-                            StdfRecord r = _ConverterFactory.Convert(ur);
+                            StdfRecord r = ConverterFactory.Convert(ur);
                             if (r.GetType() != typeof(UnknownRecord)) {
                                 //it converted, so update our last known position
                                 //TODO: We should think about:

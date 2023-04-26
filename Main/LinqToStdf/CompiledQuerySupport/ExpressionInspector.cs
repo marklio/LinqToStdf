@@ -8,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Linq.Expressions;
+using System.Diagnostics;
 
 namespace LinqToStdf.CompiledQuerySupport {
 
@@ -27,7 +28,7 @@ namespace LinqToStdf.CompiledQuerySupport {
             /// <summary>
             /// The records and fields used in the query
             /// </summary>
-            RecordsAndFields _RecordsAndFields = null;
+            RecordsAndFields? _RecordsAndFields = null;
 
             /// <summary>
             /// Inspects a query, ensuring it won't leak records and calculating the
@@ -48,6 +49,7 @@ namespace LinqToStdf.CompiledQuerySupport {
             /// </summary>
             protected override Expression VisitMember(MemberExpression node)
             {
+                Debug.Assert(_RecordsAndFields is not null);
                 //Get the type that declares the member
                 var type = node.Member.DeclaringType;
                 //if it is an StdfRecord, track the field
@@ -91,7 +93,7 @@ namespace LinqToStdf.CompiledQuerySupport {
                 //check any element type (for arrays, pointers, etc.)
                 if (type.HasElementType)
                 {
-                    EnsureTypeWontLeakRecords(type.GetElementType());
+                    EnsureTypeWontLeakRecords(type.GetElementType() ?? throw new InvalidOperationException("Type claimed to have an element type, but returned null."));
                 }
                 //check public fields/properties/methods
                 EnsureTypesWontLeakRecords(from f in type.GetFields() select f.FieldType);

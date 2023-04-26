@@ -36,14 +36,14 @@ namespace LinqToStdf.Records.V4 {
         /// <summary>
         /// Known values are: P, F, M
         /// </summary>
-        public string TestType { get; set; }
+        public string? TestType { get; set; }
         public uint TestNumber { get; set; }
         public uint? ExecutedCount { get; set; }
         public uint? FailedCount { get; set; }
         public uint? AlarmCount { get; set; }
-        public string TestName { get; set; }
-        public string SequencerName { get; set; }
-        public string TestLabel { get; set; }
+        public string? TestName { get; set; }
+        public string? SequencerName { get; set; }
+        public string? TestLabel { get; set; }
         public float? TestTime { get; set; }
         public float? TestMin { get; set; }
         public float? TestMax { get; set; }
