@@ -184,10 +184,10 @@ namespace LinqToStdf {
             return GetUnconverter(record.GetType())(record, endian);
         }
 
-#if !SILVERLIGHT
         AssemblyBuilder _DynamicAssembly;
         ModuleBuilder _DynamicModule;
 
+        /*
         void InitializeDynamicAssembly() {
             _DynamicAssembly = AppDomain.CurrentDomain.DefineDynamicAssembly(
                 new AssemblyName("DynamicConverters"),
@@ -207,7 +207,7 @@ namespace LinqToStdf {
             if (!Debug || _DynamicAssembly == null) throw new InvalidOperationException(Resources.InvalidSaveAssembly);
             _DynamicAssembly.Save("DynamicConverters.dll");
         }
-#endif
+        */
 
         #region CreateConverterForType
 
@@ -244,20 +244,8 @@ namespace LinqToStdf {
         /// </summary>
         Converter<UnknownRecord, StdfRecord> LazyCreateConverterForType(Type type)
         {
-            ILGenerator ilGenerator = null;
             Func<Converter<UnknownRecord, StdfRecord>> finalizeConverter = null;
-            if (Debug)
-            {
-#if SILVERLIGHT
-                throw new NotSupportedException(Resources.NoDebugInSilverlight);
-#else
-                ilGenerator = CreateNewRefEmitMethod<Converter<UnknownRecord, StdfRecord>>(string.Format("{0}Converter", type.Name), string.Format("ConvertTo{0}", type.Name), ref finalizeConverter);
-#endif
-            }
-            else
-            {
-                ilGenerator = CreateNewLCGMethod<Converter<UnknownRecord, StdfRecord>>(string.Format("ConvertTo{0}", type.Name), ref finalizeConverter);
-            }
+            var ilGenerator = CreateNewLCGMethod<Converter<UnknownRecord, StdfRecord>>(string.Format("ConvertTo{0}", type.Name), ref finalizeConverter);
             var generator = new ConverterGenerator(ilGenerator, type, _RecordsAndFields?.GetFieldsForType(type));
             {
                 generator.GenerateConverter();
@@ -290,20 +278,8 @@ namespace LinqToStdf {
 
         Func<StdfRecord, Endian, UnknownRecord> LazyCreateUnconverterForType(Type type)
         {
-            ILGenerator ilGenerator = null;
             Func<Func<StdfRecord, Endian, UnknownRecord>> finalizeUnconverter = null;
-            if (Debug)
-            {
-#if SILVERLIGHT
-                throw new NotSupportedException(Resources.NoDebugInSilverlight);
-#else
-                ilGenerator = CreateNewRefEmitMethod<Func<StdfRecord, Endian, UnknownRecord>>(string.Format("{0}Unconverter", type.Name), string.Format("UnconvertFrom{0}", type.Name), ref finalizeUnconverter);
-#endif
-            }
-            else
-            {
-                ilGenerator = CreateNewLCGMethod<Func<StdfRecord, Endian, UnknownRecord>>(string.Format("UnconvertFrom{0}", type.Name), ref finalizeUnconverter);
-            }
+            var ilGenerator = CreateNewLCGMethod<Func<StdfRecord, Endian, UnknownRecord>>(string.Format("UnconvertFrom{0}", type.Name), ref finalizeUnconverter);
             var generator = new UnconverterGenerator(ilGenerator, type);
             generator.GenerateUnconverter();
             var unconverter = finalizeUnconverter();
@@ -326,6 +302,7 @@ namespace LinqToStdf {
             return delegateType.GetMethod("Invoke");
         }
 
+        /*
         /// <summary>
         /// Creates a new dynamic Reflection.Emit method and provides the ILGenerator for it, as well as a delegate to call
         /// to "bake" the method for use.
@@ -355,6 +332,7 @@ namespace LinqToStdf {
             };
             return dynamicMethod.GetILGenerator();
         }
+        */
 
         /// <summary>
         /// Creates a new dynamic method using LCG and provides the ILGenerator for it, as well as a delegate to call
