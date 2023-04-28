@@ -60,6 +60,7 @@ namespace LinqToStdf.Records.V4 {
 		public byte[]? ProgrammedStates { get; set; }
 		public BitArray? FailingPinBitfield { get; set; }
 		public string? VectorName { get; set; }
+		public string? TimeSet { get; set; }
 		public string? OpCode { get; set; }
 		public string? TestText { get; set; }
 		public string? AlarmId { get; set; }

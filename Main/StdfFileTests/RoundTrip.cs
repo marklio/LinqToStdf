@@ -15,14 +15,14 @@ namespace StdfFileTests
     {
         public static TRecord GetSingleRecord<TRecord>(this StdfFile file) where TRecord : StdfRecord
         {
-            StartOfStreamRecord sos = null;
-            Far far = null;
-            TRecord recordOfInterest = null;
-            EndOfStreamRecord eos = null;
+            StartOfStreamRecord? sos = null;
+            Far? far = null;
+            TRecord? recordOfInterest = null;
+            EndOfStreamRecord? eos = null;
             foreach (var record in file.GetRecordsEnumerable())
             {
-                if (sos == null) sos = (StartOfStreamRecord)record;
-                else if (far == null)
+                if (sos is null) sos = (StartOfStreamRecord)record;
+                else if (far is null)
                 {
                     far = (Far)record;
                     if (typeof(TRecord) == typeof(Far))
@@ -30,8 +30,8 @@ namespace StdfFileTests
                         recordOfInterest = (TRecord)(object)far;
                     }
                 }
-                else if (recordOfInterest == null) recordOfInterest = (TRecord)record;
-                else if (eos == null) eos = (EndOfStreamRecord)record;
+                else if (recordOfInterest is null) recordOfInterest = (TRecord)record;
+                else if (eos is null) eos = (EndOfStreamRecord)record;
                 else
                 {
                     Assert.Fail("There were extra records");
