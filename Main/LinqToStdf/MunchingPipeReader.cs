@@ -6,8 +6,8 @@ namespace LinqToStdf;
 
 /// <summary>
 /// This wraps a pipe reader and adds the ability for it to "munch" data. Munched data will affect what is returned from
-/// a read, but we can dip back into that data if needed.
-/// Think of it as a cow and we can swallow data into a first stomach, but then regugitate it and chew on it again if needed,
+/// a read (reads will start past munched data), but we can dip back into that data if needed.
+/// Think of it as a cow and we can swallow data into a first stomach, but then regurgitate it and chew on it again if needed,
 /// Or send it down into a second stomach where it can truly go away.
 /// This replaces the rewinding stream concept we had in the old IO system.
 /// </summary>
@@ -25,6 +25,11 @@ class MunchingPipeReader : PipeReader
     /// positions since positions can't do anything on their own.
     /// </summary>
     ReadOnlySequence<byte>? _LastRead;
+    /// <summary>
+    /// The "file offset" of the beginning of the sequences currently returned by reads.
+    /// </summary>
+    public long Offset { get; private set; } = 0;
+
     public MunchingPipeReader(PipeReader reader)
     {
         _Reader = reader;
@@ -33,26 +38,34 @@ class MunchingPipeReader : PipeReader
     {
         _Reader.AdvanceTo(consumed);
         //we need to see if we've advanced past the munched position
-        ClearMunchedIfAdvancedBeyond(consumed);
+        UpdateStateForAdvanceOperation(consumed);
     }
 
-    private void ClearMunchedIfAdvancedBeyond(SequencePosition consumed)
+    private void UpdateStateForAdvanceOperation(SequencePosition consumed)
     {
         Debug.Assert(_LastRead is not null);
+        var consumedOffset = _LastRead.Value.GetOffset(consumed);
         if (_MunchedPosition is not null)
         {
             //munched position has to be within
             var munchedOffset = _LastRead.Value.GetOffset(_MunchedPosition.Value);
-            var consumedOffset = _LastRead.Value.GetOffset(consumed);
             if (consumedOffset >= munchedOffset)
             {
                 //we've consumed up to or beyond what we've munched
                 //clear our munch status
                 _MunchedPosition = null;
+                //Update our offset with the difference
+                Offset += consumedOffset - munchedOffset;
             }
+            //if we didn't pass the munched offset, our global offset didn't change.
+        }
+        else
+        {
+            //if we hadn't munched anything, just increase our offset
+            Offset += consumedOffset;
         }
         //we need to update last read, because we may be holding a sequence where part of it has
-        //been relaimed.
+        //been reclaimed.
         _LastRead = _LastRead.Value.Slice(consumed);
 
     }
@@ -61,7 +74,7 @@ class MunchingPipeReader : PipeReader
     {
         _Reader.AdvanceTo(consumed, examined);
         //we need to see if we've advanced past the munched position
-        ClearMunchedIfAdvancedBeyond(consumed);
+        UpdateStateForAdvanceOperation(consumed);
     }
 
     public override void CancelPendingRead() => _Reader.CancelPendingRead();
@@ -119,8 +132,20 @@ class MunchingPipeReader : PipeReader
     /// <param name="munched"></param>
     public void MunchTo(SequencePosition munched)
     {
+        Debug.Assert(_LastRead is not null);
+        //attempt to calculate a new offset
+        //NOTE: this could go positive or negative
+        //if we haven't munched, the offset offset will be zero
+        var originalOffsetOffset = 0L;
+        if (_MunchedPosition is not null)
+        {
+            originalOffsetOffset = _LastRead.Value.GetOffset(_MunchedPosition.Value);
+        }
+        var newOffsetOffset = _LastRead.Value.GetOffset(munched);
+        Offset += newOffsetOffset - originalOffsetOffset;
         //Do we need to validate this?
         _MunchedPosition = munched;
+
     }
 
     /// <summary>
@@ -140,6 +165,12 @@ class MunchingPipeReader : PipeReader
     /// </summary>
     public void Regurgitate()
     {
-        _MunchedPosition = null;
+        Debug.Assert(_LastRead is not null);
+        if (_MunchedPosition is not null)
+        {
+            var munchedOffset = _LastRead.Value.GetOffset(_MunchedPosition.Value);
+            Offset -= munchedOffset;
+            _MunchedPosition = null;
+        }
     }
 }
