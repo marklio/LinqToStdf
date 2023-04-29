@@ -24,6 +24,7 @@ namespace LinqToStdf
     /// In addition, it adds some STDF-specific datatype reading
     /// such as variable-length strings and dates.
     /// </remarks>
+    [Obsolete("Use Extensions on ReadOnlySequence<byte>")]
     public class BinaryReader : IDisposable
     {
         /// <summary>

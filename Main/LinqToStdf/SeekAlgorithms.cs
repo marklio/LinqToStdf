@@ -14,7 +14,7 @@ namespace LinqToStdf {
     /// It it provided to a <see cref="SeekAlgorithm"/> to allow it to indicate how many bytes should be backed up
     /// to put the current position on a valid record.
     /// </summary>
-    public delegate void BackUpCallback(int bytes);
+    public delegate void FoundRecordCallback(SequencePosition recordPosition);
 
     /// <summary>
     /// <para>
@@ -64,7 +64,7 @@ namespace LinqToStdf {
     /// </code>
     /// </example>
     /// </summary>
-    public delegate IEnumerable<byte> SeekAlgorithm(IEnumerable<byte> bytes, Endian endian, BackUpCallback backupCallback);
+    public delegate IEnumerable<byte> SeekAlgorithm(IEnumerable<byte> bytes, Endian endian, FoundRecordCallback backupCallback);
 
     /// <summary>
     /// Provides some "built-in" <see cref="SeekAlgorithm"/>s
@@ -73,7 +73,7 @@ namespace LinqToStdf {
 
         #region LookForPirs implementation
 
-        static IEnumerable<byte> LookForPirsImpl(IEnumerable<byte> bytes, Endian endian, BackUpCallback backupCallback) {
+        static IEnumerable<byte> LookForPirsImpl(IEnumerable<byte> bytes, Endian endian, FoundRecordCallback backupCallback) {
             //the state machine can be simplified since the searching sequence
             //doesn't contain the same byte twice.
             var pirHeader = new byte[] { 0, 0, 5, 10 };

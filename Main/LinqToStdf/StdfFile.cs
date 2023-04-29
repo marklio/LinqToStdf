@@ -15,6 +15,8 @@ using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Diagnostics.CodeAnalysis;
+using System.IO.Pipelines;
+using System.Buffers;
 
 namespace LinqToStdf {
 
@@ -43,7 +45,6 @@ namespace LinqToStdf {
     /// </remarks>
     public sealed partial class StdfFile : IRecordContext {
         readonly IStdfStreamManager _StreamManager;
-        RewindableByteStream? _Stream;
         readonly static internal RecordConverterFactory _V4ConverterFactory = new RecordConverterFactory();
         /// <summary>
         /// Exposes the ConverterFactory in use for parsing.
@@ -411,9 +412,9 @@ namespace LinqToStdf {
         /// Rewinds the underlying stream to the just after the last record conversion
         /// that yielded a known record and enters "seek" mode, where the stream will 
         /// be assumed corrupt and searched for byte sequences that will identify the
-        /// record boundarie. When the record stream is re-aquired, a CorruptDataRecord
+        /// record boundaries. When the record stream is re-acquired, a CorruptDataRecord
         /// will be emitted containing the bytes between the last known good record and
-        /// the newly-aquired record stream.
+        /// the newly-acquired record stream.
         /// Must be called within the context of live record reading.
         /// </summary>
         public void RewindAndSeek() {
@@ -435,167 +436,237 @@ namespace LinqToStdf {
         //indicates we are in seek mode
         bool _InSeekMode;
 
-        IEnumerable<StdfRecord> InternalGetAllRecords() {
+        async IAsyncEnumerable<StdfRecord> InternalGetAllRecords(CancellationToken cancellationToken)
+        {
             //set this in case the last time we ended in seek mode
             _InSeekMode = false;
-            using (IStdfStreamScope streamScope = _StreamManager.GetScope()) {
-                try {
-                    _Stream = new RewindableByteStream(streamScope.Stream);
-                    //read the FAR to get endianness
-                    var endian = Endian.Little;
-                    var far = new byte[6];
-                    if (_Stream.Read(far, 6) < 6) {
-                        yield return new StartOfStreamRecord { Endian = Endian.Unknown, ExpectedLength = _Stream.Length };
-                        yield return new FormatErrorRecord {
-                            Message = Resources.FarReadError,
-                            Recoverable = false
-                        };
-                        yield return new EndOfStreamRecord();
-                        yield break;
-                    }
-                    endian = far[4] < 2 ? Endian.Big : Endian.Little;
-                    var stdfVersion = far[5];
-                    var length = (endian == Endian.Little ? far[0] : far[1]);
-                    if (length != 2) {
-                        yield return new StartOfStreamRecord { Endian = endian, ExpectedLength = _Stream.Length };
-                        yield return new FormatErrorRecord {
-                            Message = Resources.FarLengthError,
-                            Recoverable = false
-                        };
-                        yield return new EndOfStreamRecord { Offset = 2 };
-                        yield break;
-                    }
-                    //validate record type
-                    if (far[2] != 0) {
-                        yield return new StartOfStreamRecord { Endian = endian, ExpectedLength = _Stream.Length };
-                        yield return new FormatErrorRecord {
-                            Offset = 2,
-                            Message = Resources.FarRecordTypeError,
-                            Recoverable = false
-                        };
-                        yield return new EndOfStreamRecord { Offset = 6 };
-                        yield break;
-                    }
-                    //validate record type
-                    if (far[3] != 10) {
-                        yield return new StartOfStreamRecord { Endian = endian, ExpectedLength = _Stream.Length };
-                        yield return new FormatErrorRecord {
-                            Offset = 3,
-                            Message = Resources.FarRecordSubTypeError,
-                            Recoverable = false
-                        };
-                        yield return new EndOfStreamRecord { Offset = 3 };
-                        yield break;
-                    }
-                    //OK we're satisfied, let's go
-                    yield return new StartOfStreamRecord() { Endian = endian, ExpectedLength = _Stream.Length };
-                    yield return new LinqToStdf.Records.V4.Far() { CpuType = far[4], StdfVersion = far[5] };
+            using IStdfStreamScope streamScope = _StreamManager.GetScope();
 
-                    //flush the memory
-                    _Stream.Flush();
+            //TODO: should scopes give us pipe readers?
+            var pipeReader = new MunchingPipeReader(PipeReader.Create(streamScope.Stream));
+            var expectedLength = streamScope.Stream.Length;
+            //read the FAR to get endianness
+            var endian = Endian.Little;
+            var farResult = await pipeReader.ReadAtLeastAsync(6, cancellationToken);
+            var far = farResult.Buffer;
+            //TODO: need to figure out 
+            if (far.Length < 6)
+            {
+                yield return new StartOfStreamRecord { Endian = Endian.Unknown, ExpectedLength = expectedLength };
+                yield return new FormatErrorRecord
+                {
+                    Message = Resources.FarReadError,
+                    Recoverable = false
+                };
+                yield return new EndOfStreamRecord();
+                yield break;
+            }
+            endian = far.GetByteAtIndex(4) < 2 ? Endian.Big : Endian.Little;
+            var stdfVersion = far.GetByteAtIndex(5);
+            var length = (endian == Endian.Little ? far.GetByteAtIndex(0) : far.GetByteAtIndex(1));
+            if (length != 2)
+            {
+                yield return new StartOfStreamRecord { Endian = endian, ExpectedLength = expectedLength };
+                yield return new FormatErrorRecord
+                {
+                    Message = Resources.FarLengthError,
+                    Recoverable = false
+                };
+                yield return new EndOfStreamRecord { Offset = 2 };
+                yield break;
+            }
+            //validate record type
+            if (far.GetByteAtIndex(2) != 0)
+            {
+                yield return new StartOfStreamRecord { Endian = endian, ExpectedLength = expectedLength };
+                yield return new FormatErrorRecord
+                {
+                    Offset = 2,
+                    Message = Resources.FarRecordTypeError,
+                    Recoverable = false
+                };
+                yield return new EndOfStreamRecord { Offset = 6 };
+                yield break;
+            }
+            //validate record type
+            if (far.GetByteAtIndex(3) != 10)
+            {
+                yield return new StartOfStreamRecord { Endian = endian, ExpectedLength = expectedLength };
+                yield return new FormatErrorRecord
+                {
+                    Offset = 3,
+                    Message = Resources.FarRecordSubTypeError,
+                    Recoverable = false
+                };
+                yield return new EndOfStreamRecord { Offset = 3 };
+                yield break;
+            }
+            //OK we're satisfied, let's go
+            yield return new StartOfStreamRecord() { Endian = endian, ExpectedLength = expectedLength };
+            yield return new LinqToStdf.Records.V4.Far() { CpuType = far.GetByteAtIndex(4), StdfVersion = far.GetByteAtIndex(5) };
 
-                    //now we have the FAR out of the way, and we can blow through the rest.
-                    while (true) {
-                        if (_InSeekMode) {
-                            _Stream.RewindAll();
-                            int backup = -1;
-                            //create the callback algorithms use to indicate the found something
-                            void BackupCallback(int bytes) { backup = bytes; }
-                            var corruptOffset = _Stream.Offset;
-                            //set up the seek algorithms and consume the sequence.
-                            var algorithm = _SeekAlgorithm(_Stream.ReadAsByteSequence(), endian, BackupCallback);
-                            algorithm.Count();
-                            //when we get here, one of the algorithms has found the record stream,
-                            //or we went to the end of the stream
+            //flush the memory
+            pipeReader.AdvanceTo(far.GetPosition(6));
 
-                            var recoverable = false;
-                            if (backup != -1) {
-                                //someone found where we need to be, backup the number of bytes they suggest
-                                _Stream.Rewind(backup);
-                                recoverable = true;
-                            }
-                            //spit out the corrupt data
-                            yield return new CorruptDataRecord() {
-                                CorruptData = _Stream.DumpDataToCurrentOffset(),
-                                Offset = corruptOffset,
-                                Recoverable = recoverable
-                            };
-                            //the data's gone out the door, so flush it
-                            _Stream.Flush();
-                            if (!recoverable) {
-                                //we got to the end without finding anything
-                                //spit out a format error
-                                yield return new FormatErrorRecord() {
-                                    Message = Resources.EOFInSeekMode,
-                                    Recoverable = false,
-                                    Offset = _Stream.Offset
-                                };
-                                yield return new EndOfStreamRecord() { Offset = _Stream.Offset };
-                                yield break;
-                            }
-                            _InSeekMode = false;
-                        }
-                        var position = _Stream.Offset;
-                        //read a record header
-                        RecordHeader? header = _Stream.ReadHeader(endian);
-                        //null means we hit EOS
-                        if (header == null) {
-                            if (!_Stream.PastEndOfStream) {
-                                //Something's wrong. We know the offset is rewound
-                                //to the begining of the header.  If there's still
-                                //data, we're corrupt
-                                yield return new CorruptDataRecord() {
-                                    Offset = position,
-                                    //TODO: leverage the data in the stream.
-                                    //we know we've hit the end, so we can just dump
-                                    //the remaining memoized data
-                                    CorruptData = _Stream.DumpRemainingData(),
-                                    Recoverable = false
-                                };
-                                yield return new FormatErrorRecord() {
-                                    Message = Resources.EOFInHeader,
-                                    Recoverable = false,
-                                    Offset = position
-                                };
-                            }
-                            yield return new EndOfStreamRecord() { Offset = _Stream.Offset };
-                            yield break;
-                        }
-                        var contents = new byte[header.Value.Length];
-                        int read = _Stream.Read(contents, contents.Length);
-                        if (read < contents.Length) {
-                            //rewind to the beginning of the record (read bytes + the header)
-                            _Stream.Rewind(_Stream.Offset - position);
-                            yield return new CorruptDataRecord() {
+            //now we have the FAR out of the way, and we can blow through the rest.
+            while (true)
+            {
+                if (_InSeekMode)
+                {
+                    pipeReader.Regurgitate();
+                    SequencePosition? foundPosition = null;
+                    //create the callback algorithms use to indicate the found something
+                    void BackupCallback(SequencePosition recordPosition) { foundPosition = recordPosition; }
+                    var corruptOffset = pipeReader.Offset;
+                    //set up the seek algorithms and consume the sequence.
+                    var algorithm = _SeekAlgorithm(pipeReader.ReadAsByteSequence(), endian, BackupCallback);
+                    algorithm.Count();
+                    //when we get here, one of the algorithms has found the record stream,
+                    //or we went to the end of the stream
+
+                    var recoverable = false;
+                    if (foundPosition is not null)
+                    {
+                        //someone found where we need to be, backup the number of bytes they suggest
+                        pipeReader.MunchTo(foundPosition.Value);
+                        recoverable = true;
+                    }
+                    //spit out the corrupt data
+                    yield return new CorruptDataRecord()
+                    {
+                        CorruptData = pipeReader.GetMunchedData().ToArray(),
+                        Offset = corruptOffset,
+                        Recoverable = recoverable
+                    };
+                    //the data's gone out the door, so flush it
+                    pipeReader.AdvanceMunched();
+                    if (!recoverable)
+                    {
+                        //we got to the end without finding anything
+                        //spit out a format error
+                        yield return new FormatErrorRecord()
+                        {
+                            Message = Resources.EOFInSeekMode,
+                            Recoverable = false,
+                            Offset = pipeReader.Offset
+                        };
+                        yield return new EndOfStreamRecord() { Offset = pipeReader.Offset };
+                        yield break;
+                    }
+                    _InSeekMode = false;
+                }
+                //consume any munched data
+                //TODO: should this be a configurable policy?
+                //TODO: should we do this at all? it would mean if we get lost and don't seek,
+                //we'll keep the rest of the file in memory until the end
+                pipeReader.AdvanceMunched();
+                var position = pipeReader.Offset;
+                //read a record header
+                RecordHeader? header = await pipeReader.ReadHeaderAsync(endian, cancellationToken);
+
+                //null means we couldn't read the full header
+                //TODO: make sure this can only occur at EOS
+                if (header is null)
+                {
+                    //if we were at the end of the stream, we should be able to read
+                    //any available data with this
+                    if (!pipeReader.TryRead(out var eofTestRead))
+                    {
+                        //TODO: can we hit this?
+                        throw new InvalidOperationException("Encountered failure to read remaining data.");
+                    }
+
+                    //There are several situations:
+                    // * the file ends before the header begins. Expect:
+                    //   * IsComplete = true
+                    //   * Length=0
+                    // * The file ends somewhere in the header. Expect:
+                    //   * IsComplete = true
+                    //   * Length > 0
+                    // * No other situation is expected here
+
+                    //all our expected situations have IsCompleted == true
+                    if (eofTestRead.IsCompleted)
+                    {
+                        //if there was any data left, dump a corrupt data record
+                        if (eofTestRead.Buffer.Length > 0)
+                        {
+                            yield return new CorruptDataRecord()
+                            {
                                 Offset = position,
-                                CorruptData = _Stream.DumpRemainingData(),
+                                //TODO: allocation strategy?
+                                CorruptData = eofTestRead.Buffer.ToArray(),
                                 Recoverable = false
                             };
-                            yield return new FormatErrorRecord() {
-                                Message = Resources.EOFInRecordContent,
+                            pipeReader.AdvanceTo(eofTestRead.Buffer.End);
+                            yield return new FormatErrorRecord()
+                            {
+                                Message = Resources.EOFInHeader,
                                 Recoverable = false,
                                 Offset = position
                             };
                         }
-                        else {
-                            var ur = new UnknownRecord(header.Value.RecordType, contents, endian) { Offset = position };
-                            StdfRecord r = ConverterFactory.Convert(ur);
-                            if (r.GetType() != typeof(UnknownRecord)) {
-                                //it converted, so update our last known position
-                                //TODO: We should think about:
-                                //* how to indicate corruption within the record boundaries
-                                //* enabling filteres to set the last known offset (to allow valid unknown records to pass through)
-                                //  * This could possible be done by allowing filters access to Flush or the dump functionality.
-                                _Stream.Flush();
-                            }
-                            r.Offset = position;
-                            yield return r;
-                        }
+                        //TODO: do this outside
+                        await pipeReader.CompleteAsync();
+                        yield return new EndOfStreamRecord() { Offset = position };
+                        yield break;
+                    }
+                    else
+                    {
+                        //some other issue occurred in the mechanics of reading
+                        //TODO: what conditions might get here?
+                        throw new InvalidOperationException("Header could not be read, but we are not at end of stream.");
                     }
                 }
-                finally {
-                    //set stream to null so we're not holding onto it
-                    _Stream = null;
+                //at this point, we've read the header and are going to do a normal record read
+                var contentsResult = await pipeReader.ReadAtLeastAsync(header.Value.Length);
+
+                if (contentsResult.Buffer.Length < header.Value.Length)
+                {
+                    if (!contentsResult.IsCompleted) throw new InvalidOperationException("Record content could not be read, but we are not at end of stream.");
+                    //we did not read the full record length, dump
+
+                    yield return new CorruptDataRecord()
+                    {
+                        Offset = position,
+                        CorruptData = contentsResult.Buffer.ToArray(),
+                        Recoverable = false
+                    };
+                    pipeReader.AdvanceTo(contentsResult.Buffer.End);
+                    yield return new FormatErrorRecord()
+                    {
+                        Message = Resources.EOFInRecordContent,
+                        Recoverable = false,
+                        Offset = position
+                    };
+                    //allow execution to continue, where we will find end of stream and produce EOS record
+                }
+                else
+                {
+                    var content = contentsResult.Buffer.Slice(0, header.Value.Length);
+                    //TODO: we'd like to be able to run converters against the PipeReader-owned bytes, but we also
+                    //need to be able to release UnknownRecords that don't convert. Ideally, we'd like a way to make that pattern clear,
+                    //particularly since callers can participate in conversion.
+                    var ur = new UnknownRecord(header.Value.RecordType, contentsResult.Buffer, endian) { Offset = position };
+                    StdfRecord r = ConverterFactory.Convert(ur);
+                    if (r is UnknownRecord unconvertedRecord)
+                    {
+                        r = ur.NormalizeForPublish();
+                        //only munch UnknownRecords to allow for rewinding
+                        pipeReader.MunchTo(contentsResult.Buffer.End);
+
+                    }
+                    else
+                    {
+                        //it converted, so update our last known position
+                        //TODO: We should think about:
+                        //* how to indicate corruption within the record boundaries
+                        //* enabling filters to set the last known offset (to allow valid unknown records to pass through)
+                        //  * This could possible be done by allowing filters access to Flush or the dump functionality.
+                        pipeReader.AdvanceTo(contentsResult.Buffer.End);
+                    }
+                    r.Offset = position;
+                    yield return r;
                 }
             }
         }
