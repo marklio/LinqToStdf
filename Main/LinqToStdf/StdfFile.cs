@@ -539,7 +539,7 @@ namespace LinqToStdf {
                         Recoverable = recoverable
                     };
                     //the data's gone out the door, so flush it
-                    pipeReader.AdvanceMunched();
+                    pipeReader.AdvanceToMunched();
                     if (!recoverable)
                     {
                         //we got to the end without finding anything
@@ -559,7 +559,7 @@ namespace LinqToStdf {
                 //TODO: should this be a configurable policy?
                 //TODO: should we do this at all? it would mean if we get lost and don't seek,
                 //we'll keep the rest of the file in memory until the end
-                pipeReader.AdvanceMunched();
+                pipeReader.AdvanceToMunched();
                 var position = pipeReader.Offset;
                 //read a record header
                 RecordHeader? header = await pipeReader.ReadHeaderAsync(endian, cancellationToken);

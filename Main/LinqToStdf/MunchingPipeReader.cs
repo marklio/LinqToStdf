@@ -1,35 +1,67 @@
 ﻿using System.Buffers;
+using System.Diagnostics;
 using System.IO.Pipelines;
 
 namespace LinqToStdf;
 
 /// <summary>
 /// This wraps a pipe reader and adds the ability for it to "munch" data. Munched data will affect what is returned from
-/// a read, but 
+/// a read, but we can dip back into that data if needed.
+/// Think of it as a cow and we can swallow data into a first stomach, but then regugitate it and chew on it again if needed,
+/// Or send it down into a second stomach where it can truly go away.
+/// This replaces the rewinding stream concept we had in the old IO system.
 /// </summary>
 class MunchingPipeReader : PipeReader
 {
     readonly PipeReader _Reader;
+    /// <summary>
+    /// The munched position is the position we've "munched" to.
+    /// If not null, this is the starting position of any sequence returned by reads,
+    /// But we can regurgitate back to the "real" advanced position if we want.
+    /// </summary>
     SequencePosition? _MunchedPosition;
+    /// <summary>
+    /// This is the last read sequence. We need this in order to reason about
+    /// positions since positions can't do anything on their own.
+    /// </summary>
+    ReadOnlySequence<byte>? _LastRead;
     public MunchingPipeReader(PipeReader reader)
     {
         _Reader = reader;
     }
-    public override void AdvanceTo(SequencePosition consumed) {
+    public override void AdvanceTo(SequencePosition consumed)
+    {
         _Reader.AdvanceTo(consumed);
-        if (_MunchedPosition is null || _MunchedPosition.Value.GetInteger() < consumed.GetInteger())
+        //we need to see if we've advanced past the munched position
+        ClearMunchedIfAdvancedBeyond(consumed);
+    }
+
+    private void ClearMunchedIfAdvancedBeyond(SequencePosition consumed)
+    {
+        Debug.Assert(_LastRead is not null);
+        if (_MunchedPosition is not null)
         {
-            _MunchedPosition = consumed;
+            //munched position has to be within
+            var munchedOffset = _LastRead.Value.GetOffset(_MunchedPosition.Value);
+            var consumedOffset = _LastRead.Value.GetOffset(consumed);
+            if (consumedOffset >= munchedOffset)
+            {
+                //we've consumed up to or beyond what we've munched
+                //clear our munch status
+                _MunchedPosition = null;
+            }
         }
+        //we need to update last read, because we may be holding a sequence where part of it has
+        //been relaimed.
+        _LastRead = _LastRead.Value.Slice(consumed);
+
     }
 
     public override void AdvanceTo(SequencePosition consumed, SequencePosition examined)
     {
         _Reader.AdvanceTo(consumed, examined);
-        if (_MunchedPosition is null || _MunchedPosition.Value.GetInteger() < consumed.GetInteger())
-        {
-            _MunchedPosition = consumed;
-        }
+        //we need to see if we've advanced past the munched position
+        ClearMunchedIfAdvancedBeyond(consumed);
     }
 
     public override void CancelPendingRead() => _Reader.CancelPendingRead();
@@ -39,31 +71,36 @@ class MunchingPipeReader : PipeReader
     public override async ValueTask<ReadResult> ReadAsync(CancellationToken cancellationToken = default)
     {
         var result = await _Reader.ReadAsync(cancellationToken);
+        return MunchResultIfNecessary(result);
+    }
+
+    ReadResult MunchResultIfNecessary(ReadResult result)
+    {
+        //store last read
+        _LastRead = result.Buffer;
+        //if we've munched, we need to slice this to start at the munched position
         if (_MunchedPosition is not null)
         {
-            if (_MunchedPosition.Value.GetInteger() > result.Buffer.Start.GetInteger() && _MunchedPosition.Value.GetInteger() < result.Buffer.End.GetInteger())
-            {
-                return new ReadResult(result.Buffer.Slice(_MunchedPosition.Value), result.IsCanceled, result.IsCompleted);
-            }
+            //we try to ensure that munched position is only not null when it exists within the bounds of what is currently read
+            //This is because:
+            // * It can only be set from a SequencePosition, and that can only be gotten legitimately from a ROS
+            // * We clear it when we have advanced up to or beyond it (up to is an optimization, I believe)
+            // We can copy over the bools because they are perfectly relevant for current status.
+            return new ReadResult(result.Buffer.Slice(_MunchedPosition.Value), result.IsCanceled, result.IsCompleted);
         }
-        _MunchedPosition = result.Buffer.Start;
         return result;
     }
 
     public override bool TryRead(out ReadResult result)
     {
         if (!_Reader.TryRead(out result)) return false;
-        if (_MunchedPosition is not null)
-        {
-            if (_MunchedPosition.Value.GetInteger() > result.Buffer.Start.GetInteger() && _MunchedPosition.Value.GetInteger() < result.Buffer.End.GetInteger())
-            {
-                //TODO: can we slice this in such a way that we need to change the result?
-                result =new ReadResult(result.Buffer.Slice(_MunchedPosition.Value), result.IsCanceled, result.IsCompleted);
-            }
-        }      
+        result = MunchResultIfNecessary(result);
         return true;
     }
 
+    /// <summary>
+    /// Returns the data that has been munched
+    /// </summary>
     public ReadOnlySequence<byte> GetMunchedData()
     {
         if (_MunchedPosition is null) return ReadOnlySequence<byte>.Empty;
@@ -74,12 +111,23 @@ class MunchingPipeReader : PipeReader
         return currentResult.Buffer.Slice(0, _MunchedPosition.Value);
     }
 
+    /// <summary>
+    /// "munches" to the position specified.
+    /// This will cause "reads" to return starting at this location as
+    /// if it was advanced, but we can "regurgitate" back into it if needed.
+    /// </summary>
+    /// <param name="munched"></param>
     public void MunchTo(SequencePosition munched)
     {
+        //Do we need to validate this?
         _MunchedPosition = munched;
     }
 
-    public void AdvanceMunched()
+    /// <summary>
+    /// This advances the reader to the munched point, if set.
+    /// Think of this as "flushing the munch"
+    /// </summary>
+    public void AdvanceToMunched()
     {
         if (_MunchedPosition is not null)
         {
@@ -87,6 +135,9 @@ class MunchingPipeReader : PipeReader
         }
     }
 
+    /// <summary>
+    /// This will regurgitate all munched data
+    /// </summary>
     public void Regurgitate()
     {
         _MunchedPosition = null;
